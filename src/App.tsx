@@ -1,23 +1,27 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { mockArchetypes, mockInstances, mockLocations } from '../mockData';
-import { PlantInstance, PlantArchetype, Location } from '../types';
+import { useState, useEffect, useCallback, FC } from 'react';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../types';
 import { Dashboard } from './components/Dashboard';
 import { PlantDetail } from './components/PlantDetail';
 import { Scanner } from './components/Scanner';
 import { LocationManager } from './components/LocationManager';
 import { ArchetypeManager } from './components/ArchetypeManager';
+import { LocationDetail } from './components/LocationDetail';
+import { ZoneDetail } from './components/ZoneDetail';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export const App: React.FC = () => {
-  const [instances, setInstances] = useState<PlantInstance[]>(mockInstances);
-  const [archetypes, setArchetypes] = useState<PlantArchetype[]>(mockArchetypes);
-  const [locations, setLocations] = useState<Location[]>(mockLocations);
+export const App: FC = () => {
+  const [instances, setInstances] = useState<PlantInstance[]>([]);
+  const [archetypes, setArchetypes] = useState<PlantArchetype[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
+  const [activeLoc, setActiveLoc] = useState<string | null>(null);
+  const [activeZone, setActiveZone] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
 
   // Theme persistence and OS matching logic
@@ -43,12 +47,32 @@ export const App: React.FC = () => {
   }, [theme]);
 
   useEffect(() => {
-    fetch('/api/state')
+    fetch('/api/state', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.instances && data.instances.length > 0) setInstances(data.instances);
         if (data.archetypes && data.archetypes.length > 0) setArchetypes(data.archetypes);
-        if (data.locations && data.locations.length > 0) setLocations(data.locations);
+        
+        let loadedZones: Zone[] = data.zones || [];
+        let loadedLocations: Location[] = data.locations || [];
+
+        // JIT Data Migration: Convert old text-based zones into fully relational Zone entities!
+        loadedLocations = loadedLocations.map((loc: any) => {
+          if (loc.zone && !loc.zoneId) {
+            let existingZone = loadedZones.find((z) => z.name === loc.zone);
+            if (!existingZone) {
+              existingZone = { id: `zn-${Date.now()}-${Math.floor(Math.random()*1000)}`, name: loc.zone };
+              loadedZones.push(existingZone);
+            }
+            loc.zoneId = existingZone.id;
+            delete loc.zone; // Clean up old property
+          }
+          return loc;
+        });
+
+        setZones(loadedZones);
+        setLocations(loadedLocations);
+        
         setIsDbLoaded(true);
       })
       .catch(err => {
@@ -62,29 +86,58 @@ export const App: React.FC = () => {
     fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ instances, archetypes, locations })
+      body: JSON.stringify({ instances, archetypes, locations, zones })
     }).catch(err => console.error('Failed to sync state to database:', err));
-  }, [instances, archetypes, locations, isDbLoaded]);
+  }, [instances, archetypes, locations, zones, isDbLoaded]);
 
   // Router mimicking layer: Extracts specific URL query contexts to determine view execution
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const qrParam = params.get('qr');
-    const actionParam = params.get('action');
-
-    if (qrParam) {
-      setActiveQr(qrParam);
-      setInitialAction(actionParam);
-      setCurrentView('detail');
+    const pathname = window.location.pathname;
+    const parts = pathname.split('/').filter(Boolean); // e.g. ['plant', 'qr-001', 'water']
+    
+    if (parts.length > 0) {
+      const [type, id, action] = parts;
+      if (type === 'plant') {
+        setActiveQr(id);
+        setInitialAction(action || null);
+        setCurrentView('detail');
+      } else if (type === 'location') {
+        setActiveLoc(id);
+        setInitialAction(action || null);
+        setCurrentView('locationDetail');
+      } else if (type === 'zone') {
+        setActiveZone(decodeURIComponent(id));
+        setInitialAction(action || null);
+        setCurrentView('zoneDetail');
+      }
     }
   }, []);
 
-  const handleBatchWater = (locationId: string) => {
+  const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
       inst.locationId === locationId ? { ...inst, lastWatered: now } : inst
     ));
-  };
+  }, []);
+
+  const handleBatchFeed = useCallback((locationId: string) => {
+    const now = new Date().toISOString();
+    setInstances(prev => prev.map(inst => 
+      inst.locationId === locationId ? { ...inst, lastFed: now } : inst
+    ));
+  }, []);
+
+  const handleBatchWaterZone = useCallback((zoneId: string) => {
+    const now = new Date().toISOString();
+    const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
+    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { ...inst, lastWatered: now } : inst));
+  }, [locations]);
+
+  const handleBatchFeedZone = useCallback((zoneId: string) => {
+    const now = new Date().toISOString();
+    const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
+    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { ...inst, lastFed: now } : inst));
+  }, [locations]);
 
   const handleWater = useCallback((qrId: string) => {
     const now = new Date().toISOString();
@@ -104,7 +157,7 @@ export const App: React.FC = () => {
     setInitialAction(null);
   }, []);
 
-  const handleRegister = (qrId: string, identifier: string, isNew: boolean, locationIdentifier: string, isNewLocation: boolean = false, newLocationZone: string = '') => {
+  const handleRegister = (qrId: string, identifier: string, isNew: boolean, locationIdentifier: string, isNewLocation: boolean = false, zoneIdentifier: string = '', isNewZone: boolean = false, imageUrl: string = '') => {
     let targetArchetypeId = identifier;
 
     if (isNew) {
@@ -128,16 +181,28 @@ export const App: React.FC = () => {
           companionPlants: [],
           combativePlants: [],
           growthHabit: 'Unknown',
-          daysToHarvest: 0
+          daysToHarvest: 0,
+          imageUrl: imageUrl || '',
+          whenToPlant: 'Unknown',
+          whenToHarvest: 'Unknown',
+          usesForLargeHarvests: 'Unknown',
+          hardinessZones: [],
+          hardinessNote: ''
         };
         setArchetypes(prev => [...prev, newArchetype]);
       }
     }
 
+    let finalZoneId = zoneIdentifier;
+    if (isNewZone) {
+      finalZoneId = `zn-${Date.now()}`;
+      setZones(prev => [...prev, { id: finalZoneId, name: zoneIdentifier }]);
+    }
+
     let finalLocationId = locationIdentifier;
     if (isNewLocation) {
       finalLocationId = `loc-${Date.now()}`;
-      setLocations(prev => [...prev, { id: finalLocationId, name: locationIdentifier, zone: newLocationZone }]);
+      setLocations(prev => [...prev, { id: finalLocationId, name: locationIdentifier, zoneId: finalZoneId }]);
     }
 
     const newInstance: PlantInstance = {
@@ -169,9 +234,26 @@ export const App: React.FC = () => {
     setArchetypes(prev => prev.filter(arch => arch.id !== id));
   };
 
-  const handleAddLocation = (name: string, zone: string) => {
+  const handleAddZone = (name: string) => {
+    const newId = `zn-${Date.now()}`;
+    setZones(prev => [...prev, { id: newId, name }]);
+  };
+
+  const handleUpdateZone = (id: string, updates: Partial<Zone>) => {
+    setZones(prev => prev.map(z => z.id === id ? { ...z, ...updates } : z));
+  };
+
+  const handleDeleteZone = (id: string) => {
+    setZones(prev => prev.filter(z => z.id !== id));
+  };
+
+  const handleAddLocation = (name: string, zoneId: string) => {
     const newId = `loc-${Date.now()}`;
-    setLocations(prev => [...prev, { id: newId, name, zone }]);
+    setLocations(prev => [...prev, { id: newId, name, zoneId }]);
+  };
+
+  const handleUpdateLocation = (id: string, updates: Partial<Location>) => {
+    setLocations(prev => prev.map(loc => loc.id === id ? { ...loc, ...updates } : loc));
   };
 
   const handleDeleteLocation = (id: string) => {
@@ -182,30 +264,68 @@ export const App: React.FC = () => {
     setActiveQr(qrId);
     setInitialAction(null);
     setCurrentView('detail');
-    window.history.pushState({}, '', `/?qr=${qrId}`);
+    window.history.pushState({}, '', `/plant/${qrId}`);
+  };
+
+  const handleNavigateLocation = (locId: string) => {
+    setActiveLoc(locId);
+    setInitialAction(null);
+    setCurrentView('locationDetail');
+    window.history.pushState({}, '', `/location/${locId}`);
+  };
+
+  const handleNavigateZone = (zoneId: string) => {
+    setActiveZone(zoneId);
+    setInitialAction(null);
+    setCurrentView('zoneDetail');
+    window.history.pushState({}, '', `/zone/${zoneId}`);
   };
 
   const handleGoHome = () => {
     setCurrentView('dashboard');
     setActiveQr(null);
+    setActiveLoc(null);
+    setActiveZone(null);
     setInitialAction(null);
     window.history.pushState({}, '', `/`);
   };
 
   const handleScanResult = (qrString: string) => {
-    // If the scanned string is a full URL (e.g. from physical printout), extract the query params
     try {
-      const url = new URL(qrString);
-      const qrParam = url.searchParams.get('qr');
-      if (qrParam) {
-        handleNavigate(qrParam);
+      // By providing the current origin as the base, it seamlessly supports both relative paths and absolute URLs!
+      const url = new URL(qrString, window.location.origin);
+      const parts = url.pathname.split('/').filter(Boolean);
+      const [type, id, action] = parts;
+      
+      if (type === 'plant' && id) {
+        setActiveQr(id);
+        setInitialAction(action || null);
+        setCurrentView('detail');
+        window.history.pushState({}, '', url.pathname);
+        return;
+      } else if (type === 'location' && id) {
+        setActiveLoc(id);
+        setInitialAction(action || null);
+        setCurrentView('locationDetail');
+        window.history.pushState({}, '', url.pathname);
+        return;
+      } else if (type === 'zone' && id) {
+        setActiveZone(decodeURIComponent(id));
+        setInitialAction(action || null);
+        setCurrentView('zoneDetail');
+        window.history.pushState({}, '', url.pathname);
         return;
       }
     } catch (e) {
-      // Ignore error; it's likely just a raw string like "qr-001"
+      // Fallback below
     }
-    // Fallback: assume raw text ID
-    handleNavigate(qrString);
+    
+    // Fallback: Check if the scanned string matches a Location ID first, else assume it's a Plant Instance QR
+    if (locations.some(l => l.id === qrString)) {
+      handleNavigateLocation(qrString);
+    } else {
+      handleNavigate(qrString);
+    }
   };
 
   if (!isDbLoaded) {
@@ -216,25 +336,47 @@ export const App: React.FC = () => {
     const instance = instances.find(i => i.qrId === activeQr);
     const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
     const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
+    const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
     return (
-      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
+    );
+  }
+
+  if (currentView === 'locationDetail' && activeLoc) {
+    const location = locations.find(l => l.id === activeLoc);
+    const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
+    const locationInstances = instances.filter(i => i.locationId === activeLoc);
+    
+    return (
+      <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+    );
+  }
+
+  if (currentView === 'zoneDetail' && activeZone) {
+    const zone = zones.find(z => z.id === activeZone);
+    const zoneLocations = locations.filter(l => l.zoneId === activeZone);
+    const zoneLocIds = zoneLocations.map(l => l.id);
+    const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
+    
+    return (
+      <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoHome={handleGoHome} onClearAction={handleClearAction} />
     );
   }
 
   if (currentView === 'scanner') {
-    return <Scanner onScan={handleScanResult} onClose={handleGoHome} />;
+    return <Scanner onScan={handleScanResult} onClose={handleGoHome} />
   }
 
   if (currentView === 'locations') {
-    return <LocationManager locations={locations} instances={instances} theme={theme} onThemeChange={setTheme} onAdd={handleAddLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} />;
+    return <LocationManager locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} />;
   }
 
   if (currentView === 'archetypes') {
     return <ArchetypeManager archetypes={archetypes} instances={instances} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={() => setCurrentView('locations')} />;
   }
 
-  return <Dashboard instances={instances} archetypes={archetypes} locations={locations} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onManageLocations={() => setCurrentView('locations')} />;
+  return <Dashboard instances={instances} archetypes={archetypes} locations={locations} zones={zones} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onManageLocations={() => setCurrentView('locations')} />;
 };
 
 export default App;

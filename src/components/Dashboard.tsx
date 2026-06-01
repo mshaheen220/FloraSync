@@ -1,18 +1,19 @@
 import { useMemo, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location } from '../../types';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Subtitle, StatusBadge, ProgressBarContainer, ProgressBarFill, Button, FAB } from '../styles/StyledElements';
 
 interface DashboardProps {
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
   locations: Location[];
+  zones: Zone[];
   onBatchWater: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenScanner: () => void;
   onManageLocations: () => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, onBatchWater, onNavigate, onOpenScanner, onManageLocations }) => {
+export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onManageLocations }) => {
   
   // Attention Queue sorting engine logic calculating actual time distance against care intervals
   const attentionQueue = useMemo(() => {
@@ -20,6 +21,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
     return instances.map(instance => {
       const archetype = archetypes.find(a => a.id === instance.archetypeId);
       const location = locations.find(l => l.id === instance.locationId);
+      const zone = zones.find(z => z.id === location?.zoneId);
       const lastWateredTime = new Date(instance.lastWatered).getTime();
       const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
       const timeElapsed = today - lastWateredTime;
@@ -29,11 +31,12 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         ...instance,
         archetype,
         location,
+        zone,
         isOverdue: ratio <= 0,
         ratio
       };
-    }).sort((a, b) => a.ratio - b.ratio); // Flots the hungriest plants directly to the top
-  }, [instances, archetypes, locations]);
+    }).sort((a, b) => a.ratio - b.ratio);
+  }, [instances, archetypes, locations, zones]);
 
   const overdueLocations = useMemo(() => {
     const locIds = new Set(attentionQueue.filter(item => item.isOverdue).map(item => item.locationId));
@@ -44,7 +47,10 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
     <Container>
       <header className="mb-6 pt-6 flex justify-between items-center">
         <div>
-          <Title className="!mb-1">FloraSync 🌿</Title>
+          <div className="flex items-center gap-2 mb-1">
+            <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
+            <Title className="!mb-0">FloraSync</Title>
+          </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Your garden at a glance.</p>
         </div>
         <button onClick={onManageLocations} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
@@ -66,14 +72,14 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       )}
 
       <section>
-        <Subtitle>Needs Attention Today</Subtitle>
+        <Subtitle>Your Plants</Subtitle>
         <div className="space-y-3">
           {attentionQueue.map(item => (
             <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300">
               <div className="flex justify-between items-start mb-1">
                 <div>
                   <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.location?.zone} • {item.location?.name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
                 </div>
                 <StatusBadge status={item.isOverdue ? 'overdue' : 'hydrated'}>
                   {item.isOverdue ? 'Overdue' : 'Hydrated'}

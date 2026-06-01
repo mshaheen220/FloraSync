@@ -51,11 +51,11 @@ export const Input = styled.input.attrs({
   className: 'w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all',
 })``;
 
-export const Toast = styled.div.attrs<{ visible: boolean }>(({ visible }) => ({
+export const Toast = styled.div.attrs<{ $visible: boolean }>(({ $visible }) => ({
   className: `fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-6 py-3.5 rounded-2xl shadow-xl transition-all duration-300 z-50 flex items-center gap-3 w-11/12 max-w-sm font-medium ${
-    visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
+    $visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12 pointer-events-none'
   }`,
-}))<{ visible: boolean }>``;
+}))<{ $visible: boolean }>``;
 
 export const FAB = styled.button.attrs({
   className: 'fixed bottom-8 right-6 w-16 h-16 bg-emerald-600 dark:bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-600/30 dark:shadow-emerald-900/50 flex items-center justify-center text-3xl hover:bg-emerald-700 dark:hover:bg-emerald-600 active:scale-90 transition-all duration-200 z-40 border-4 border-white dark:border-slate-900',

@@ -83,9 +83,33 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
                       <Input type="number" min="0" value={editData.daysToHarvest || ''} onChange={e => setEditData({...editData, daysToHarvest: Number(e.target.value)})} className="!mb-0 py-2" required />
                     </div>
                   </div>
-                  <div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Growth Habit</label>
                     <Input value={editData.growthHabit || ''} onChange={e => setEditData({...editData, growthHabit: e.target.value})} className="!mb-0 py-2" required />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Hardiness Zones (Numbers)</label>
+                    <Input value={editData.hardinessZones?.join(', ') || ''} onChange={e => setEditData({...editData, hardinessZones: e.target.value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))})} className="!mb-0 py-2" placeholder="e.g. 10, 11" />
+                  </div>
+                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Hardiness Note</label>
+                  <Input value={editData.hardinessNote || ''} onChange={e => setEditData({...editData, hardinessNote: e.target.value})} className="!mb-0 py-2" placeholder="e.g. Grow as annual in Zone 6/7" />
+                </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">When to Plant</label>
+                      <Input value={editData.whenToPlant || ''} onChange={e => setEditData({...editData, whenToPlant: e.target.value})} className="!mb-0 py-2" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">When to Harvest</label>
+                      <Input value={editData.whenToHarvest || ''} onChange={e => setEditData({...editData, whenToHarvest: e.target.value})} className="!mb-0 py-2" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Large Harvest Uses</label>
+                    <textarea value={editData.usesForLargeHarvests || ''} onChange={e => setEditData({...editData, usesForLargeHarvests: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={2} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">What to Feed</label>
@@ -150,7 +174,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
           );
         })}
       </div>
-      <Toast visible={!!toastMessage}>{toastMessage}</Toast>
+      <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );
 };

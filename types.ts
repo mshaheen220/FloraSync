@@ -14,6 +14,11 @@ export interface PlantArchetype {
   growthHabit: string;
   daysToHarvest: number;
   imageUrl?: string;
+  whenToPlant: string;
+  whenToHarvest: string;
+  usesForLargeHarvests: string;
+  hardinessZones: number[];
+  hardinessNote: string;
 }
 
 export interface PlantInstance {
@@ -28,5 +33,12 @@ export interface PlantInstance {
 export interface Location {
   id: string;
   name: string;
-  zone: string;
+  zoneId: string;
+}
+
+export interface Zone {
+  id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
 }
