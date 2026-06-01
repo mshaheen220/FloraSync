@@ -13,23 +13,29 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS app_state (
     id INTEGER PRIMARY KEY,
     instances TEXT,
-    archetypes TEXT
+    archetypes TEXT,
+    locations TEXT
   );
 `);
+
+// Safely add the column for existing databases
+try {
+  db.exec('ALTER TABLE app_state ADD COLUMN locations TEXT;');
+} catch (err) {}
 
 // Seed the database with an empty row if it doesn't exist yet
 const stmt = db.prepare('SELECT id FROM app_state WHERE id = 1');
 if (!stmt.get()) {
-  db.prepare('INSERT INTO app_state (id, instances, archetypes) VALUES (1, ?, ?)').run('[]', '[]');
+  db.prepare('INSERT INTO app_state (id, instances, archetypes, locations) VALUES (1, ?, ?, ?)').run('[]', '[]', '[]');
 }
 
 app.get('/api/state', (req, res) => {
-  const row = db.prepare('SELECT instances, archetypes FROM app_state WHERE id = 1').get();
-  res.json({ instances: JSON.parse(row.instances), archetypes: JSON.parse(row.archetypes) });
+  const row = db.prepare('SELECT instances, archetypes, locations FROM app_state WHERE id = 1').get();
+  res.json({ instances: JSON.parse(row.instances), archetypes: JSON.parse(row.archetypes), locations: row.locations ? JSON.parse(row.locations) : [] });
 });
 
 app.post('/api/state', (req, res) => {
-  db.prepare('UPDATE app_state SET instances = ?, archetypes = ? WHERE id = 1').run(JSON.stringify(req.body.instances), JSON.stringify(req.body.archetypes));
+  db.prepare('UPDATE app_state SET instances = ?, archetypes = ?, locations = ? WHERE id = 1').run(JSON.stringify(req.body.instances), JSON.stringify(req.body.archetypes), JSON.stringify(req.body.locations));
   res.json({ success: true });
 });
 

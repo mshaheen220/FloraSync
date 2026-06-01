@@ -1,18 +1,45 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { mockArchetypes, mockInstances, mockLocations } from './data/mockData';
-import { PlantInstance, PlantArchetype } from './types';
+import { PlantInstance, PlantArchetype, Location } from './types';
 import { Dashboard } from './components/Dashboard';
 import { PlantDetail } from './components/PlantDetail';
 import { Scanner } from './components/Scanner';
+import { LocationManager } from './components/LocationManager';
+
+export type Theme = 'light' | 'dark' | 'system';
 
 export const App: React.FC = () => {
   const [instances, setInstances] = useState<PlantInstance[]>(mockInstances);
   const [archetypes, setArchetypes] = useState<PlantArchetype[]>(mockArchetypes);
+  const [locations, setLocations] = useState<Location[]>(mockLocations);
   const [isDbLoaded, setIsDbLoaded] = useState(false);
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
+
+  // Theme persistence and OS matching logic
+  useEffect(() => {
+    localStorage.setItem('florasync_theme', theme);
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      if (e.matches) document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [theme]);
 
   useEffect(() => {
     fetch('/api/state')
@@ -20,6 +47,7 @@ export const App: React.FC = () => {
       .then(data => {
         if (data.instances && data.instances.length > 0) setInstances(data.instances);
         if (data.archetypes && data.archetypes.length > 0) setArchetypes(data.archetypes);
+        if (data.locations && data.locations.length > 0) setLocations(data.locations);
         setIsDbLoaded(true);
       })
       .catch(err => {
@@ -33,9 +61,9 @@ export const App: React.FC = () => {
     fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ instances, archetypes })
+      body: JSON.stringify({ instances, archetypes, locations })
     }).catch(err => console.error('Failed to sync state to database:', err));
-  }, [instances, archetypes, isDbLoaded]);
+  }, [instances, archetypes, locations, isDbLoaded]);
 
   // Router mimicking layer: Extracts specific URL query contexts to determine view execution
   useEffect(() => {
@@ -57,12 +85,23 @@ export const App: React.FC = () => {
     ));
   };
 
-  const handleWater = (qrId: string) => {
+  const handleWater = useCallback((qrId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
       inst.qrId === qrId ? { ...inst, lastWatered: now } : inst
     ));
-  };
+  }, []);
+
+  const handleFeed = useCallback((qrId: string) => {
+    const now = new Date().toISOString();
+    setInstances(prev => prev.map(inst => 
+      inst.qrId === qrId ? { ...inst, lastFed: now } : inst
+    ));
+  }, []);
+
+  const handleClearAction = useCallback(() => {
+    setInitialAction(null);
+  }, []);
 
   const handleRegister = (qrId: string, name: string) => {
     // Mock external architectural fetch and ID sanitization
@@ -88,6 +127,24 @@ export const App: React.FC = () => {
     };
 
     setInstances(prev => [...prev, newInstance]);
+  };
+
+  const handleUpdateInstance = (qrId: string, updates: Partial<PlantInstance>) => {
+    setInstances(prev => prev.map(inst => inst.qrId === qrId ? { ...inst, ...updates } : inst));
+  };
+
+  const handleDeleteInstance = (qrId: string) => {
+    setInstances(prev => prev.filter(inst => inst.qrId !== qrId));
+    handleGoHome();
+  };
+
+  const handleAddLocation = (name: string, zone: string) => {
+    const newId = `loc-${Date.now()}`;
+    setLocations(prev => [...prev, { id: newId, name, zone }]);
+  };
+
+  const handleDeleteLocation = (id: string) => {
+    setLocations(prev => prev.filter(loc => loc.id !== id));
   };
 
   const handleNavigate = (qrId: string) => {
@@ -127,10 +184,10 @@ export const App: React.FC = () => {
   if (currentView === 'detail' && activeQr) {
     const instance = instances.find(i => i.qrId === activeQr);
     const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
-    const location = instance ? mockLocations.find(l => l.id === instance.locationId) : undefined;
+    const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
 
     return (
-      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} location={location} onWater={handleWater} onRegister={handleRegister} onGoHome={handleGoHome} onClearAction={() => setInitialAction(null)} />
+      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} location={location} locations={locations} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} />
     );
   }
 
@@ -138,7 +195,11 @@ export const App: React.FC = () => {
     return <Scanner onScan={handleScanResult} onClose={handleGoHome} />;
   }
 
-  return <Dashboard instances={instances} archetypes={archetypes} locations={mockLocations} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} />;
+  if (currentView === 'locations') {
+    return <LocationManager locations={locations} instances={instances} theme={theme} onThemeChange={setTheme} onAdd={handleAddLocation} onDelete={handleDeleteLocation} onGoHome={handleGoHome} />;
+  }
+
+  return <Dashboard instances={instances} archetypes={archetypes} locations={locations} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onManageLocations={() => setCurrentView('locations')} />;
 };
 
 export default App;
