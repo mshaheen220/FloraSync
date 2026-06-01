@@ -49,3 +49,28 @@ interface PlantArchetype {
   feedingIntervalDays: number; // e.g., 14
   pruningTips: string;
 }
+```
+
+### 'PlantInstance'
+Defines the mutable state properties tracking physical entities in the real world.
+```typescript
+interface PlantInstance {
+  qrId: string;            // e.g., "qr-greenhouse-045"
+  archetypeId: string;     // FK mapping back to Archetype
+  locationId: string;      // e.g., "greenhouse-shelf-a"
+  datePlanted: string;
+  lastWatered: string;     // ISO Timestamp
+  lastFed: string;         // ISO Timestamp
+}
+```
+## 🛠️ Getting Started
+
+### 1. Clone the repository:
+```bash
+git clone [https://github.com/yourusername/thrivetag.git](https://github.com/yourusername/thrivetag.git)
+```
+
+### 2. Install dependencies:
+```bash
+npm install
+```
