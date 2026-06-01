@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Add custom utility classes to hide scrollbars for the horizontal quick actions */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
