@@ -1,5 +1,5 @@
-import { useEffect, useState, FC, FormEvent } from 'react';
-import { PlantInstance, PlantArchetype, Location } from '../types';
+import { useEffect, useState, useMemo, FC, FormEvent } from 'react';
+import { PlantInstance, PlantArchetype, Location } from '../../types';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle } from '../styles/StyledElements';
 
 interface PlantDetailProps {
@@ -7,11 +7,12 @@ interface PlantDetailProps {
   initialAction: string | null;
   instance?: PlantInstance;
   archetype?: PlantArchetype;
+  archetypes: PlantArchetype[];
   location?: Location;
   locations: Location[];
   onWater: (qrId: string) => void;
   onFeed: (qrId: string) => void;
-  onRegister: (qrId: string, name: string) => void;
+  onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, newLocationZone?: string) => void;
   onUpdate: (qrId: string, updates: Partial<PlantInstance>) => void;
   onDelete: (qrId: string) => void;
   onGoHome: () => void;
@@ -19,12 +20,32 @@ interface PlantDetailProps {
 }
 
 export const PlantDetail: FC<PlantDetailProps> = ({ 
-  qrId, initialAction, instance, archetype, location, locations, onWater, onFeed, onRegister, onUpdate, onDelete, onGoHome, onClearAction 
+  qrId, initialAction, instance, archetype, archetypes, location, locations, onWater, onFeed, onRegister, onUpdate, onDelete, onGoHome, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
-  const [regName, setRegName] = useState('');
+  const [selectedMode, setSelectedMode] = useState('');
+  const [customName, setCustomName] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [customLocationName, setCustomLocationName] = useState('');
+  const [customLocationZone, setCustomLocationZone] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '' });
+
+  const groupedArchetypes = useMemo(() => {
+    const groups = archetypes.reduce((acc, curr) => {
+      const category = curr.category || 'Uncategorized';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(curr);
+      return acc;
+    }, {} as Record<string, PlantArchetype[]>);
+
+    const sortedCategories = Object.keys(groups).sort();
+    sortedCategories.forEach(cat => {
+      groups[cat].sort((a, b) => a.commonName.localeCompare(b.commonName));
+    });
+
+    return { groups, sortedCategories };
+  }, [archetypes]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -69,8 +90,24 @@ export const PlantDetail: FC<PlantDetailProps> = ({
 
   const handleRegister = (e: FormEvent) => {
     e.preventDefault();
-    if (!regName.trim()) return;
-    onRegister(qrId, regName);
+
+    let finalPlantId = selectedMode;
+    let finalIsNewPlant = false;
+    if (selectedMode === 'other') {
+      if (!customName.trim()) return;
+      finalPlantId = customName;
+      finalIsNewPlant = true;
+    } else if (!selectedMode) return;
+
+    let finalLocationId = selectedLocation;
+    let finalIsNewLocation = false;
+    if (selectedLocation === 'other') {
+      if (!customLocationName.trim() || !customLocationZone.trim()) return;
+      finalLocationId = customLocationName;
+      finalIsNewLocation = true;
+    } else if (!selectedLocation) return;
+
+    onRegister(qrId, finalPlantId, finalIsNewPlant, finalLocationId, finalIsNewLocation, customLocationZone);
     showToast('🌱 Plant registered successfully!');
   };
 
@@ -85,14 +122,66 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{qrId}</strong> is unassigned. 
             What are we planting here?
           </p>
-          <form onSubmit={handleRegister}>
-            <Input 
-              placeholder="e.g., Heirloom Tomato" 
-              value={regName}
-              onChange={(e) => setRegName(e.target.value)}
-              autoFocus
-            />
-            <Button type="submit">Initialize Care Routine</Button>
+          <form onSubmit={handleRegister} className="flex flex-col gap-3">
+            <select 
+              className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
+              value={selectedMode}
+              onChange={e => setSelectedMode(e.target.value)}
+            >
+              <option value="" disabled>Select a plant type...</option>
+              {groupedArchetypes.sortedCategories.map(category => (
+                <optgroup key={category} label={category}>
+                  {groupedArchetypes.groups[category].map(a => (
+                    <option key={a.id} value={a.id}>{a.commonName}</option>
+                  ))}
+                </optgroup>
+              ))}
+              <option value="other">+ Other (Add new...)</option>
+            </select>
+            <select 
+              className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
+              value={selectedLocation}
+              onChange={e => setSelectedLocation(e.target.value)}
+            >
+              <option value="" disabled>Select a location...</option>
+              {locations.map(loc => (
+                <option key={loc.id} value={loc.id}>{loc.zone} • {loc.name}</option>
+              ))}
+              <option value="other">+ Other (Add new...)</option>
+            </select>
+            {selectedLocation === 'other' && (
+              <div className="flex gap-3 mt-1">
+                <div className="flex-1">
+                  <Input 
+                    placeholder="Zone (e.g. Garden)" 
+                    value={customLocationZone}
+                    onChange={(e) => setCustomLocationZone(e.target.value)}
+                    className="!mb-0"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input 
+                    placeholder="Name (e.g. Bed 1)" 
+                    value={customLocationName}
+                    onChange={(e) => setCustomLocationName(e.target.value)}
+                    className="!mb-0"
+                  />
+                </div>
+              </div>
+            )}
+            {selectedMode === 'other' && (
+              <Input 
+                placeholder="e.g., Heirloom Tomato" 
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                className="!mb-0 mt-1"
+                autoFocus
+              />
+            )}
+            <Button type="submit" className="mt-2" disabled={
+              !selectedMode || (selectedMode === 'other' && !customName.trim()) || 
+              !selectedLocation || (selectedLocation === 'other' && (!customLocationName.trim() || !customLocationZone.trim()))
+            }>Initialize Care Routine</Button>
           </form>
         </Card>
         <Button variant="secondary" onClick={onGoHome} className="mt-2">Cancel Setup</Button>
@@ -207,19 +296,25 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         </button>
       </header>
 
-      <Card className="flex flex-col items-center py-10 mb-6 relative overflow-hidden">
-        <div className="absolute top-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600"></div>
-        <StatusBadge status={isOverdue ? 'overdue' : 'hydrated'} className="mb-5 shadow-sm">
-          {isOverdue ? 'Watering Overdue' : 'Optimal Hydration'}
-        </StatusBadge>
-        <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
-          <p>Last watered: {new Date(instance.lastWatered).toLocaleDateString()}</p>
-          <p>Last fed: {new Date(instance.lastFed).toLocaleDateString()}</p>
-        </div>
-        
-        <div className="w-full flex gap-3 px-2">
-          <Button onClick={handleManualWater}>💦 Water</Button>
-          <Button variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
+      <Card className="flex flex-col items-center pb-10 mb-6 relative overflow-hidden !px-0 !pt-0">
+        {archetype?.imageUrl ? (
+          <img src={archetype.imageUrl} alt={archetype.commonName} className="w-full h-56 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
+        ) : (
+          <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-8"></div>
+        )}
+        <div className="px-5 w-full flex flex-col items-center">
+          <StatusBadge status={isOverdue ? 'overdue' : 'hydrated'} className="mb-5 shadow-sm">
+            {isOverdue ? 'Watering Overdue' : 'Optimal Hydration'}
+          </StatusBadge>
+          <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
+            <p>Last watered: {new Date(instance.lastWatered).toLocaleDateString()}</p>
+            <p>Last fed: {new Date(instance.lastFed).toLocaleDateString()}</p>
+          </div>
+          
+          <div className="w-full flex gap-3 px-2">
+            <Button onClick={handleManualWater}>💦 Water</Button>
+            <Button variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
+          </div>
         </div>
       </Card>
 
@@ -243,8 +338,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <li className="flex gap-4 items-start">
             <span className="text-2xl bg-amber-50 dark:bg-amber-900/30 rounded-full p-2">🪴</span>
             <div className="pt-1">
-              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Feeding Interval</strong>
-              <span className="text-slate-500 dark:text-slate-400 leading-relaxed">Every {archetype?.feedingIntervalDays} days</span>
+              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Feeding</strong>
+              <span className="text-slate-500 dark:text-slate-400 leading-relaxed block mb-1">Every {archetype?.feedingIntervalDays} days</span>
+              {archetype?.whatToFeed && <span className="text-slate-500 dark:text-slate-400 text-xs italic block leading-relaxed">{archetype.whatToFeed}</span>}
             </div>
           </li>
           <li className="flex gap-4 items-start">
@@ -255,6 +351,46 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             </div>
           </li>
         </ul>
+      </Card>
+
+      <Subtitle>Details & Traits</Subtitle>
+      <Card>
+        <div className="space-y-4 text-sm">
+          <div>
+            <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Scientific Name</strong>
+            <span className="text-slate-500 dark:text-slate-400 italic">{archetype?.scientificName}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Category</strong>
+              <span className="text-slate-500 dark:text-slate-400">{archetype?.category}</span>
+            </div>
+            <div>
+              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Growth Habit</strong>
+              <span className="text-slate-500 dark:text-slate-400">{archetype?.growthHabit}</span>
+            </div>
+          </div>
+          <div>
+            <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Days to Harvest</strong>
+            <span className="text-slate-500 dark:text-slate-400">{archetype?.daysToHarvest} days</span>
+          </div>
+          <div>
+            <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Flavor Profile</strong>
+            <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.flavorProfile}</span>
+          </div>
+          {(archetype?.companionPlants ?? []).length > 0 && (
+            <div>
+              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Companion Plants</strong>
+              <span className="text-slate-500 dark:text-slate-400">{archetype?.companionPlants?.join(", ")}</span>
+            </div>
+          )}
+          {(archetype?.combativePlants ?? []).length > 0 && (
+            <div>
+              <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Combative Plants</strong>
+              <span className="text-slate-500 dark:text-slate-400">{archetype?.combativePlants?.join(", ")}</span>
+            </div>
+          )}
+        </div>
       </Card>
 
       <Toast visible={!!toastMessage}>{toastMessage}</Toast>

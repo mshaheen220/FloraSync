@@ -1,26 +1,16 @@
 {
-  "dependencies": {
-    "@yudiel/react-qr-scanner": "^2.6.0",
-    "better-sqlite3": "^12.10.0",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
-    "styled-components": "^6.4.2"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.15",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "autoprefixer": "^10.5.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^3.4.19",
-    "typescript": "^6.0.3",
-    "vite": "^8.0.14"
-  },
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
+  },
+  "dependencies": {
+    "styled-components": "^6.4.2"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19"
   }
 }

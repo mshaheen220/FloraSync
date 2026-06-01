@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { mockArchetypes, mockInstances, mockLocations } from './data/mockData';
-import { PlantInstance, PlantArchetype, Location } from './types';
+import { mockArchetypes, mockInstances, mockLocations } from '../mockData';
+import { PlantInstance, PlantArchetype, Location } from '../types';
 import { Dashboard } from './components/Dashboard';
 import { PlantDetail } from './components/PlantDetail';
 import { Scanner } from './components/Scanner';
 import { LocationManager } from './components/LocationManager';
+import { ArchetypeManager } from './components/ArchetypeManager';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -15,7 +16,7 @@ export const App: React.FC = () => {
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
 
@@ -103,24 +104,46 @@ export const App: React.FC = () => {
     setInitialAction(null);
   }, []);
 
-  const handleRegister = (qrId: string, name: string) => {
-    // Mock external architectural fetch and ID sanitization
-    const newArchetypeId = name.toLowerCase().replace(/\s+/g, '-');
-    const newArchetype: PlantArchetype = {
-      id: newArchetypeId,
-      commonName: name,
-      sunRequirement: 'Full Sun', // In a production app, this fetches from OpenFarm API
-      waterIntervalDays: 4,
-      feedingIntervalDays: 14,
-      pruningTips: 'Trim baseline leaves to improve airflow.',
-    };
+  const handleRegister = (qrId: string, identifier: string, isNew: boolean, locationIdentifier: string, isNewLocation: boolean = false, newLocationZone: string = '') => {
+    let targetArchetypeId = identifier;
 
-    setArchetypes(prev => [...prev, newArchetype]);
+    if (isNew) {
+      // Check if it already exists by name just in case they typed an exact match
+      const existing = archetypes.find(a => a.commonName.toLowerCase() === identifier.toLowerCase());
+      if (existing) {
+        targetArchetypeId = existing.id;
+      } else {
+        targetArchetypeId = identifier.toLowerCase().replace(/\s+/g, '-');
+        const newArchetype: PlantArchetype = {
+          id: targetArchetypeId,
+          commonName: identifier,
+          scientificName: 'Unknown',
+          category: 'Uncategorized',
+          sunRequirement: 'Full Sun',
+          waterIntervalDays: 4,
+          feedingIntervalDays: 14,
+          whatToFeed: 'Balanced fertilizer',
+          pruningTips: 'Trim baseline leaves to improve airflow.',
+          flavorProfile: 'Unknown',
+          companionPlants: [],
+          combativePlants: [],
+          growthHabit: 'Unknown',
+          daysToHarvest: 0
+        };
+        setArchetypes(prev => [...prev, newArchetype]);
+      }
+    }
+
+    let finalLocationId = locationIdentifier;
+    if (isNewLocation) {
+      finalLocationId = `loc-${Date.now()}`;
+      setLocations(prev => [...prev, { id: finalLocationId, name: locationIdentifier, zone: newLocationZone }]);
+    }
 
     const newInstance: PlantInstance = {
       qrId,
-      archetypeId: newArchetypeId,
-      locationId: 'greenhouse-shelf-a', // Automatically pre-mapped using ID tag ranges
+      archetypeId: targetArchetypeId,
+      locationId: finalLocationId,
       datePlanted: new Date().toISOString(),
       lastWatered: new Date().toISOString(),
       lastFed: new Date().toISOString(),
@@ -136,6 +159,14 @@ export const App: React.FC = () => {
   const handleDeleteInstance = (qrId: string) => {
     setInstances(prev => prev.filter(inst => inst.qrId !== qrId));
     handleGoHome();
+  };
+
+  const handleUpdateArchetype = (id: string, updates: Partial<PlantArchetype>) => {
+    setArchetypes(prev => prev.map(arch => arch.id === id ? { ...arch, ...updates } : arch));
+  };
+
+  const handleDeleteArchetype = (id: string) => {
+    setArchetypes(prev => prev.filter(arch => arch.id !== id));
   };
 
   const handleAddLocation = (name: string, zone: string) => {
@@ -187,7 +218,7 @@ export const App: React.FC = () => {
     const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
 
     return (
-      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} location={location} locations={locations} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} />
     );
   }
 
@@ -196,7 +227,11 @@ export const App: React.FC = () => {
   }
 
   if (currentView === 'locations') {
-    return <LocationManager locations={locations} instances={instances} theme={theme} onThemeChange={setTheme} onAdd={handleAddLocation} onDelete={handleDeleteLocation} onGoHome={handleGoHome} />;
+    return <LocationManager locations={locations} instances={instances} theme={theme} onThemeChange={setTheme} onAdd={handleAddLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} />;
+  }
+
+  if (currentView === 'archetypes') {
+    return <ArchetypeManager archetypes={archetypes} instances={instances} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={() => setCurrentView('locations')} />;
   }
 
   return <Dashboard instances={instances} archetypes={archetypes} locations={locations} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onManageLocations={() => setCurrentView('locations')} />;

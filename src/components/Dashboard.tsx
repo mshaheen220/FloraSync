@@ -1,5 +1,5 @@
 import { useMemo, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location } from '../types';
+import { PlantInstance, PlantArchetype, Location } from '../../types';
 import { Container, Title, Card, Subtitle, StatusBadge, ProgressBarContainer, ProgressBarFill, Button, FAB } from '../styles/StyledElements';
 
 interface DashboardProps {

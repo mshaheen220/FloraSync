@@ -19,7 +19,7 @@ export const Subtitle = styled.h2.attrs({
 
 // Prop-driven structural styling
 export const Button = styled.button.attrs<{ variant?: 'primary' | 'secondary' | 'batch' }>(({ variant }) => {
-  let baseClasses = 'w-full flex justify-center items-center py-3.5 px-4 rounded-xl font-medium transition-colors shadow-sm active:scale-95 duration-200 ';
+  let baseClasses = 'w-full flex justify-center items-center py-3.5 px-4 rounded-xl font-medium transition-colors shadow-sm active:scale-95 duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ';
   if (variant === 'secondary') {
     baseClasses += 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50';
   } else if (variant === 'batch') {

@@ -1,5 +1,5 @@
 import { useState, FC, FormEvent } from 'react';
-import { Location, PlantInstance } from '../types';
+import { Location, PlantInstance } from '../../types';
 import { Container, Title, Card, Button, Input, Toast, Subtitle } from '../styles/StyledElements';
 import { Theme } from '../App';
 
@@ -10,10 +10,11 @@ interface LocationManagerProps {
   onThemeChange: (theme: Theme) => void;
   onAdd: (name: string, zone: string) => void;
   onDelete: (id: string) => void;
+  onManageArchetypes: () => void;
   onGoHome: () => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ locations, instances, theme, onThemeChange, onAdd, onDelete, onGoHome }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ locations, instances, theme, onThemeChange, onAdd, onDelete, onManageArchetypes, onGoHome }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
   const [newZone, setNewZone] = useState('');
@@ -56,6 +57,11 @@ export const LocationManager: FC<LocationManagerProps> = ({ locations, instances
             {t}
           </button>
         ))}
+      </Card>
+
+      <Subtitle>Database</Subtitle>
+      <Card>
+        <Button variant="secondary" onClick={onManageArchetypes}>📖 Manage Plant Dictionary</Button>
       </Card>
 
       <Card>
