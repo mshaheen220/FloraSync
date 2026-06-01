@@ -74,3 +74,17 @@ git clone [https://github.com/yourusername/thrivetag.git](https://github.com/you
 ```bash
 npm install
 ```
+
+### 3. Run the development server:
+```bash
+npm run dev
+```
+
+## 🗺️ Implementation Roadmap
+
+- [ ] Initialize React + TS framework template setup
+- [ ] Scaffold global StyledElements primitive directory
+- [ ] Integrate Tailwind configuration foundations
+- [ ] Construct query string processing hook for automated scanning simulations
+- [ ] Build Dashboard and Queue prioritization matrices
+- [ ] Implement cascaded location batch-actions
