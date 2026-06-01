@@ -3,11 +3,19 @@ import sys
 import argparse
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer
+import sqlite3
+import json
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../"))
 ICONS_DIR = os.path.join(ROOT_DIR, "public", "images", "icons", "qr")
 DATA_DIR = os.path.join(ROOT_DIR, "src", "data")
+
+OUTPUT_DIR = os.path.join(DATA_DIR, "code-prints")
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 
 # ==========================================
 # 1. AVERY TEMPLATE CONFIGURATION (In Inches)
@@ -43,18 +51,21 @@ def generate_qr_with_icon(data_url, icon_path):
     # Create the QR base
     qr = qrcode.QRCode(
         version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_Q, # Q-level (25%) reduces grid density while keeping it safe
+        error_correction=qrcode.constants.ERROR_CORRECT_M, # Q-level (25%) reduces grid density while keeping it safe
         box_size=10,
         border=1,
     )
     qr.add_data(data_url)
     qr.make(fit=True)
     
-    # Convert to PIL Image (RGB mode)
-    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
+    # Create the dotted QR code image
+    qr_img = qr.make_image(
+        image_factory=StyledPilImage,
+        module_drawer=CircleModuleDrawer()
+    ).convert("RGB")
+    
     qr_img = qr_img.resize((QR_SIZE_PIXELS, QR_SIZE_PIXELS), Image.Resampling.LANCZOS)
     
-    # Overlay the central icon if it exists
     if os.path.exists(icon_path):
         icon = Image.open(icon_path).convert("RGBA")
         
@@ -80,15 +91,92 @@ def generate_qr_with_icon(data_url, icon_path):
     return qr_img
 
 # ==========================================
-# 3. MAIN EXECUTION ENGINE
+# 3. GENERATOR ENGINE
 # ==========================================
+def generate_sheets(category, ids_to_process, output_basename, start_id=None):
+    if not ids_to_process:
+        print(f"No IDs to process for category '{category}'. Skipping.")
+        return
+
+    total_ids = len(ids_to_process)
+    labels_per_id = 2
+    total_labels_to_generate = total_ids * labels_per_id
+    num_sheets = (total_labels_to_generate + TOTAL_LABELS_PER_SHEET - 1) // TOTAL_LABELS_PER_SHEET
+
+    id_index = 0
+    
+    for sheet_num in range(num_sheets):
+        page_w_px = int(PAGE_WIDTH * DPI)
+        page_h_px = int(PAGE_HEIGHT * DPI)
+        page = Image.new("RGB", (page_w_px, page_h_px), "white")
+        page_draw = ImageDraw.Draw(page)
+        
+        try:
+            label_font = ImageFont.truetype("Arial.ttf", 24)
+        except IOError:
+            try:
+                label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
+            except IOError:
+                try:
+                    label_font = ImageFont.load_default(size=24)
+                except TypeError:
+                    label_font = ImageFont.load_default()
+        
+        print(f"Generating {category} sheet {sheet_num + 1} of {num_sheets}...")
+
+        for label_index in range(TOTAL_LABELS_PER_SHEET):
+            if id_index >= total_ids:
+                break
+
+            is_water_sticker = (label_index % 2 == 1)
+            base_id = ids_to_process[id_index]
+            
+            if not is_water_sticker:
+                url = f"/{category}/{base_id}"
+                icon = os.path.join(ICONS_DIR, f"{category}.png")
+            else:
+                url = f"/{category}/{base_id}/water"
+                icon = os.path.join(ICONS_DIR, "water.png")
+            
+            qr_thumb = generate_qr_with_icon(url, icon)
+            
+            row = label_index // COLS
+            col = label_index % COLS
+
+            x_inch = MARGIN_LEFT + (col * GAP_X)
+            y_inch = MARGIN_TOP + (row * GAP_Y)
+            
+            center_offset_x = (LABEL_WIDTH - QR_SIZE_INCHES) / 2
+            center_offset_y = (LABEL_HEIGHT - QR_SIZE_INCHES) / 2
+            
+            pos_x_px = int((x_inch + center_offset_x) * DPI)
+            pos_y_px = int((y_inch + center_offset_y) * DPI)
+            
+            page.paste(qr_thumb, (pos_x_px, pos_y_px))
+            
+            label_text = f"{base_id}" if not is_water_sticker else f"{base_id}/water"
+            page_draw.text((pos_x_px + 10, pos_y_px + QR_SIZE_PIXELS + 2), label_text, fill="black", font=label_font)
+            
+            if is_water_sticker:
+                id_index += 1
+
+        output_filename = os.path.join(OUTPUT_DIR, f"{output_basename}_sheet_{sheet_num + 1}.png")
+        page.save(output_filename, "PNG", dpi=(DPI, DPI))
+        print(f"Success! Saved printable template to {output_filename}")
+
+    if start_id:
+        next_id = int(start_id) + (TOTAL_LABELS_PER_SHEET // 2)
+        id_length = len(start_id)
+        print(f"Next sheet should start with ID: --start-id {next_id:0{id_length}d}")
+
 def main():
     parser = argparse.ArgumentParser(description="Generate a sheet of paired garden QR codes.")
+    parser.add_argument("--from-db", action="store_true", help="Pull all existing IDs directly from the database.")
     parser.add_argument(
         "--category", 
         type=str, 
         choices=["plant", "zone", "location"],
-        required=True, 
+        required=False, 
         help="The category of the QR code (plant, zone, location)"
     )
 
@@ -101,6 +189,42 @@ def main():
 
     args = parser.parse_args()
     
+    if args.from_db:
+        db_path = os.path.join(ROOT_DIR, "florasync.db")
+        if not os.path.exists(db_path):
+            print(f"Error: Database not found at {db_path}")
+            sys.exit(1)
+        
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute("SELECT instances, locations, zones FROM app_state WHERE id = 1")
+        row = c.fetchone()
+        conn.close()
+        
+        if not row:
+            print("Database is empty!")
+            sys.exit(1)
+            
+        instances = json.loads(row[0] or "[]")
+        locations = json.loads(row[1] or "[]")
+        zones = json.loads(row[2] or "[]")
+        
+        plant_ids = [inst['qrId'] for inst in instances]
+        loc_ids = [loc['id'] for loc in locations]
+        zone_ids = [zone['id'] for zone in zones]
+        
+        print("--- Database Export Mode ---")
+        if not args.category or args.category == "plant":
+            generate_sheets("plant", plant_ids, "db_export_plants")
+        if not args.category or args.category == "location":
+            generate_sheets("location", loc_ids, "db_export_locations")
+        if not args.category or args.category == "zone":
+            generate_sheets("zone", zone_ids, "db_export_zones")
+        return
+
+    if not args.category:
+        parser.error("Error: --category is required unless using --from-db.")
+
     ids_to_process = []
     output_basename = ""
 
@@ -132,92 +256,7 @@ def main():
     else:
         parser.error("Error: You must provide either --file or both --prefix and --start-id.")
 
-    # Calculate how many sheets are needed
-    total_ids = len(ids_to_process)
-    labels_per_id = 2
-    total_labels_to_generate = total_ids * labels_per_id
-    num_sheets = (total_labels_to_generate + TOTAL_LABELS_PER_SHEET - 1) // TOTAL_LABELS_PER_SHEET
-
-    id_index = 0
-    
-    for sheet_num in range(num_sheets):
-        # Create a new blank page for each sheet
-        page_w_px = int(PAGE_WIDTH * DPI)
-        page_h_px = int(PAGE_HEIGHT * DPI)
-        page = Image.new("RGB", (page_w_px, page_h_px), "white")
-        page_draw = ImageDraw.Draw(page)
-        
-        # Try to load a nice, clear font at ~24px (approx 6pt at 300DPI)
-        try:
-            label_font = ImageFont.truetype("Arial.ttf", 24)
-        except IOError:
-            try:
-                label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
-            except IOError:
-                try:
-                    label_font = ImageFont.load_default(size=24)
-                except TypeError:
-                    label_font = ImageFont.load_default()
-        
-        print(f"Generating sheet {sheet_num + 1} of {num_sheets}...")
-
-        for label_index in range(TOTAL_LABELS_PER_SHEET):
-            if id_index >= total_ids:
-                break # Stop if we've run out of IDs
-
-            # Determine if this slot is a 'Base Plant' or 'Water' sticker
-            # Even slots (0, 2, 4...) get the Main Plant QR, Odd slots get the Water QR
-            is_water_sticker = (label_index % 2 == 1)
-            
-            base_id = ids_to_process[id_index]
-            
-            if not is_water_sticker:
-                # Pair Start: Main Category ID
-                url = f"/{args.category}/{base_id}"
-                icon = os.path.join(ICONS_DIR, f"{args.category}.png")
-            else:
-                # Pair End: Water Action Path
-                url = f"/{args.category}/{base_id}/water"
-                icon = os.path.join(ICONS_DIR, "water.png")
-            
-            # Generate the QR image
-            qr_thumb = generate_qr_with_icon(url, icon)
-            
-            row = label_index // COLS
-            col = label_index % COLS
-
-            # Calculate physical coordinate layout in pixels
-            x_inch = MARGIN_LEFT + (col * GAP_X)
-            y_inch = MARGIN_TOP + (row * GAP_Y)
-            
-            # Center the QR code inside its specific Avery label boundary box
-            center_offset_x = (LABEL_WIDTH - QR_SIZE_INCHES) / 2
-            center_offset_y = (LABEL_HEIGHT - QR_SIZE_INCHES) / 2
-            
-            pos_x_px = int((x_inch + center_offset_x) * DPI)
-            pos_y_px = int((y_inch + center_offset_y) * DPI)
-            
-            # Paste onto the printable canvas page
-            page.paste(qr_thumb, (pos_x_px, pos_y_px))
-            
-            # Draw the label text just beneath the QR code on the main page
-            label_text = f"{base_id}" if not is_water_sticker else f"{base_id}/water"
-            page_draw.text((pos_x_px + 10, pos_y_px + QR_SIZE_PIXELS + 2), label_text, fill="black", font=label_font)
-            
-            # Move to next sticker slot. If we finished a pair, advance the ID.
-            if is_water_sticker:
-                id_index += 1
-
-        # Save the sheet
-        output_filename = f"{output_basename}_sheet_{sheet_num + 1}.png"
-        page.save(output_filename, "PNG", dpi=(DPI, DPI))
-        print(f"Success! Saved printable template to {output_filename}")
-
-    if args.start_id:
-        # Only print next start-id for sequential mode
-        next_id = int(args.start_id) + (TOTAL_LABELS_PER_SHEET // 2)
-        id_length = len(args.start_id)
-        print(f"Next sheet should start with ID: --start-id {next_id:0{id_length}d}")
+    generate_sheets(args.category, ids_to_process, output_basename, args.start_id)
 
 if __name__ == "__main__":
     main()
