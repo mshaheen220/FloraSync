@@ -19,6 +19,8 @@ export interface PlantArchetype {
   usesForLargeHarvests: string;
   hardinessZones: number[];
   hardinessNote: string;
+  plantingInstructions: string;
+  growthRequirements: string;
 }
 
 export interface PlantInstance {

@@ -187,7 +187,9 @@ export const App: FC = () => {
           whenToHarvest: 'Unknown',
           usesForLargeHarvests: 'Unknown',
           hardinessZones: [],
-          hardinessNote: ''
+          hardinessNote: '',
+          plantingInstructions: 'Unknown',
+          growthRequirements: 'Unknown'
         };
         setArchetypes(prev => [...prev, newArchetype]);
       }

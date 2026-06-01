@@ -376,6 +376,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     (archetype.hardinessZones && archetype.hardinessZones.length > 0) ||
     isValidData(archetype.hardinessNote) ||
     isValidData(archetype.daysToHarvest) ||
+    isValidData(archetype.growthRequirements) ||
     isValidData(archetype.flavorProfile) ||
     (archetype.companionPlants && archetype.companionPlants.length > 0) ||
     (archetype.combativePlants && archetype.combativePlants.length > 0)
@@ -384,6 +385,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const hasLifecycleData = archetype && (
     isValidData(archetype.whenToPlant) ||
     isValidData(archetype.whenToHarvest) ||
+    isValidData(archetype.plantingInstructions) ||
     isValidData(archetype.usesForLargeHarvests)
   );
 
@@ -530,6 +532,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                   )}
                 </div>
               )}
+              {isValidData(archetype?.growthRequirements) && (
+                <div>
+                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Growth Requirements</strong>
+                  <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.growthRequirements}</span>
+                </div>
+              )}
               {((archetype?.hardinessZones ?? []).length > 0 || isValidData(archetype?.hardinessNote)) && (
                 <div>
                   <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Hardiness Zones</strong>
@@ -581,6 +589,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                 <div>
                   <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">When to Plant</strong>
                   <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.whenToPlant}</span>
+                </div>
+              )}
+              {isValidData(archetype?.plantingInstructions) && (
+                <div>
+                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">How to Plant</strong>
+                  <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.plantingInstructions}</span>
                 </div>
               )}
               {isValidData(archetype?.whenToHarvest) && (
