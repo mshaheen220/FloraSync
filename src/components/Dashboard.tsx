@@ -1,6 +1,7 @@
 import { useMemo, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Subtitle, StatusBadge, ProgressBarContainer, ProgressBarFill, Button, FAB } from '../styles/StyledElements';
+import { Container, Title, Card, Subtitle, Button, FAB } from '../styles/StyledElements';
+import { PlantInstanceCard } from './PlantInstanceCard';
 
 interface DashboardProps {
   instances: PlantInstance[];
@@ -136,26 +137,14 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         ) : (
           <div className="space-y-3">
             {overduePlants.map(item => (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
-                <div className="flex justify-between items-start mb-1">
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
-                  </div>
-                  <StatusBadge status={item.isOverdue ? 'overdue' : 'hydrated'}>
-                    {item.isOverdue ? 'Overdue' : 'Hydrated'}
-                  </StatusBadge>
-                </div>
-                <div className="mt-5">
-                  <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-                    <span>Hydration Level</span>
-                    <span className={item.ratio <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(item.ratio * 100)}%</span>
-                  </div>
-                  <ProgressBarContainer>
-                    <ProgressBarFill ratio={item.ratio} />
-                  </ProgressBarContainer>
-                </div>
-              </Card>
+              <PlantInstanceCard 
+                key={item.qrId} 
+                instance={item} 
+                archetype={item.archetype} 
+                locationName={item.location?.name} 
+                zoneName={item.zone?.name} 
+                onClick={() => onNavigate(item.qrId)} 
+              />
             ))}
           </div>
         )}

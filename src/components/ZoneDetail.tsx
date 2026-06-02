@@ -1,6 +1,7 @@
 import { useEffect, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, StatusBadge, Toast, Subtitle, ProgressBarContainer, ProgressBarFill } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Toast, Subtitle } from '../styles/StyledElements';
+import { PlantInstanceCard } from './PlantInstanceCard';
 
 interface ZoneDetailProps {
   zone?: Zone;
@@ -93,25 +94,15 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           instances.map(item => {
             const archetype = archetypes.find(a => a.id === item.archetypeId);
             const itemLocation = locations.find(l => l.id === item.locationId);
-            const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
-            const ratio = Math.max(0, 1 - ((new Date().getTime() - new Date(item.lastWatered).getTime()) / intervalMs));
-            const isOverdue = ratio <= 0;
 
             return (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 !p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{archetype?.commonName}</h3>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{itemLocation?.name}</p>
-                  </div>
-                  <StatusBadge status={isOverdue ? 'overdue' : 'hydrated'}>
-                    {isOverdue ? 'Overdue' : 'Hydrated'}
-                  </StatusBadge>
-                </div>
-                <ProgressBarContainer>
-                  <ProgressBarFill ratio={ratio} />
-                </ProgressBarContainer>
-              </Card>
+              <PlantInstanceCard 
+                key={item.qrId}
+                instance={item}
+                archetype={archetype}
+                locationName={itemLocation?.name}
+                onClick={() => onNavigate(item.qrId)}
+              />
             );
           })
         )}

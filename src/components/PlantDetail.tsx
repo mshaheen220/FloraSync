@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, FC, FormEvent, ChangeEvent } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle } from '../styles/StyledElements';
+import { PlantRegistrationForm } from './PlantRegistrationForm';
 
 interface PlantDetailProps {
   qrId: string;
@@ -27,35 +28,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoHome, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
   const [toastMessage, setToastMessage] = useState('');
-  const [selectedMode, setSelectedMode] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [selectedZone, setSelectedZone] = useState('');
-  const [customLocationName, setCustomLocationName] = useState('');
-  const [customZoneName, setCustomZoneName] = useState('');
-  const [customImage, setCustomImage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '' });
-
-  const groupedArchetypes = useMemo(() => {
-    const groups = archetypes.reduce((acc, curr) => {
-      const category = curr.category || 'Uncategorized';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(curr);
-      return acc;
-    }, {} as Record<string, PlantArchetype[]>);
-
-    const sortedCategories = Object.keys(groups).sort();
-    sortedCategories.forEach(cat => {
-      groups[cat].sort((a, b) => a.commonName.localeCompare(b.commonName));
-    });
-
-    return { groups, sortedCategories };
-  }, [archetypes]);
-
-  const sortedZones = useMemo(() => {
-    return [...zones].sort((a, b) => a.name.localeCompare(b.name));
-  }, [zones]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -100,60 +74,13 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     showToast('🪴 Plant fed successfully!');
   };
 
-  const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRegister = (e: FormEvent) => {
-    e.preventDefault();
-
-    let finalPlantId = selectedMode;
-    let finalIsNewPlant = false;
-    if (selectedMode === 'other') {
-      if (!customName.trim()) return;
-      finalPlantId = customName;
-      finalIsNewPlant = true;
-    } else if (!selectedMode) return;
-
-    let finalLocationId = selectedLocation;
-    let finalIsNewLocation = false;
-    let finalZoneId = selectedZone;
-    let finalIsNewZone = false;
-
-    if (selectedZone === 'other') {
-      if (!customZoneName.trim() || !customLocationName.trim()) return;
-      finalLocationId = customLocationName;
-      finalIsNewLocation = true;
-      finalZoneId = customZoneName;
-      finalIsNewZone = true;
-    } else if (selectedLocation === 'other') {
-      if (!customLocationName.trim()) return;
-      finalLocationId = customLocationName;
-      finalIsNewLocation = true;
-    } else if (!selectedLocation) {
-      return;
-    }
-
-    onRegister(qrId, finalPlantId, finalIsNewPlant, finalLocationId, finalIsNewLocation, finalZoneId, finalIsNewZone, customImage);
+  const handleRegistrationSubmit = (id: string, identifier: string, isNew: boolean, locId: string, isNewLoc?: boolean, zId?: string, isNewZ?: boolean, img?: string) => {
+    onRegister(id, identifier, isNew, locId, isNewLoc, zId, isNewZ, img);
     showToast('🌱 Plant registered successfully!');
   };
 
   // 4. Dynamic Just-In-Time Registration Form (when QR isn't mapped in instances)
   if (!instance) {
-    const isSubmitDisabled = 
-      !selectedMode || 
-      (selectedMode === 'other' && !customName.trim()) || 
-      !selectedZone || 
-      (selectedZone === 'other' && (!customLocationName.trim() || !customZoneName.trim())) || 
-      (selectedZone !== 'other' && (!selectedLocation || (selectedLocation === 'other' && !customLocationName.trim())));
-
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg">
@@ -163,103 +90,16 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{qrId}</strong> is unassigned. 
             What are we planting here?
           </p>
-          <form onSubmit={handleRegister} className="flex flex-col gap-3">
-            <select 
-              className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-              value={selectedMode}
-              onChange={e => setSelectedMode(e.target.value)}
-            >
-              <option value="" disabled>Select a plant type...</option>
-              {groupedArchetypes.sortedCategories.map(category => (
-                <optgroup key={category} label={category}>
-                  {groupedArchetypes.groups[category].map(a => (
-                    <option key={a.id} value={a.id}>{a.commonName}</option>
-                  ))}
-                </optgroup>
-              ))}
-              <option value="other">+ Other (Add new...)</option>
-            </select>
-            <select 
-              className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-              value={selectedZone}
-              onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}
-            >
-              <option value="" disabled>Select a zone...</option>
-              {sortedZones.map(z => (
-                <option key={z.id} value={z.id}>{z.name}</option>
-              ))}
-              <option value="other">+ Other (Add new zone...)</option>
-            </select>
-            {selectedZone && selectedZone !== 'other' && (
-              <select 
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-                value={selectedLocation}
-                onChange={e => setSelectedLocation(e.target.value)}
-              >
-                <option value="" disabled>Select a location...</option>
-                {locations.filter(l => l.zoneId === selectedZone).map(loc => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
-                ))}
-                <option value="other">+ Other (Add new location...)</option>
-              </select>
-            )}
-            {(selectedZone === 'other' || selectedLocation === 'other') && (
-              <div className="flex gap-3 mt-1">
-                {selectedZone === 'other' && (
-                  <div className="flex-1">
-                    <Input 
-                      placeholder="Zone (e.g. Garden)" 
-                      value={customZoneName}
-                      onChange={(e) => setCustomZoneName(e.target.value)}
-                      className="!mb-0"
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <Input 
-                    placeholder="Name (e.g. Bed 1)" 
-                    value={customLocationName}
-                    onChange={(e) => setCustomLocationName(e.target.value)}
-                    className="!mb-0"
-                  />
-                </div>
-              </div>
-            )}
-            {selectedMode === 'other' && (
-              <>
-                <Input 
-                  placeholder="e.g., Heirloom Tomato" 
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  className="!mb-0 mt-1"
-                  autoFocus
-                />
-                <div className="mt-1">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                    Plant Photo (Optional)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    {customImage && (
-                      <img src={customImage} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
-                    )}
-                    <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                      📸 {customImage ? 'Retake Photo' : 'Take Photo'}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        capture="environment"
-                        onChange={handleImageCapture}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                </div>
-              </>
-            )}
-            <Button type="submit" className="mt-2" disabled={isSubmitDisabled}>Initialize Care Routine</Button>
-          </form>
+          <PlantRegistrationForm 
+            prefilledQrId={qrId} 
+            archetypes={archetypes} 
+            locations={locations} 
+            zones={zones} 
+            onRegister={handleRegistrationSubmit} 
+            onCancel={onGoHome} 
+            submitLabel="Initialize Care Routine" 
+          />
         </Card>
-        <Button variant="secondary" onClick={onGoHome} className="mt-2">Cancel Setup</Button>
         <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
       </Container>
     );

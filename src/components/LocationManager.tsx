@@ -1,7 +1,11 @@
-import { useState, FC, FormEvent, useMemo, ChangeEvent } from 'react';
+import { useState, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance, PlantArchetype } from '../../types';
-import { Container, Title, Card, Button, Input, Toast, Subtitle, StatusBadge, ProgressBarContainer, ProgressBarFill } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Input, Toast, Subtitle } from '../styles/StyledElements';
 import { Theme } from '../App';
+import { PlantInstanceCard } from './PlantInstanceCard';
+import { ZoneCard } from './ZoneCard';
+import { LocationCard } from './LocationCard';
+import { PlantRegistrationForm } from './PlantRegistrationForm';
 
 interface LocationManagerProps {
   mode: 'settings' | 'zones' | 'locations' | 'inventory';
@@ -35,13 +39,6 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [editZoneData, setEditZoneData] = useState<Partial<Zone>>({});
   const [isAddingPlant, setIsAddingPlant] = useState(false);
-  const [selectedMode, setSelectedMode] = useState('');
-  const [customName, setCustomName] = useState('');
-  const [selectedZone, setSelectedZone] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [customZoneName, setCustomZoneName] = useState('');
-  const [customLocationName, setCustomLocationName] = useState('');
-  const [customImage, setCustomImage] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -62,66 +59,6 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
     onAdd(newName, selectedZoneId);
     setNewName('');
     showToast('📍 Location added successfully!');
-  };
-
-  const groupedArchetypes = useMemo(() => {
-    const groups = archetypes.reduce((acc, curr) => {
-      const category = curr.category || 'Uncategorized';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(curr);
-      return acc;
-    }, {} as Record<string, PlantArchetype[]>);
-    const sortedCategories = Object.keys(groups).sort();
-    sortedCategories.forEach(cat => {
-      groups[cat].sort((a, b) => a.commonName.localeCompare(b.commonName));
-    });
-    return { groups, sortedCategories };
-  }, [archetypes]);
-
-  const sortedZones = useMemo(() => {
-    return [...zones].sort((a, b) => a.name.localeCompare(b.name));
-  }, [zones]);
-
-  const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setCustomImage(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleRegisterSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    let finalPlantId = selectedMode;
-    let finalIsNewPlant = false;
-    if (selectedMode === 'other') {
-      if (!customName.trim()) return;
-      finalPlantId = customName;
-      finalIsNewPlant = true;
-    } else if (!selectedMode) return;
-
-    let finalLocationId = selectedLocation;
-    let finalIsNewLocation = false;
-    let finalZoneId = selectedZone;
-    let finalIsNewZone = false;
-    if (selectedZone === 'other') {
-      if (!customZoneName.trim() || !customLocationName.trim()) return;
-      finalLocationId = customLocationName;
-      finalIsNewLocation = true;
-      finalZoneId = customZoneName;
-      finalIsNewZone = true;
-    } else if (selectedLocation === 'other') {
-      if (!customLocationName.trim()) return;
-      finalLocationId = customLocationName;
-      finalIsNewLocation = true;
-    } else if (!selectedLocation) return;
-
-    const generatedQrId = `qr-${Date.now()}`;
-    onRegister(generatedQrId, finalPlantId, finalIsNewPlant, finalLocationId, finalIsNewLocation, finalZoneId, finalIsNewZone, customImage);
-    showToast('🌱 Plant added successfully!');
-    setIsAddingPlant(false);
-    setSelectedMode(''); setCustomName(''); setSelectedZone(''); setSelectedLocation(''); setCustomZoneName(''); setCustomLocationName(''); setCustomImage('');
   };
 
   const inventoryList = useMemo(() => {
@@ -145,13 +82,6 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
       };
     }).sort((a, b) => (a.archetype?.commonName || '').localeCompare(b.archetype?.commonName || ''));
   }, [instances, archetypes, locations, zones]);
-
-  const isSubmitDisabled = 
-    !selectedMode || 
-    (selectedMode === 'other' && !customName.trim()) || 
-    !selectedZone || 
-    (selectedZone === 'other' && (!customLocationName.trim() || !customZoneName.trim())) || 
-    (selectedZone !== 'other' && (!selectedLocation || (selectedLocation === 'other' && !customLocationName.trim())));
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
@@ -207,58 +137,20 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               const locationsInZone = locations.filter(l => l.zoneId === zone.id).length;
               const isEditing = editingZoneId === zone.id;
     
-              if (isEditing) {
-                return (
-                  <Card key={zone.id} className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
-                    <form onSubmit={(e) => { e.preventDefault(); onUpdateZone(zone.id, editZoneData); setEditingZoneId(null); showToast('📍 Zone updated!'); }} className="flex flex-col gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Zone Name</label>
-                        <Input value={editZoneData.name || ''} onChange={e => setEditZoneData({...editZoneData, name: e.target.value})} className="!mb-0 py-2.5" required />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Description (Optional)</label>
-                        <Input value={editZoneData.description || ''} onChange={e => setEditZoneData({...editZoneData, description: e.target.value})} className="!mb-0 py-2.5" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Image URL (Optional)</label>
-                        <Input value={editZoneData.imageUrl || ''} onChange={e => setEditZoneData({...editZoneData, imageUrl: e.target.value})} className="!mb-0 py-2.5" placeholder="/images/zones/greenhouse.jpg" />
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="secondary" onClick={() => setEditingZoneId(null)}>Cancel</Button>
-                        <Button type="submit">Save</Button>
-                      </div>
-                    </form>
-                  </Card>
-                );
-              }
-    
               return (
-                <Card key={zone.id} className="!p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{zone.name}</h3>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{zone.id}</p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">{locationsInZone} sub-locations</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={() => onNavigateZone(zone.id)}
-                        className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"
-                        title="View Zone"
-                      >
-                        👁️
-                      </button>
-                      <button onClick={() => { setEditingZoneId(zone.id); setEditZoneData(zone); }} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-                      <button 
-                        onClick={() => { if (locationsInZone === 0 && window.confirm('Delete this zone?')) { onDeleteZone(zone.id); showToast('🗑️ Zone removed'); } }}
-                        disabled={locationsInZone > 0}
-                        className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </Card>
+                <ZoneCard
+                  key={zone.id}
+                  zone={zone}
+                  locationsInZone={locationsInZone}
+                  isEditing={isEditing}
+                  editZoneData={editZoneData}
+                  setEditZoneData={setEditZoneData}
+                  onEditStart={() => { setEditingZoneId(zone.id); setEditZoneData(zone); }}
+                  onEditCancel={() => setEditingZoneId(null)}
+                  onSave={(e) => { e.preventDefault(); onUpdateZone(zone.id, editZoneData); setEditingZoneId(null); showToast('📍 Zone updated!'); }}
+                  onDelete={() => { if (locationsInZone === 0 && window.confirm('Delete this zone?')) { onDeleteZone(zone.id); showToast('🗑️ Zone removed'); } }}
+                  onNavigateZone={() => onNavigateZone(zone.id)}
+                />
               );
             })}
           </div>
@@ -292,68 +184,22 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               const zone = zones.find(z => z.id === loc.zoneId);
               const isEditing = editingId === loc.id;
     
-              if (isEditing) {
-                return (
-                  <Card key={loc.id} className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
-                    <form onSubmit={(e) => { e.preventDefault(); onUpdate(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }} className="flex flex-col gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
-                        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={editData.zoneId || ''} onChange={e => setEditData({...editData, zoneId: e.target.value})} required>
-                          <option value="" disabled>Select a zone...</option>
-                          {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Specific Name (e.g. Shelf B)</label>
-                        <Input value={editData.name || ''} onChange={e => setEditData({...editData, name: e.target.value})} className="!mb-0 py-2.5" required />
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        <Button type="button" variant="secondary" onClick={() => setEditingId(null)}>Cancel</Button>
-                        <Button type="submit">Save</Button>
-                      </div>
-                    </form>
-                  </Card>
-                );
-              }
-    
               return (
-                <Card key={loc.id} className="!p-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{loc.name}</h3>
-                      <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{loc.id}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-0.5">{zone?.name}</p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-2">{plantsInZone} active plant{plantsInZone !== 1 && 's'}</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={() => onNavigateLocation(loc.id)}
-                        className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"
-                        title="View Location"
-                      >
-                        👁️
-                      </button>
-                      <button 
-                        onClick={() => { setEditingId(loc.id); setEditData(loc); }}
-                        className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        onClick={() => {
-                          if (plantsInZone === 0 && window.confirm('Delete this location?')) {
-                            onDelete(loc.id);
-                            showToast('🗑️ Location removed');
-                          }
-                        }}
-                        disabled={plantsInZone > 0}
-                        className={`p-2 rounded-lg transition-colors ${plantsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                </Card>
+                <LocationCard
+                  key={loc.id}
+                  location={loc}
+                  zoneName={zone?.name}
+                  zones={zones}
+                  plantsInLocation={plantsInZone}
+                  isEditing={isEditing}
+                  editData={editData}
+                  setEditData={setEditData}
+                  onEditStart={() => { setEditingId(loc.id); setEditData(loc); }}
+                  onEditCancel={() => setEditingId(null)}
+                  onSave={(e) => { e.preventDefault(); onUpdate(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
+                  onDelete={() => { if (plantsInZone === 0 && window.confirm('Delete this location?')) { onDelete(loc.id); showToast('🗑️ Location removed'); } }}
+                  onNavigateLocation={() => onNavigateLocation(loc.id)}
+                />
               );
             })}
           </div>
@@ -368,80 +214,18 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
           ) : (
             <Card className="mb-6 shadow-md border-emerald-500 dark:border-emerald-500">
               <Subtitle className="!mt-0 mb-4">Add New Plant</Subtitle>
-              <form onSubmit={handleRegisterSubmit} className="flex flex-col gap-3">
-                <select 
-                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-                  value={selectedMode}
-                  onChange={e => setSelectedMode(e.target.value)}
-                >
-                  <option value="" disabled>Select a plant type...</option>
-                  {groupedArchetypes.sortedCategories.map(category => (
-                    <optgroup key={category} label={category}>
-                      {groupedArchetypes.groups[category].map(a => (
-                        <option key={a.id} value={a.id}>{a.commonName}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                  <option value="other">+ Other (Add new...)</option>
-                </select>
-                <select 
-                  className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-                  value={selectedZone}
-                  onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}
-                >
-                  <option value="" disabled>Select a zone...</option>
-                  {sortedZones.map(z => (
-                    <option key={z.id} value={z.id}>{z.name}</option>
-                  ))}
-                  <option value="other">+ Other (Add new zone...)</option>
-                </select>
-                {selectedZone && selectedZone !== 'other' && (
-                  <select 
-                    className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all"
-                    value={selectedLocation}
-                    onChange={e => setSelectedLocation(e.target.value)}
-                  >
-                    <option value="" disabled>Select a location...</option>
-                    {locations.filter(l => l.zoneId === selectedZone).map(loc => (
-                      <option key={loc.id} value={loc.id}>{loc.name}</option>
-                    ))}
-                    <option value="other">+ Other (Add new location...)</option>
-                  </select>
-                )}
-                {(selectedZone === 'other' || selectedLocation === 'other') && (
-                  <div className="flex gap-3 mt-1">
-                    {selectedZone === 'other' && (
-                      <div className="flex-1">
-                        <Input placeholder="Zone (e.g. Garden)" value={customZoneName} onChange={(e) => setCustomZoneName(e.target.value)} className="!mb-0" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <Input placeholder="Name (e.g. Bed 1)" value={customLocationName} onChange={(e) => setCustomLocationName(e.target.value)} className="!mb-0" />
-                    </div>
-                  </div>
-                )}
-                {selectedMode === 'other' && (
-                  <>
-                    <Input placeholder="e.g., Heirloom Tomato" value={customName} onChange={(e) => setCustomName(e.target.value)} className="!mb-0 mt-1" autoFocus />
-                    <div className="mt-1">
-                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Plant Photo (Optional)</label>
-                      <div className="flex items-center gap-3">
-                        {customImage && (
-                          <img src={customImage} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
-                        )}
-                        <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                          📸 {customImage ? 'Retake Photo' : 'Take Photo'}
-                          <input type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
-                        </label>
-                      </div>
-                    </div>
-                  </>
-                )}
-                <div className="flex gap-2 mt-2">
-                  <Button type="button" variant="secondary" onClick={() => setIsAddingPlant(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isSubmitDisabled}>Add Plant</Button>
-                </div>
-              </form>
+              <PlantRegistrationForm 
+                archetypes={archetypes} 
+                locations={locations} 
+                zones={zones} 
+                onRegister={(qrId, identifier, isNew, locationId, isNewLocation, zoneId, isNewZone, imageUrl) => {
+                  onRegister(qrId, identifier, isNew, locationId, isNewLocation, zoneId, isNewZone, imageUrl);
+                  showToast('🌱 Plant added successfully!');
+                  setIsAddingPlant(false);
+                }} 
+                onCancel={() => setIsAddingPlant(false)} 
+                submitLabel="Add Plant" 
+              />
             </Card>
           )}
           <div className="space-y-3">
@@ -452,26 +236,14 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               </Card>
             ) : (
               inventoryList.map(item => (
-                <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
-                  <div className="flex justify-between items-start mb-1">
-                    <div>
-                      <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
-                    </div>
-                    <StatusBadge status={item.isOverdue ? 'overdue' : 'hydrated'}>
-                      {item.isOverdue ? 'Overdue' : 'Hydrated'}
-                    </StatusBadge>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-                      <span>Hydration Level</span>
-                      <span className={item.ratio <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(item.ratio * 100)}%</span>
-                    </div>
-                    <ProgressBarContainer>
-                      <ProgressBarFill ratio={item.ratio} />
-                    </ProgressBarContainer>
-                  </div>
-                </Card>
+                <PlantInstanceCard 
+                  key={item.qrId}
+                  instance={item}
+                  archetype={item.archetype}
+                  locationName={item.location?.name}
+                  zoneName={item.zone?.name}
+                  onClick={() => onNavigate(item.qrId)}
+                />
               ))
             )}
           </div>
