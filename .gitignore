@@ -15,6 +15,9 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
+# Production build
+dist/
+
 # Environment variables (API Keys)
 .env
 

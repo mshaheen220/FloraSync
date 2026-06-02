@@ -51,4 +51,12 @@ app.post('/api/state', (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(3001, '0.0.0.0', () => console.log('✅ 🌿 FloraSync SQLite API is running at http://localhost:3001'));
+// Serve the built static React frontend from the dist directory
+const DIST_DIR = path.join(ROOT_DIR, 'dist');
+app.use(express.static(DIST_DIR));
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(DIST_DIR, 'index.html'));
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => console.log(`✅ 🌿 FloraSync SQLite API is running on port ${PORT}`));
