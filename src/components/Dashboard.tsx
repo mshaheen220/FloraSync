@@ -10,10 +10,10 @@ interface DashboardProps {
   onBatchWater: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenScanner: () => void;
-  onManageLocations: () => void;
+  onOpenMenu: () => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onManageLocations }) => {
+export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onOpenMenu }) => {
   
   // Attention Queue sorting engine logic calculating actual time distance against care intervals
   const attentionQueue = useMemo(() => {
@@ -43,6 +43,8 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
     return locations.filter(l => locIds.has(l.id));
   }, [attentionQueue, locations]);
 
+  const overduePlants = useMemo(() => attentionQueue.filter(p => p.isOverdue), [attentionQueue]);
+
   return (
     <Container>
       <header className="mb-6 pt-6 flex justify-between items-center">
@@ -53,8 +55,8 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Your garden at a glance.</p>
         </div>
-        <button onClick={onManageLocations} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
-          ⚙️
+        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          ☰
         </button>
       </header>
 
@@ -72,31 +74,38 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       )}
 
       <section>
-        <Subtitle>Your Plants</Subtitle>
-        <div className="space-y-3">
-          {attentionQueue.map(item => (
-            <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300">
-              <div className="flex justify-between items-start mb-1">
-                <div>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
-                  <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
+        <Subtitle>Needs Attention Today</Subtitle>
+        {overduePlants.length === 0 ? (
+          <Card className="text-center py-10">
+            <div className="text-4xl mb-3">✨</div>
+            <p className="text-slate-500 dark:text-slate-400 font-medium">All plants are perfectly hydrated and fed!</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {overduePlants.map(item => (
+              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
+                <div className="flex justify-between items-start mb-1">
+                  <div>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
+                  </div>
+                  <StatusBadge status={item.isOverdue ? 'overdue' : 'hydrated'}>
+                    {item.isOverdue ? 'Overdue' : 'Hydrated'}
+                  </StatusBadge>
                 </div>
-                <StatusBadge status={item.isOverdue ? 'overdue' : 'hydrated'}>
-                  {item.isOverdue ? 'Overdue' : 'Hydrated'}
-                </StatusBadge>
-              </div>
-              <div className="mt-5">
-                <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
-                  <span>Hydration Level</span>
-                  <span className={item.ratio <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(item.ratio * 100)}%</span>
+                <div className="mt-5">
+                  <div className="flex justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">
+                    <span>Hydration Level</span>
+                    <span className={item.ratio <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(item.ratio * 100)}%</span>
+                  </div>
+                  <ProgressBarContainer>
+                    <ProgressBarFill ratio={item.ratio} />
+                  </ProgressBarContainer>
                 </div>
-                <ProgressBarContainer>
-                  <ProgressBarFill ratio={item.ratio} />
-                </ProgressBarContainer>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <FAB onClick={onOpenScanner}>

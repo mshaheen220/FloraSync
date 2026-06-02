@@ -7,6 +7,7 @@ import { LocationManager } from './components/LocationManager';
 import { ArchetypeManager } from './components/ArchetypeManager';
 import { LocationDetail } from './components/LocationDetail';
 import { ZoneDetail } from './components/ZoneDetail';
+import { NavigationMenu, MenuRoute } from './components/NavigationMenu';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -18,11 +19,12 @@ export const App: FC = () => {
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Theme persistence and OS matching logic
   useEffect(() => {
@@ -292,6 +294,15 @@ export const App: FC = () => {
     window.history.pushState({}, '', `/`);
   };
 
+  const handleMenuNavigate = (route: MenuRoute) => {
+    setIsMenuOpen(false);
+    if (route === 'dashboard') {
+      handleGoHome();
+    } else {
+      setCurrentView(route);
+    }
+  };
+
   const handleScanResult = (qrString: string) => {
     try {
       // By providing the current origin as the base, it seamlessly supports both relative paths and absolute URLs!
@@ -330,55 +341,68 @@ export const App: FC = () => {
     }
   };
 
-  if (!isDbLoaded) {
-    return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-emerald-800 font-medium">Syncing with Greenhouse...</div>;
-  }
+  const renderView = () => {
+    if (!isDbLoaded) {
+      return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-emerald-800 font-medium">Syncing with Greenhouse...</div>;
+    }
 
-  if (currentView === 'detail' && activeQr) {
-    const instance = instances.find(i => i.qrId === activeQr);
-    const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
-    const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
-    const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
+    if (currentView === 'detail' && activeQr) {
+      const instance = instances.find(i => i.qrId === activeQr);
+      const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
+      const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
+      const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
-    return (
-      <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
-    );
-  }
+      return (
+        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
+      );
+    }
 
-  if (currentView === 'locationDetail' && activeLoc) {
-    const location = locations.find(l => l.id === activeLoc);
-    const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
-    const locationInstances = instances.filter(i => i.locationId === activeLoc);
-    
-    return (
-      <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoHome={handleGoHome} onClearAction={handleClearAction} />
-    );
-  }
+    if (currentView === 'locationDetail' && activeLoc) {
+      const location = locations.find(l => l.id === activeLoc);
+      const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
+      const locationInstances = instances.filter(i => i.locationId === activeLoc);
+      
+      return (
+        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+      );
+    }
 
-  if (currentView === 'zoneDetail' && activeZone) {
-    const zone = zones.find(z => z.id === activeZone);
-    const zoneLocations = locations.filter(l => l.zoneId === activeZone);
-    const zoneLocIds = zoneLocations.map(l => l.id);
-    const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
-    
-    return (
-      <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoHome={handleGoHome} onClearAction={handleClearAction} />
-    );
-  }
+    if (currentView === 'zoneDetail' && activeZone) {
+      const zone = zones.find(z => z.id === activeZone);
+      const zoneLocations = locations.filter(l => l.zoneId === activeZone);
+      const zoneLocIds = zoneLocations.map(l => l.id);
+      const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
+      
+      return (
+        <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+      );
+    }
 
-  if (currentView === 'scanner') {
-    return <Scanner onScan={handleScanResult} onClose={handleGoHome} />
-  }
+    if (currentView === 'scanner') {
+      return <Scanner onScan={handleScanResult} onClose={handleGoHome} />
+    }
 
-  if (currentView === 'locations') {
-    return <LocationManager locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} />;
-  }
+    if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} />;
+    }
 
-  if (currentView === 'archetypes') {
-    return <ArchetypeManager archetypes={archetypes} instances={instances} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={() => setCurrentView('locations')} />;
-  }
+    if (currentView === 'archetypes') {
+      return <ArchetypeManager archetypes={archetypes} instances={instances} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoHome} />;
+    }
 
-  return <Dashboard instances={instances} archetypes={archetypes} locations={locations} zones={zones} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onManageLocations={() => setCurrentView('locations')} />;
+    return <Dashboard instances={instances} archetypes={archetypes} locations={locations} zones={zones} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onOpenMenu={() => setIsMenuOpen(true)} />;
+  };
+
+  return (
+    <>
+      <NavigationMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        onNavigate={handleMenuNavigate} 
+      />
+      {renderView()}
+    </>
+  );
 };
 
 export default App;
