@@ -1,22 +1,29 @@
 import { useState, useMemo, FC, FormEvent } from 'react';
 import { PlantArchetype, PlantInstance } from '../../types';
-import { Container, Title, Input, Toast, Subtitle } from '../styles/StyledElements';
+import { Container, Title, Input, Toast, Subtitle, Button } from '../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
 
 interface ArchetypeManagerProps {
   archetypes: PlantArchetype[];
   instances: PlantInstance[];
+  onAdd: (archetype: PlantArchetype) => void;
   onUpdate: (id: string, updates: Partial<PlantArchetype>) => void;
   onDelete: (id: string) => void;
   onGoBack: () => void;
 }
 
-export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instances, onUpdate, onDelete, onGoBack }) => {
+export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instances, onAdd, onUpdate, onDelete, onGoBack }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<PlantArchetype>>({});
+  const [isAdding, setIsAdding] = useState(false);
+  const [newData, setNewData] = useState<Partial<PlantArchetype>>({
+    waterIntervalDays: 4,
+    feedingIntervalDays: 14,
+    sunRequirement: 'Full Sun'
+  });
 
   const groupedData = useMemo(() => {
     const filtered = archetypes.filter(a => 
@@ -51,6 +58,51 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
     showToast('📖 Plant reference updated!');
   };
 
+  const handleAddSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!newData.commonName?.trim()) {
+      showToast('⚠️ Common Name is required!');
+      return;
+    }
+
+    const newId = newData.commonName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (archetypes.some(a => a.id === newId)) {
+      showToast('⚠️ A plant with this name already exists!');
+      return;
+    }
+
+    const newArchetype: PlantArchetype = {
+      id: newId,
+      commonName: newData.commonName.trim(),
+      scientificName: newData.scientificName || 'Unknown',
+      category: newData.category || 'Uncategorized',
+      sunRequirement: newData.sunRequirement || 'Full Sun',
+      waterIntervalDays: newData.waterIntervalDays || 4,
+      feedingIntervalDays: newData.feedingIntervalDays || 14,
+      whatToFeed: newData.whatToFeed || 'Unknown',
+      pruningTips: newData.pruningTips || 'Unknown',
+      flavorProfile: newData.flavorProfile || 'Unknown',
+      companionPlants: newData.companionPlants || [],
+      combativePlants: newData.combativePlants || [],
+      growthHabit: newData.growthHabit || 'Unknown',
+      daysToHarvest: newData.daysToHarvest || 0,
+      imageUrl: newData.imageUrl || '',
+      whenToPlant: newData.whenToPlant || 'Unknown',
+      whenToHarvest: newData.whenToHarvest || 'Unknown',
+      usesForLargeHarvests: newData.usesForLargeHarvests || 'Unknown',
+      hardinessZones: newData.hardinessZones || [],
+      hardinessNote: newData.hardinessNote || '',
+      plantingInstructions: newData.plantingInstructions || 'Unknown',
+      growthRequirements: newData.growthRequirements || 'Unknown',
+      ...newData
+    };
+
+    onAdd(newArchetype);
+    setIsAdding(false);
+    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun' });
+    showToast('✅ New plant added successfully!');
+  };
+
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <header className="mb-6 flex items-center gap-3 pt-6">
@@ -63,6 +115,27 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
       </p>
+
+      {!isAdding ? (
+        <Button onClick={() => setIsAdding(true)} className="mb-6">+ Add New Plant</Button>
+      ) : (
+        <div className="mb-8">
+          <Subtitle>Add New Plant</Subtitle>
+          <ArchetypeCard
+            arch={{} as PlantArchetype}
+            inUseCount={0}
+            isEditing={true}
+            isViewing={false}
+            editData={newData}
+            setEditData={setNewData}
+            onViewToggle={() => {}}
+            onEditStart={() => {}}
+            onEditCancel={() => setIsAdding(false)}
+            onSave={handleAddSubmit}
+            onDelete={() => {}}
+          />
+        </div>
+      )}
 
       <Input 
         placeholder="🔍 Search plants or categories..." 

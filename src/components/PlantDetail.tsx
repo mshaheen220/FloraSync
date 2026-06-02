@@ -35,7 +35,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const [customZoneName, setCustomZoneName] = useState('');
   const [customImage, setCustomImage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '' });
+  const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '' });
 
   const groupedArchetypes = useMemo(() => {
     const groups = archetypes.reduce((acc, curr) => {
@@ -68,7 +68,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         locationId: instance.locationId,
         // Converts ISO string to the "YYYY-MM-DDTHH:mm" format required by native datetime-local inputs
         lastWatered: new Date(instance.lastWatered).toISOString().slice(0, 16),
-        lastFed: new Date(instance.lastFed).toISOString().slice(0, 16)
+          lastFed: new Date(instance.lastFed).toISOString().slice(0, 16),
+          datePlanted: instance.datePlanted ? new Date(instance.datePlanted).toISOString().slice(0, 16) : '',
+          dateHarvested: instance.dateHarvested ? new Date(instance.dateHarvested).toISOString().slice(0, 16) : ''
       });
     }
   }, [instance]);
@@ -269,7 +271,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       onUpdate(qrId, {
         locationId: editData.locationId,
         lastWatered: new Date(editData.lastWatered).toISOString(),
-        lastFed: new Date(editData.lastFed).toISOString()
+        lastFed: new Date(editData.lastFed).toISOString(),
+        datePlanted: editData.datePlanted ? new Date(editData.datePlanted).toISOString() : instance.datePlanted,
+        dateHarvested: editData.dateHarvested ? new Date(editData.dateHarvested).toISOString() : undefined
       });
       setIsEditing(false);
       showToast('✅ Plant updated!');
@@ -321,6 +325,26 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                 className="!mb-0"
               />
             </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Date Planted</label>
+            <Input 
+              type="datetime-local" 
+              value={editData.datePlanted}
+              onChange={e => setEditData({...editData, datePlanted: e.target.value})}
+              className="!mb-0"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Date Harvested</label>
+            <Input 
+              type="datetime-local" 
+              value={editData.dateHarvested || ''}
+              onChange={e => setEditData({...editData, dateHarvested: e.target.value})}
+              className="!mb-0"
+            />
+          </div>
 
             <div className="mt-4">
               <Button type="submit">Save Changes</Button>
@@ -447,6 +471,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             {isOverdue ? 'Watering Overdue' : 'Optimal Hydration'}
           </StatusBadge>
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
+          <p>Planted: {new Date(instance.datePlanted).toLocaleDateString()}</p>
+          {instance.dateHarvested && <p className="text-amber-600 dark:text-amber-400 font-semibold">Harvested: {new Date(instance.dateHarvested).toLocaleDateString()}</p>}
             <p>Last watered: {new Date(instance.lastWatered).toLocaleDateString()}</p>
             <p>Last fed: {new Date(instance.lastFed).toLocaleDateString()}</p>
           </div>

@@ -238,6 +238,10 @@ export const App: FC = () => {
     setArchetypes(prev => prev.filter(arch => arch.id !== id));
   };
 
+  const handleAddArchetype = (newArchetype: PlantArchetype) => {
+    setArchetypes(prev => [...prev, newArchetype]);
+  };
+
   const handleAddZone = (name: string) => {
     const newId = `zn-${Date.now()}`;
     setZones(prev => [...prev, { id: newId, name }]);
@@ -383,11 +387,11 @@ export const App: FC = () => {
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
     }
 
     if (currentView === 'archetypes') {
-      return <ArchetypeManager archetypes={archetypes} instances={instances} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoHome} />;
+      return <ArchetypeManager archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoHome} />;
     }
 
     return <Dashboard instances={instances} archetypes={archetypes} locations={locations} zones={zones} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onOpenMenu={() => setIsMenuOpen(true)} />;

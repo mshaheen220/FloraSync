@@ -157,6 +157,9 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
       </div>
       {isViewing && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 text-sm space-y-3">
+          {arch.imageUrl && (
+            <img src={arch.imageUrl} alt={arch.commonName} className="w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800" />
+          )}
           {arch.scientificName && arch.scientificName !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Scientific Name</strong> <span className="italic block text-slate-700 dark:text-slate-300">{arch.scientificName}</span></div>}
           {(arch.category || arch.growthHabit) && (
             <div className="grid grid-cols-2 gap-2">

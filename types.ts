@@ -28,6 +28,7 @@ export interface PlantInstance {
   archetypeId: string;
   locationId: string;
   datePlanted: string;
+  dateHarvested?: string;
   lastWatered: string; // ISO String
   lastFed: string;     // ISO String
 }
