@@ -17,6 +17,7 @@ yarn-error.log*
 
 # Production build
 dist/
+dist.tar.gz
 
 # Environment variables (API Keys)
 .env
