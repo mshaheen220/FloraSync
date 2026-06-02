@@ -1,4 +1,4 @@
-import { useState, useMemo, FC, FormEvent } from 'react';
+import { useState, useMemo, useEffect, FC, FormEvent } from 'react';
 import { PlantArchetype, PlantInstance } from '../../types';
 import { Container, Title, Input, Toast, Subtitle, Button } from '../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
@@ -18,11 +18,13 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<PlantArchetype>>({});
+  const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [newData, setNewData] = useState<Partial<PlantArchetype>>({
     waterIntervalDays: 4,
     feedingIntervalDays: 14,
-    sunRequirement: 'Full Sun'
+    sunRequirement: 'Full Sun',
+    lifecycle: 'Unknown'
   });
 
   const groupedData = useMemo(() => {
@@ -45,6 +47,15 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
 
     return { groups, sortedCategories };
   }, [archetypes, searchTerm]);
+
+  // Auto-expand categories when actively searching
+  useEffect(() => {
+    if (searchTerm.trim()) {
+      setExpandedCategories(groupedData.sortedCategories);
+    } else {
+      setExpandedCategories([]);
+    }
+  }, [searchTerm, groupedData.sortedCategories]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -94,13 +105,22 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
       hardinessNote: newData.hardinessNote || '',
       plantingInstructions: newData.plantingInstructions || 'Unknown',
       growthRequirements: newData.growthRequirements || 'Unknown',
+      lifecycle: newData.lifecycle || 'Unknown',
       ...newData
     };
 
     onAdd(newArchetype);
     setIsAdding(false);
-    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun' });
+    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun', lifecycle: 'Unknown' });
     showToast('✅ New plant added successfully!');
+  };
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
   };
 
   return (
@@ -143,38 +163,50 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
         onChange={(e) => setSearchTerm(e.target.value)} 
       />
 
-      <div className="space-y-8">
+      <div className="space-y-4">
         {groupedData.sortedCategories.length === 0 ? (
           <p className="text-slate-500 dark:text-slate-400 text-sm text-center py-8">No plants found.</p>
         ) : (
           groupedData.sortedCategories.map(category => (
-            <div key={category}>
-              <Subtitle>{category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedData.groups[category].length})</span></Subtitle>
-              <div className="space-y-4">
-                {groupedData.groups[category].map(arch => {
-                  const inUseCount = instances.filter(i => i.archetypeId === arch.id).length;
-                            const isEditing = editingId === arch.id;
-                  const isViewing = viewingId === arch.id;
+            <div key={category} className="border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0">
+              <button 
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
+              >
+                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedData.groups[category].length})</span>
+                </Subtitle>
+                <span className={`text-slate-400 transition-transform duration-200 ${expandedCategories.includes(category) ? 'rotate-180' : ''}`}>
+                  ▼
+                </span>
+              </button>
+              
+              {expandedCategories.includes(category) && (
+                <div className="space-y-4 mb-4">
+                  {groupedData.groups[category].map(arch => {
+                    const inUseCount = instances.filter(i => i.archetypeId === arch.id).length;
+                    const isEditing = editingId === arch.id;
+                    const isViewing = viewingId === arch.id;
 
-                  return (
-                    <ArchetypeCard
-                      key={arch.id}
-                      arch={arch}
-                      inUseCount={inUseCount}
-                      isEditing={isEditing}
-                      isViewing={isViewing}
-                      editData={editData}
-                      setEditData={setEditData}
-                      onViewToggle={() => { setViewingId(isViewing ? null : arch.id); setEditingId(null); }}
-                      onEditStart={() => { setEditingId(arch.id); setEditData(arch); setViewingId(null); }}
-                      onEditCancel={() => setEditingId(null)}
-                      onSave={(e) => handleSave(e, arch.id)}
-                      onDelete={() => { if (inUseCount === 0 && window.confirm('Delete this plant archetype?')) { onDelete(arch.id); showToast('🗑️ Archetype removed'); } }}
-                    />
-                  );
-
-        })}
-              </div>
+                    return (
+                      <ArchetypeCard
+                        key={arch.id}
+                        arch={arch}
+                        inUseCount={inUseCount}
+                        isEditing={isEditing}
+                        isViewing={isViewing}
+                        editData={editData}
+                        setEditData={setEditData}
+                        onViewToggle={() => { setViewingId(isViewing ? null : arch.id); setEditingId(null); }}
+                        onEditStart={() => { setEditingId(arch.id); setEditData(arch); setViewingId(null); }}
+                        onEditCancel={() => setEditingId(null)}
+                        onSave={(e) => handleSave(e, arch.id)}
+                        onDelete={() => { if (inUseCount === 0 && window.confirm('Delete this plant archetype?')) { onDelete(arch.id); showToast('🗑️ Archetype removed'); } }}
+                      />
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ))
         )}

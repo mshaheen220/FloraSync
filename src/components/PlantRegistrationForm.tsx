@@ -13,6 +13,7 @@ interface PlantRegistrationFormProps {
 }
 
 export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefilledQrId, archetypes, locations, zones, submitLabel, onRegister, onCancel }) => {
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedMode, setSelectedMode] = useState('');
   const [customName, setCustomName] = useState('');
   const [selectedZone, setSelectedZone] = useState('');
@@ -80,6 +81,7 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
   };
 
   const isSubmitDisabled = 
+    !selectedCategory ||
     !selectedMode || 
     (selectedMode === 'other' && !customName.trim()) || 
     !selectedZone || 
@@ -88,15 +90,19 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
-        <option value="" disabled>Select a plant type...</option>
+      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedMode(''); }}>
+        <option value="" disabled>Select a category...</option>
         {groupedArchetypes.sortedCategories.map(category => (
-          <optgroup key={category} label={category}>
-            {groupedArchetypes.groups[category].map(a => <option key={a.id} value={a.id}>{a.commonName}</option>)}
-          </optgroup>
+          <option key={category} value={category}>{category}</option>
         ))}
-        <option value="other">+ Other (Add new...)</option>
       </select>
+      {selectedCategory && (
+        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
+          <option value="" disabled>Select a plant...</option>
+          {groupedArchetypes.groups[selectedCategory].map(a => <option key={a.id} value={a.id}>{a.commonName}</option>)}
+          <option value="other">+ Other (Add new...)</option>
+        </select>
+      )}
       <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}>
         <option value="" disabled>Select a zone...</option>
         {sortedZones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}

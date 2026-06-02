@@ -73,13 +73,24 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
               <Input value={editData.growthHabit || ''} onChange={e => setEditData({...editData, growthHabit: e.target.value})} className="!mb-0 py-2" required />
             </div>
             <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lifecycle</label>
+              <select value={editData.lifecycle || ''} onChange={e => setEditData({...editData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" required>
+                <option value="Annual">Annual</option>
+                <option value="Biennial">Biennial</option>
+                <option value="Perennial">Perennial</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex-1">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Hardiness Zones (Numbers)</label>
               <Input value={editData.hardinessZones?.join(', ') || ''} onChange={e => setEditData({...editData, hardinessZones: e.target.value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))})} className="!mb-0 py-2" placeholder="e.g. 10, 11" />
             </div>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Hardiness Note</label>
-            <Input value={editData.hardinessNote || ''} onChange={e => setEditData({...editData, hardinessNote: e.target.value})} className="!mb-0 py-2" placeholder="e.g. Grow as annual in Zone 6/7" />
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Hardiness Note</label>
+              <Input value={editData.hardinessNote || ''} onChange={e => setEditData({...editData, hardinessNote: e.target.value})} className="!mb-0 py-2" placeholder="e.g. Zone 6/7" />
+            </div>
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
@@ -161,10 +172,11 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
             <img src={arch.imageUrl} alt={arch.commonName} className="w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800" />
           )}
           {arch.scientificName && arch.scientificName !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Scientific Name</strong> <span className="italic block text-slate-700 dark:text-slate-300">{arch.scientificName}</span></div>}
-          {(arch.category || arch.growthHabit) && (
+          {(arch.category || arch.growthHabit || arch.lifecycle) && (
             <div className="grid grid-cols-2 gap-2">
               {arch.category && arch.category !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Category</strong> <span className="block text-slate-700 dark:text-slate-300">{arch.category}</span></div>}
               {arch.growthHabit && arch.growthHabit !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Growth Habit</strong> <span className="block text-slate-700 dark:text-slate-300">{arch.growthHabit}</span></div>}
+              {arch.lifecycle && arch.lifecycle !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Lifecycle</strong> <span className="block text-slate-700 dark:text-slate-300">{arch.lifecycle}</span></div>}
             </div>
           )}
           {arch.plantingInstructions && arch.plantingInstructions !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">How to Plant</strong> <span className="block text-slate-700 dark:text-slate-300 leading-relaxed">{arch.plantingInstructions}</span></div>}

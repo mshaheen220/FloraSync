@@ -1,73 +1,70 @@
 # FloraSync 🌿
 
-FloraSync is a mobile-first, context-aware React web application designed to eliminate data-entry friction in home greenhouse and raised garden bed management. By deploying weatherproof physical QR codes directly onto plant stakes, shelves, and garden beds, users can instantly log critical care metrics (watering, feeding) with a single tap or scan.
+FloraSync is a mobile-first, offline-ready local web application designed to eliminate data-entry friction in home greenhouse and raised garden bed management. By deploying weatherproof physical QR codes directly onto plant stakes, shelves, and garden beds, users can instantly log critical care metrics (watering, feeding) or register new plants with a single tap or scan.
 
-The interface pairs an earthy, bohemian-modern aesthetic with hyper-efficient single-purpose URL execution to keep tracking secondary to actual gardening.
+The application is powered by a React frontend and a robust Node.js/SQLite local backend, ensuring complete data ownership and rapid local-network synchronization.
 
 ---
 
 ## 🚀 Architecture & Tech Stack
 
-- **Frontend Core:** React (TypeScript)
+- **Frontend Core:** React 19 (TypeScript) + Vite
+- **Backend API:** Node.js, Express, `better-sqlite3`
 - **Styling Architecture:** Tailwind CSS (Utility Layouts) + Styled Components (Prop-driven structural states)
-- **Iconography:** Lucide React
-- **Design System:** Mobile-first responsive grids optimized for single-hand phone interaction.
+- **Physical Bridge:** Python-based automated Avery label QR Code generator (`qrcode`, `Pillow`)
+- **Design System:** Mobile-first responsive grids, dark/light mode OS syncing, optimized for single-hand phone interaction.
 
 ---
 
 ## 📋 Core Features & Mechanics
 
 ### 1. "Zero-Click" Action Handling
-Physical QR codes on individual stakes or shelf borders are encoded with explicit query parameters (e.g., `?qr=012&action=water`). 
-- Scanning the code targets the specific backend routing layer.
-- The state updates instantly (`last_watered = NOW()`) without requiring manual form submissions or button taps on the mobile screen.
-- A success toast pattern gives immediate feedback.
+Physical QR codes on individual stakes or shelf borders are encoded with explicit URLs (e.g., `/plant/qr-012/water`). 
+- Scanning the code targets the specific frontend router layer.
+- The state updates instantly without requiring manual form submissions.
+- A centralized SQLite database syncs via a 200MB-payload-capable proxy tunnel.
 
-### 2. Location & Cascade Hierarchy
+### 2. Relational Cascade Hierarchy
 To prevent tracking fatigue, data architecture follows a nested hierarchy:
-`Zone (Greenhouse) -> Section (Shelf A) -> Individual Pots (Instances)`
-Scanning a Section or Zone level QR code provides instant macro-actions, such as a **"Water All Plants on Shelf A"** batch update.
+`Zone (e.g. Greenhouse) -> Location (e.g. Shelf A) -> Individual Pots (Instances)`
+Scanning a Location or Zone-level QR code provides instant macro-actions, such as a **"Water All Plants on Shelf A"** batch update.
 
-### 3. Smart Attention Queue
-The central dashboard acts as a dynamic sorting engine. Instead of a standard list, it calculates care intervals against local system time to surface a **"What Needs Attention Today"** stack, floating dehydrated or hungry plants directly to the top.
+### 3. Smart Attention Queue & Vitality Stats
+The central dashboard acts as a dynamic sorting engine and garden command center. 
+- **Vitality Stats:** View total active plants, overall hydration averages, and most populated zones.
+- **Attention Queue:** Calculates care intervals against local system time to surface a **"Needs Attention Today"** stack, floating dehydrated or hungry plants directly to the top.
 
 ### 4. Dynamic Just-In-Time Registration
-New QR codes deployed to the garden can be initialized dynamically. Scanning an unmapped tag opens a lightweight onboarding field. Entering a single identifier (e.g., "Sweet Basil") pulls structured cultivation metrics (sunlight, baseline care intervals) from a decoupled reference schema, inheriting pre-mapped location contexts automatically.
+New blank QR codes deployed to the garden can be initialized dynamically. Scanning an unmapped tag opens a lightweight onboarding form. Selecting a plant from the dictionary inherits robust cultivation metrics (sunlight, harvest intervals, pruning tips) from the baseline archetype schema.
 
 ---
 
 ## 💾 Core Schema Reference
 
-### `PlantArchetype`
-Defines the immutable cultivation properties of a specific crop strain.
-```typescript
-interface PlantArchetype {
-  id: string;              // e.g., "sweet-basil"
-  commonName: string;      // e.g., "Sweet Basil"
-  sunRequirement: string;  // e.g., "Full Sun"
-  waterIntervalDays: number; // e.g., 2
-  feedingIntervalDays: number; // e.g., 14
-  pruningTips: string;
-}
-```
+The database operates on a highly normalized relational schema:
 
-### 'PlantInstance'
-Defines the mutable state properties tracking physical entities in the real world.
-```typescript
-interface PlantInstance {
-  qrId: string;            // e.g., "qr-greenhouse-045"
-  archetypeId: string;     // FK mapping back to Archetype
-  locationId: string;      // e.g., "greenhouse-shelf-a"
-  datePlanted: string;
-  lastWatered: string;     // ISO Timestamp
-  lastFed: string;         // ISO Timestamp
-}
-```
+- **`Zone`**: Macro-level areas (e.g., Greenhouse, Rear Patio).
+- **`Location`**: Specific shelves, beds, or rails mapped to a Zone.
+- **`PlantArchetype`**: The "Plant Dictionary." Defines immutable cultivation properties of a specific crop strain (e.g., Sweet Basil, Cherry Tomato). Contains rich data like `growthRequirements`, `flavorProfile`, and `daysToHarvest`.
+- **`PlantInstance`**: The physical, living entities in the real world. Tracks `datePlanted`, `lastWatered`, `lastFed`, and maps back to an Archetype and Location.
+
+---
+
+## 🧰 CLI Tools & Scripts
+
+FloraSync includes powerful Node and Python CLI tools to manage your physical and digital garden:
+
+- **`npm run seed`**: Imports baseline Dictionary Archetypes, Zones, and Locations from `src/data/imports/` into the SQLite database.
+- **`npm run backup`**: Safely extracts all living Plant Instances into a timestamped JSON file in `src/data/backups/`.
+- **`npm run restore`**: Restores the database's live Plant Instances from the most recent backup.
+- **`python3 scripts/python/make_qrs.py --from-db`**: Automatically queries the SQLite database and generates perfectly spaced Avery-compatible printable PNG sheets containing QR codes for every active plant, zone, and location in your system.
+
 ## 🛠️ Getting Started
 
 ### 1. Clone the repository:
 ```bash
-git clone [https://github.com/yourusername/thrivetag.git](https://github.com/yourusername/thrivetag.git)
+git clone https://github.com/yourusername/FloraSync.git
+cd FloraSync
 ```
 
 ### 2. Install dependencies:
@@ -79,12 +76,3 @@ npm install
 ```bash
 npm run dev
 ```
-
-## 🗺️ Implementation Roadmap
-
-- [X] Initialize React + TS framework template setup
-- [X] Scaffold global StyledElements primitive directory
-- [X] Integrate Tailwind configuration foundations
-- [X] Construct query string processing hook for automated scanning simulations
-- [ ] Build Dashboard and Queue prioritization matrices
-- [ ] Implement cascaded location batch-actions

@@ -202,7 +202,8 @@ export const App: FC = () => {
           hardinessZones: [],
           hardinessNote: '',
           plantingInstructions: 'Unknown',
-          growthRequirements: 'Unknown'
+          growthRequirements: 'Unknown',
+          lifecycle: 'Unknown'
         };
         setArchetypes(prev => [...prev, newArchetype]);
       }

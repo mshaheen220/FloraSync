@@ -21,6 +21,7 @@ export interface PlantArchetype {
   hardinessNote: string;
   plantingInstructions: string;
   growthRequirements: string;
+  lifecycle: string;
 }
 
 export interface PlantInstance {

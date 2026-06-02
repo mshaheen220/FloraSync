@@ -125,7 +125,10 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <button onClick={() => setIsEditing(false)} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
             &larr;
           </button>
-          <Title className="!mb-0">Edit Plant</Title>
+          <div>
+            <Title className="!mb-0">Edit Plant</Title>
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">{archetype?.commonName}</p>
+          </div>
         </header>
         
         <Card>
@@ -237,6 +240,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     isValidData(archetype.scientificName) ||
     isValidData(archetype.category) ||
     isValidData(archetype.growthHabit) ||
+    isValidData(archetype.lifecycle) ||
     (archetype.hardinessZones && archetype.hardinessZones.length > 0) ||
     isValidData(archetype.hardinessNote) ||
     isValidData(archetype.daysToHarvest) ||
@@ -382,7 +386,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                   <span className="text-slate-500 dark:text-slate-400 italic">{archetype?.scientificName}</span>
                 </div>
               )}
-              {(isValidData(archetype?.category) || isValidData(archetype?.growthHabit)) && (
+              {(isValidData(archetype?.category) || isValidData(archetype?.growthHabit) || isValidData(archetype?.lifecycle)) && (
                 <div className="grid grid-cols-2 gap-4">
                   {isValidData(archetype?.category) && (
                     <div>
@@ -394,6 +398,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                     <div>
                       <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Growth Habit</strong>
                       <span className="text-slate-500 dark:text-slate-400">{archetype?.growthHabit}</span>
+                    </div>
+                  )}
+                  {isValidData(archetype?.lifecycle) && (
+                    <div>
+                      <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Lifecycle</strong>
+                      <span className="text-slate-500 dark:text-slate-400">{archetype?.lifecycle}</span>
                     </div>
                   )}
                 </div>
