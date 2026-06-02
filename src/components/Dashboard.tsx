@@ -12,9 +12,11 @@ interface DashboardProps {
   onNavigate: (qrId: string) => void;
   onOpenScanner: () => void;
   onOpenMenu: () => void;
+  onNavigateInventory: () => void;
+  onNavigateZone: (zoneId: string) => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onOpenMenu }) => {
+export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -75,7 +77,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   }, [activeInstances, archetypes]);
 
   const mostPopulatedZone = useMemo(() => {
-    if (activeInstances.length === 0 || zones.length === 0) return 'None';
+    if (activeInstances.length === 0 || zones.length === 0) return { name: 'None', id: null };
     const zoneCounts = activeInstances.reduce((acc, inst) => {
       const loc = locations.find(l => l.id === inst.locationId);
       if (loc?.zoneId) {
@@ -93,7 +95,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       }
     }
     const zone = zones.find(z => z.id === maxZoneId);
-    return zone ? zone.name : 'None';
+    return zone ? { name: zone.name, id: zone.id } : { name: 'None', id: null };
   }, [activeInstances, locations, zones]);
 
   const dailySpotlight = useMemo(() => {
@@ -231,17 +233,23 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Feed</span>
             </div>
           </Card>
-          <Card className="!p-4 !mb-0 flex flex-col items-center justify-center text-center">
+          <Card 
+            className="!p-4 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
+            onClick={onNavigateInventory}
+          >
             <span className="text-3xl mb-2">🌱</span>
             <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeInstances.length}</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Active Plants</span>
           </Card>
-          <Card className="!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between">
+          <Card 
+            className={`!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between transition-colors ${mostPopulatedZone.id ? 'cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700' : ''}`}
+            onClick={() => mostPopulatedZone.id && onNavigateZone(mostPopulatedZone.id)}
+          >
             <div className="flex items-center gap-4">
               <span className="text-3xl">🌍</span>
               <div className="text-left">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
-                <span className="text-lg font-bold text-emerald-800 dark:text-emerald-200">{mostPopulatedZone}</span>
+                <span className="text-lg font-bold text-emerald-800 dark:text-emerald-200">{mostPopulatedZone.name}</span>
               </div>
             </div>
           </Card>

@@ -406,7 +406,20 @@ export const App: FC = () => {
       return <ArchetypeManager archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoHome} />;
     }
 
-    return <Dashboard instances={instances} archetypes={archetypes} locations={locations} zones={zones} onBatchWater={handleBatchWater} onNavigate={handleNavigate} onOpenScanner={() => setCurrentView('scanner')} onOpenMenu={() => setIsMenuOpen(true)} />;
+    return (
+      <Dashboard 
+        instances={instances} 
+        archetypes={archetypes} 
+        locations={locations} 
+        zones={zones} 
+        onBatchWater={handleBatchWater} 
+        onNavigate={handleNavigate} 
+        onOpenScanner={() => setCurrentView('scanner')} 
+        onOpenMenu={() => setIsMenuOpen(true)} 
+        onNavigateInventory={() => setCurrentView('inventory')} 
+        onNavigateZone={handleNavigateZone} 
+      />
+    );
   };
 
   return (
