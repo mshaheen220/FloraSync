@@ -49,6 +49,11 @@ export const App: FC = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
+  // Instantly scroll to the top of the window whenever the view changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentView]);
+
   useEffect(() => {
     fetch('/api/state', { cache: 'no-store' })
       .then(res => res.json())
