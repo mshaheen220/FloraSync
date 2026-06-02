@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, FC, FormEvent, ChangeEvent } from 'react';
+import { useEffect, useState, FC, FormEvent } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle } from '../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';

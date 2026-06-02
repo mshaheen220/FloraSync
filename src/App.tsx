@@ -399,7 +399,7 @@ export const App: FC = () => {
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onManageArchetypes={() => setCurrentView('archetypes')} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
     }
 
     if (currentView === 'archetypes') {

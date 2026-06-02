@@ -19,7 +19,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
     index: Math.floor(Math.random() * 1000000),
-    prompt: Math.floor(Math.random() * 4)
+    prompt: Math.floor(Math.random() * 8)
   }));
 
   // Filter out any plants that have already completed their lifecycle
@@ -117,6 +117,21 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
     } else if (promptType === 2 && archetype.flavorProfile && archetype.flavorProfile !== 'Unknown') {
       title = "Flavor Profile";
       message = `Craving something ${archetype.flavorProfile.toLowerCase()}? Check on your ${archetype.commonName}!`;
+    } else if (promptType === 3 && archetype.companionPlants && archetype.companionPlants.length > 0) {
+      title = "Garden Friends";
+      message = `Did you know ${archetype.commonName} thrives when planted near ${archetype.companionPlants.join(', ')}?`;
+    } else if (promptType === 4 && archetype.combativePlants && archetype.combativePlants.length > 0) {
+      title = "Planting Warning";
+      message = `Keep an eye on the neighborhood! ${archetype.commonName} doesn't like growing near ${archetype.combativePlants.join(', ')}.`;
+    } else if (promptType === 5 && archetype.sunRequirement && archetype.sunRequirement !== 'Unknown') {
+      title = "Sunlight Check";
+      message = `Is your ${archetype.commonName} getting the right amount of light? It prefers ${archetype.sunRequirement.toLowerCase()}.`;
+    } else if (promptType === 6 && archetype.scientificName && archetype.scientificName !== 'Unknown') {
+      title = "Botanical Trivia";
+      message = `Impress your friends! The scientific name for ${archetype.commonName} is ${archetype.scientificName}.`;
+    } else if (promptType === 7 && archetype.lifecycle && archetype.lifecycle !== 'Unknown') {
+      title = "Lifecycle Planning";
+      message = `Since ${archetype.commonName} is a ${archetype.lifecycle.toLowerCase()} plant, keep that in mind when planning your beds for next season.`;
     }
 
     return { instance, archetype, title, message };
@@ -244,7 +259,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
             )}
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight mb-1 truncate">{dailySpotlight.archetype.commonName}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-3">"{dailySpotlight.message}"</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-3">{dailySpotlight.message}</p>
             </div>
           </Card>
         </section>

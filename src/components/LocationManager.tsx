@@ -1,4 +1,4 @@
-import { useState, FC, FormEvent, useMemo } from 'react';
+import { useState, useEffect, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance, PlantArchetype } from '../../types';
 import { Container, Title, Card, Button, Input, Toast, Subtitle } from '../styles/StyledElements';
 import { Theme } from '../App';
@@ -21,7 +21,6 @@ interface LocationManagerProps {
   onAdd: (name: string, zoneId: string) => void;
   onUpdate: (id: string, updates: Partial<Location>) => void;
   onDelete: (id: string) => void;
-  onManageArchetypes: () => void;
   onGoHome: () => void;
   onNavigateLocation: (id: string) => void;
   onNavigateZone: (id: string) => void;
@@ -29,7 +28,7 @@ interface LocationManagerProps {
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onManageArchetypes, onGoHome, onNavigateLocation, onNavigateZone, onNavigate, onRegister }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoHome, onNavigateLocation, onNavigateZone, onNavigate, onRegister }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [newName, setNewName] = useState('');
@@ -39,6 +38,9 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [editZoneData, setEditZoneData] = useState<Partial<Zone>>({});
   const [isAddingPlant, setIsAddingPlant] = useState(false);
+  const [expandedInventoryCategories, setExpandedInventoryCategories] = useState<string[]>([]);
+  const [inventoryGroupBy, setInventoryGroupBy] = useState<'category' | 'zone' | 'location'>('category');
+  const [inventorySearchTerm, setInventorySearchTerm] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -61,9 +63,17 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
     showToast('📍 Location added successfully!');
   };
 
-  const inventoryList = useMemo(() => {
+  const toggleInventoryCategory = (category: string) => {
+    setExpandedInventoryCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  const groupedInventory = useMemo(() => {
     const today = new Date().getTime();
-    return instances.map(instance => {
+    let enrichedInstances = instances.map(instance => {
       const archetype = archetypes.find(a => a.id === instance.archetypeId);
       const location = locations.find(l => l.id === instance.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
@@ -80,8 +90,48 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         isOverdue: ratio <= 0,
         ratio
       };
-    }).sort((a, b) => (a.archetype?.commonName || '').localeCompare(b.archetype?.commonName || ''));
-  }, [instances, archetypes, locations, zones]);
+    });
+
+    if (inventorySearchTerm.trim()) {
+      const lowerTerm = inventorySearchTerm.toLowerCase();
+      enrichedInstances = enrichedInstances.filter(item => 
+        item.archetype?.commonName.toLowerCase().includes(lowerTerm)
+      );
+    }
+
+    const groups = enrichedInstances.reduce((acc, curr) => {
+      let groupKey = 'Uncategorized';
+      if (inventoryGroupBy === 'category') {
+        groupKey = curr.archetype?.category || 'Uncategorized';
+      } else if (inventoryGroupBy === 'zone') {
+        groupKey = curr.zone?.name || 'Unassigned Zone';
+      } else if (inventoryGroupBy === 'location') {
+        groupKey = curr.location?.name 
+          ? `${curr.zone?.name || 'Unassigned Zone'} • ${curr.location.name}` 
+          : 'Unassigned Location';
+      }
+
+      if (!acc[groupKey]) acc[groupKey] = [];
+      acc[groupKey].push(curr);
+      return acc;
+    }, {} as Record<string, typeof enrichedInstances>);
+
+    const sortedCategories = Object.keys(groups).sort();
+    sortedCategories.forEach(cat => {
+      groups[cat].sort((a, b) => (a.archetype?.commonName || '').localeCompare(b.archetype?.commonName || ''));
+    });
+
+    return { groups, sortedCategories, totalCount: enrichedInstances.length };
+  }, [instances, archetypes, locations, zones, inventoryGroupBy, inventorySearchTerm]);
+
+  // Auto-expand categories when actively searching
+  useEffect(() => {
+    if (inventorySearchTerm.trim()) {
+      setExpandedInventoryCategories(groupedInventory.sortedCategories);
+    } else {
+      setExpandedInventoryCategories([]);
+    }
+  }, [inventorySearchTerm, groupedInventory.sortedCategories]);
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
@@ -228,22 +278,72 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               />
             </Card>
           )}
-          <div className="space-y-3">
-            {inventoryList.length === 0 ? (
+
+          {instances.length > 0 && (
+            <Input 
+              placeholder="🔍 Search your plants..." 
+              value={inventorySearchTerm} 
+              onChange={(e) => setInventorySearchTerm(e.target.value)} 
+            />
+          )}
+
+          {groupedInventory.totalCount > 0 && (
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Group By</span>
+              <select 
+                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-all text-slate-700 dark:text-slate-200 shadow-sm"
+                value={inventoryGroupBy}
+                onChange={e => {
+                  setInventoryGroupBy(e.target.value as any);
+                  setExpandedInventoryCategories([]); // Auto-collapse everything when switching views
+                }}
+              >
+                <option value="category">Plant Category</option>
+                <option value="zone">Macro Zone</option>
+                <option value="location">Specific Location</option>
+              </select>
+            </div>
+          )}
+          <div className="space-y-4">
+            {groupedInventory.totalCount === 0 ? (
               <Card className="text-center py-12 shadow-sm border-dashed border-2 border-emerald-200 dark:border-emerald-800">
                 <div className="text-4xl mb-4">🌱</div>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">You have no active plants in your inventory. Scan a new tag to get started!</p>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                  {inventorySearchTerm.trim() 
+                    ? "No plants match your search." 
+                    : "You have no active plants in your inventory. Scan a new tag to get started!"}
+                </p>
               </Card>
             ) : (
-              inventoryList.map(item => (
-                <PlantInstanceCard 
-                  key={item.qrId}
-                  instance={item}
-                  archetype={item.archetype}
-                  locationName={item.location?.name}
-                  zoneName={item.zone?.name}
-                  onClick={() => onNavigate(item.qrId)}
-                />
+              groupedInventory.sortedCategories.map(category => (
+                <div key={category} className="border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0">
+                  <button 
+                    onClick={() => toggleInventoryCategory(category)}
+                    className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
+                  >
+                    <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedInventory.groups[category].length})</span>
+                    </Subtitle>
+                    <span className={`text-slate-400 transition-transform duration-200 ${expandedInventoryCategories.includes(category) ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </button>
+                  
+                  {expandedInventoryCategories.includes(category) && (
+                    <div className="space-y-3 mb-4">
+                      {groupedInventory.groups[category].map(item => (
+                        <PlantInstanceCard 
+                          key={item.qrId}
+                          instance={item}
+                          archetype={item.archetype}
+                          locationName={item.location?.name}
+                          zoneName={item.zone?.name}
+                          onClick={() => onNavigate(item.qrId)}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))
             )}
           </div>

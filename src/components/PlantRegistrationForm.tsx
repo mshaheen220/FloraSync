@@ -138,7 +138,7 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
       )}
       <div className="flex gap-2 mt-2">
         {onCancel && <Button type="button" variant="secondary" onClick={onCancel}>Cancel</Button>}
-        <Button type="submit">{submitLabel}</Button>
+        <Button type="submit" disabled={isSubmitDisabled}>{submitLabel}</Button>
       </div>
     </form>
   );
