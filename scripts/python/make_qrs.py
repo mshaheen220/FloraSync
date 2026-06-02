@@ -99,7 +99,7 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
         return
 
     total_ids = len(ids_to_process)
-    labels_per_id = 2
+    labels_per_id = 1
     total_labels_to_generate = total_ids * labels_per_id
     num_sheets = (total_labels_to_generate + TOTAL_LABELS_PER_SHEET - 1) // TOTAL_LABELS_PER_SHEET
 
@@ -128,15 +128,15 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
             if id_index >= total_ids:
                 break
 
-            is_water_sticker = (label_index % 2 == 1)
-            base_id = ids_to_process[id_index]
-            
-            if not is_water_sticker:
-                url = f"/{category}/{base_id}"
-                icon = os.path.join(ICONS_DIR, f"{category}.png")
+            item = ids_to_process[id_index]
+            if isinstance(item, tuple):
+                base_id, label_text = item
             else:
-                url = f"/{category}/{base_id}/water"
-                icon = os.path.join(ICONS_DIR, "water.png")
+                base_id = item
+                label_text = str(item)
+            
+            url = f"/{category}/{base_id}"
+            icon = os.path.join(ICONS_DIR, f"{category}.png")
             
             qr_thumb = generate_qr_with_icon(url, icon)
             
@@ -154,18 +154,16 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
             
             page.paste(qr_thumb, (pos_x_px, pos_y_px))
             
-            label_text = f"{base_id}" if not is_water_sticker else f"{base_id}/water"
             page_draw.text((pos_x_px + 10, pos_y_px + QR_SIZE_PIXELS + 2), label_text, fill="black", font=label_font)
             
-            if is_water_sticker:
-                id_index += 1
+            id_index += 1
 
         output_filename = os.path.join(OUTPUT_DIR, f"{output_basename}_sheet_{sheet_num + 1}.png")
         page.save(output_filename, "PNG", dpi=(DPI, DPI))
         print(f"Success! Saved printable template to {output_filename}")
 
     if start_id:
-        next_id = int(start_id) + (TOTAL_LABELS_PER_SHEET // 2)
+        next_id = int(start_id) + TOTAL_LABELS_PER_SHEET
         id_length = len(start_id)
         print(f"Next sheet should start with ID: --start-id {next_id:0{id_length}d}")
 
@@ -197,7 +195,7 @@ def main():
         
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("SELECT instances, locations, zones FROM app_state WHERE id = 1")
+        c.execute("SELECT instances, locations, zones, archetypes FROM app_state WHERE id = 1")
         row = c.fetchone()
         conn.close()
         
@@ -208,10 +206,13 @@ def main():
         instances = json.loads(row[0] or "[]")
         locations = json.loads(row[1] or "[]")
         zones = json.loads(row[2] or "[]")
+        archetypes = json.loads(row[3] or "[]")
         
-        plant_ids = [inst['qrId'] for inst in instances]
-        loc_ids = [loc['id'] for loc in locations]
-        zone_ids = [zone['id'] for zone in zones]
+        arch_dict = {a.get('id'): a.get('commonName', 'Unknown') for a in archetypes}
+        
+        plant_ids = [(inst['qrId'], arch_dict.get(inst.get('archetypeId'), inst['qrId'])) for inst in instances]
+        loc_ids = [(loc['id'], loc.get('name', loc['id'])) for loc in locations]
+        zone_ids = [(zone['id'], zone.get('name', zone['id'])) for zone in zones]
         
         print("--- Database Export Mode ---")
         if not args.category or args.category == "plant":
@@ -246,7 +247,7 @@ def main():
     elif args.prefix and args.start_id:
         id_length = len(args.start_id)
         start_id_val = int(args.start_id)
-        num_ids_needed = TOTAL_LABELS_PER_SHEET // 2
+        num_ids_needed = TOTAL_LABELS_PER_SHEET
         
         for i in range(num_ids_needed):
             ids_to_process.append(f"{args.prefix}-{start_id_val + i:0{id_length}d}")

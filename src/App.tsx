@@ -25,6 +25,7 @@ export const App: FC = () => {
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
 
   // Theme persistence and OS matching logic
   useEffect(() => {
@@ -85,11 +86,21 @@ export const App: FC = () => {
 
   useEffect(() => {
     if (!isDbLoaded) return;
+    setSyncStatus('syncing');
     fetch('/api/state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ instances, archetypes, locations, zones })
-    }).catch(err => console.error('Failed to sync state to database:', err));
+    })
+    .then(res => {
+      if (!res.ok) {
+        console.error(`Server rejected state sync: HTTP ${res.status}`);
+        setSyncStatus('error');
+      } else {
+        setSyncStatus('synced');
+      }
+    })
+    .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
   }, [instances, archetypes, locations, zones, isDbLoaded]);
 
   // Router mimicking layer: Extracts specific URL query contexts to determine view execution
@@ -399,6 +410,16 @@ export const App: FC = () => {
 
   return (
     <>
+      {syncStatus === 'syncing' && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white px-4 py-1.5 rounded-full text-xs font-bold z-50 animate-pulse shadow-lg flex items-center gap-2">
+          <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div> Syncing to server...
+        </div>
+      )}
+      {syncStatus === 'error' && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-1.5 rounded-full text-xs font-bold z-50 shadow-lg">
+          ⚠️ Sync Failed! Check connection.
+        </div>
+      )}
       <NavigationMenu 
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 

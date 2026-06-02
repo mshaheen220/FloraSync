@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     host: true, // Exposes the server on your local network
     proxy: {
-      '/api': 'http://localhost:3001', // Routes API calls to our new SQLite backend
+      '/api': 'http://127.0.0.1:3001', // Routes API calls to our new SQLite backend
     },
   },
 });

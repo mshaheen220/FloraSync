@@ -5,7 +5,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "api": "node scripts/node/server.js",
-    "seed": "node scripts/node/import-seed.js"
+    "seed": "node scripts/node/import-seed.js",
+    "backup": "node scripts/node/export-backup.js",
+    "restore": "node scripts/node/restore-backup.js"
   },
   "dependencies": {
     "@yudiel/react-qr-scanner": "^2.6.0",

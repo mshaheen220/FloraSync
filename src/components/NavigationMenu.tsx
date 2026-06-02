@@ -26,6 +26,9 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
           <button onClick={() => onNavigate('dashboard')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">🌿</span> Dashboard
           </button>
+          <button onClick={() => onNavigate('inventory')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+            <span className="text-2xl">📦</span> Inventory Manager
+          </button>
           <button onClick={() => onNavigate('archetypes')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">📖</span> Plant Dictionary
           </button>
@@ -34,9 +37,6 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
           </button>
           <button onClick={() => onNavigate('locations')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">📍</span> Location Manager
-          </button>
-          <button onClick={() => onNavigate('inventory')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-            <span className="text-2xl">📦</span> Inventory Manager
           </button>
           <button onClick={() => onNavigate('settings')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">⚙️</span> General Settings

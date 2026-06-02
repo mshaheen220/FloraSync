@@ -45,6 +45,34 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
 
   const overduePlants = useMemo(() => attentionQueue.filter(p => p.isOverdue), [attentionQueue]);
 
+  const averageHydration = useMemo(() => {
+    if (attentionQueue.length === 0) return 100;
+    const total = attentionQueue.reduce((acc, curr) => acc + curr.ratio, 0);
+    return Math.round((total / attentionQueue.length) * 100);
+  }, [attentionQueue]);
+
+  const mostPopulatedZone = useMemo(() => {
+    if (instances.length === 0 || zones.length === 0) return 'None';
+    const zoneCounts = instances.reduce((acc, inst) => {
+      const loc = locations.find(l => l.id === inst.locationId);
+      if (loc?.zoneId) {
+        acc[loc.zoneId] = (acc[loc.zoneId] || 0) + 1;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+    
+    let maxZoneId = '';
+    let maxCount = -1;
+    for (const [zId, count] of Object.entries(zoneCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        maxZoneId = zId;
+      }
+    }
+    const zone = zones.find(z => z.id === maxZoneId);
+    return zone ? zone.name : 'None';
+  }, [instances, locations, zones]);
+
   return (
     <Container>
       <header className="mb-6 pt-6 flex justify-between items-center">
@@ -59,6 +87,31 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
           ☰
         </button>
       </header>
+
+      <section className="mb-8 animate-in fade-in duration-500 delay-100">
+        <Subtitle>Garden Vitality</Subtitle>
+        <div className="grid grid-cols-2 gap-3">
+          <Card className="!p-4 !mb-0 flex flex-col items-center justify-center text-center">
+            <span className="text-3xl mb-2">💧</span>
+            <span className={`text-2xl font-black ${averageHydration <= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>{averageHydration}%</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Hydration</span>
+          </Card>
+          <Card className="!p-4 !mb-0 flex flex-col items-center justify-center text-center">
+            <span className="text-3xl mb-2">🌱</span>
+            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{instances.length}</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Active Plants</span>
+          </Card>
+          <Card className="!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-4">
+              <span className="text-3xl">🌍</span>
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
+                <span className="text-lg font-bold text-emerald-800 dark:text-emerald-200">{mostPopulatedZone}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
 
       {overdueLocations.length > 0 && (
         <section className="mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
