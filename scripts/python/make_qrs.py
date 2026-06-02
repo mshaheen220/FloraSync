@@ -7,6 +7,7 @@ from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.moduledrawers.pil import CircleModuleDrawer
 import sqlite3
 import json
+import textwrap
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../"))
@@ -18,8 +19,9 @@ if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 
 # ==========================================
-# 1. AVERY TEMPLATE CONFIGURATION (In Inches)
-# Standard Avery 1" Square (e.g., 22805 / 4321)
+# 1. GRID & TEMPLATE CONFIGURATION (In Inches)
+# Optimized for manual cutting on vinyl sticker sheets
+# (Also compatible with Standard Avery 1" Square e.g., 22805 / 4321)
 # ==========================================
 PAGE_WIDTH = 8.5
 PAGE_HEIGHT = 11.0
@@ -35,19 +37,21 @@ LABEL_HEIGHT = 1.0  # 1 inch (25.4mm)
 
 # Margins and spacing
 MARGIN_LEFT = 0.75
-MARGIN_TOP = 0.75
+MARGIN_TOP = 0.9
 GAP_X = 1.2        # Center-to-center horizontal distance
 GAP_Y = 1.2        # Center-to-center vertical distance
 
 # Target QR size (Shrink slightly to leave room for the text label below it!)
-QR_SIZE_INCHES = 0.82  
+QR_SIZE_INCHES = 0.75
 QR_SIZE_PIXELS = int(QR_SIZE_INCHES * DPI)
+
+DRAW_CUT_GUIDES = True # Set to True to draw faint outlines around each sticker for manual cutting
 
 # ==========================================
 # 2. HELPER FUNCTIONS
 # ==========================================
-def generate_qr_with_icon(data_url, icon_path):
-    """Generates a high-quality QR code with a small centered icon."""
+def generate_qr(data_url):
+    """Generates a high-quality QR code."""
     # Create the QR base
     qr = qrcode.QRCode(
         version=1,
@@ -66,27 +70,6 @@ def generate_qr_with_icon(data_url, icon_path):
     
     qr_img = qr_img.resize((QR_SIZE_PIXELS, QR_SIZE_PIXELS), Image.Resampling.LANCZOS)
     
-    if os.path.exists(icon_path):
-        icon = Image.open(icon_path).convert("RGBA")
-        
-        # Keep the icon small (max 20% of QR size) so the code remains scannable
-        icon_size = int(QR_SIZE_PIXELS * 0.20)
-        icon = icon.resize((icon_size, icon_size), Image.Resampling.LANCZOS)
-        
-        # Create a solid white box slightly larger than the icon to act as a clean "cutout"
-        box_size = int(QR_SIZE_PIXELS * 0.25)
-        white_box = Image.new("RGB", (box_size, box_size), "white")
-        
-        # Calculate center positions for both the box and the icon
-        box_pos = ((QR_SIZE_PIXELS - box_size) // 2, (QR_SIZE_PIXELS - box_size) // 2)
-        icon_pos = ((QR_SIZE_PIXELS - icon_size) // 2, (QR_SIZE_PIXELS - icon_size) // 2)
-        
-        # Paste the white cutout box first to clear out the complex QR dots
-        qr_img.paste(white_box, box_pos)
-        # Paste the icon on top of the white box using its alpha channel as a mask
-        qr_img.paste(icon, icon_pos, icon)
-    else:
-        print(f"Warning: Icon asset '{icon_path}' not found. Generating QR without it.")
         
     return qr_img
 
@@ -112,13 +95,13 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
         page_draw = ImageDraw.Draw(page)
         
         try:
-            label_font = ImageFont.truetype("Arial.ttf", 24)
+            label_font = ImageFont.truetype("Arial.ttf", 20)
         except IOError:
             try:
-                label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
+                label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 20)
             except IOError:
                 try:
-                    label_font = ImageFont.load_default(size=24)
+                    label_font = ImageFont.load_default(size=20)
                 except TypeError:
                     label_font = ImageFont.load_default()
         
@@ -136,9 +119,8 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
                 label_text = str(item)
             
             url = f"/{category}/{base_id}"
-            icon = os.path.join(ICONS_DIR, f"{category}.png")
             
-            qr_thumb = generate_qr_with_icon(url, icon)
+            qr_thumb = generate_qr(url)
             
             row = label_index // COLS
             col = label_index % COLS
@@ -146,15 +128,47 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
             x_inch = MARGIN_LEFT + (col * GAP_X)
             y_inch = MARGIN_TOP + (row * GAP_Y)
             
-            center_offset_x = (LABEL_WIDTH - QR_SIZE_INCHES) / 2
-            center_offset_y = (LABEL_HEIGHT - QR_SIZE_INCHES) / 2
+            # Draw cut guides if enabled to assist with manual vinyl cutting
+            if DRAW_CUT_GUIDES:
+                cell_x1 = int(x_inch * DPI)
+                cell_y1 = int(y_inch * DPI)
+                cell_x2 = int((x_inch + LABEL_WIDTH) * DPI)
+                cell_y2 = int((y_inch + LABEL_HEIGHT) * DPI)
+                page_draw.rectangle([cell_x1, cell_y1, cell_x2, cell_y2], outline="#CCCCCC", width=2)
             
-            pos_x_px = int((x_inch + center_offset_x) * DPI)
-            pos_y_px = int((y_inch + center_offset_y) * DPI)
+            # Respect explicit newlines, or wrap if it's a single long line
+            if "\n" in label_text:
+                wrapped_lines = label_text.split("\n")[:2]
+                # Ensure manually split lines still don't overflow the sticker width
+                wrapped_lines = [(line[:19] + "...") if len(line) > 22 else line for line in wrapped_lines]
+            else:
+                wrapped_lines = textwrap.wrap(label_text, width=22)
+                if len(wrapped_lines) > 2:
+                    wrapped_lines = wrapped_lines[:2]
+                    wrapped_lines[1] = wrapped_lines[1][:19] + "..."
+            wrapped_label = "\n".join(wrapped_lines)
+            
+            # Calculate text dimensions to vertically center the entire block (QR + Text)
+            bbox = page_draw.multiline_textbbox((0, 0), wrapped_label, font=label_font, spacing=2)
+            text_height = bbox[3] - bbox[1]
+            
+            total_block_height = QR_SIZE_PIXELS + 4 + text_height
+            label_height_px = int(LABEL_HEIGHT * DPI)
+            
+            center_offset_x_px = int(((LABEL_WIDTH - QR_SIZE_INCHES) / 2) * DPI)
+            center_offset_y_px = (label_height_px - total_block_height) // 2
+            
+            pos_x_px = int(x_inch * DPI) + center_offset_x_px
+            pos_y_px = int(y_inch * DPI) + center_offset_y_px
             
             page.paste(qr_thumb, (pos_x_px, pos_y_px))
             
-            page_draw.text((pos_x_px + 10, pos_y_px + QR_SIZE_PIXELS + 2), label_text, fill="black", font=label_font)
+            # Center-align the text directly beneath the QR code
+            center_x = pos_x_px + (QR_SIZE_PIXELS // 2)
+            page_draw.multiline_text(
+                (center_x, pos_y_px + QR_SIZE_PIXELS + 4), 
+                wrapped_label, fill="black", font=label_font, anchor="ma", align="center", spacing=2
+            )
             
             id_index += 1
 
@@ -209,9 +223,10 @@ def main():
         archetypes = json.loads(row[3] or "[]")
         
         arch_dict = {a.get('id'): a.get('commonName', 'Unknown') for a in archetypes}
+        zone_dict = {z.get('id'): z.get('name', 'Unknown Zone') for z in zones}
         
         plant_ids = [(inst['qrId'], arch_dict.get(inst.get('archetypeId'), inst['qrId'])) for inst in instances]
-        loc_ids = [(loc['id'], loc.get('name', loc['id'])) for loc in locations]
+        loc_ids = [(loc['id'], f"{zone_dict.get(loc.get('zoneId'), 'Unknown')}\n{loc.get('name', loc['id'])}") for loc in locations]
         zone_ids = [(zone['id'], zone.get('name', zone['id'])) for zone in zones]
         
         print("--- Database Export Mode ---")
