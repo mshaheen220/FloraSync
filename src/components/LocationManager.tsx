@@ -41,6 +41,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [expandedInventoryCategories, setExpandedInventoryCategories] = useState<string[]>([]);
   const [inventoryGroupBy, setInventoryGroupBy] = useState<'category' | 'zone' | 'location'>('category');
   const [inventorySearchTerm, setInventorySearchTerm] = useState('');
+  const [expandedLocationZones, setExpandedLocationZones] = useState<string[]>([]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -70,6 +71,31 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         : [...prev, category]
     );
   };
+
+  const toggleLocationZone = (zoneName: string) => {
+    setExpandedLocationZones(prev => 
+      prev.includes(zoneName)
+        ? prev.filter(z => z !== zoneName)
+        : [...prev, zoneName]
+    );
+  };
+
+  const groupedLocations = useMemo(() => {
+    const groups = locations.reduce((acc, loc) => {
+      const zone = zones.find(z => z.id === loc.zoneId);
+      const zoneName = zone ? zone.name : 'Unassigned Zone';
+      if (!acc[zoneName]) acc[zoneName] = [];
+      acc[zoneName].push(loc);
+      return acc;
+    }, {} as Record<string, Location[]>);
+
+    const sortedZones = Object.keys(groups).sort();
+    sortedZones.forEach(z => {
+      groups[z].sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    return { groups, sortedZones };
+  }, [locations, zones]);
 
   const groupedInventory = useMemo(() => {
     const today = new Date().getTime();
@@ -227,31 +253,55 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
             </form>
           </Card>
     
-          <Subtitle>Existing Locations</Subtitle>
-          <div className="space-y-3">
-            {locations.map(loc => {
-              const plantsInZone = instances.filter(i => i.locationId === loc.id).length;
-              const zone = zones.find(z => z.id === loc.zoneId);
-              const isEditing = editingId === loc.id;
-    
-              return (
-                <LocationCard
-                  key={loc.id}
-                  location={loc}
-                  zoneName={zone?.name}
-                  zones={zones}
-                  plantsInLocation={plantsInZone}
-                  isEditing={isEditing}
-                  editData={editData}
-                  setEditData={setEditData}
-                  onEditStart={() => { setEditingId(loc.id); setEditData(loc); }}
-                  onEditCancel={() => setEditingId(null)}
-                  onSave={(e) => { e.preventDefault(); onUpdate(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
-                  onDelete={() => { if (plantsInZone === 0 && window.confirm('Delete this location?')) { onDelete(loc.id); showToast('🗑️ Location removed'); } }}
-                  onNavigateLocation={() => onNavigateLocation(loc.id)}
-                />
-              );
-            })}
+          <Subtitle className="!mb-0">Existing Locations</Subtitle>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">(grouped by Zone)</p>
+          <div className="space-y-4">
+            {groupedLocations.sortedZones.length === 0 ? (
+              <p className="text-sm text-slate-500 italic mt-4">No locations currently assigned.</p>
+            ) : (
+              groupedLocations.sortedZones.map(zoneName => (
+                <div key={zoneName} className="border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0">
+                  <button 
+                    onClick={() => toggleLocationZone(zoneName)}
+                    className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
+                  >
+                    <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      {zoneName} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedLocations.groups[zoneName].length})</span>
+                    </Subtitle>
+                    <span className={`text-slate-400 transition-transform duration-200 ${expandedLocationZones.includes(zoneName) ? 'rotate-180' : ''}`}>
+                      ▼
+                    </span>
+                  </button>
+                  
+                  {expandedLocationZones.includes(zoneName) && (
+                    <div className="space-y-3 mb-4">
+                      {groupedLocations.groups[zoneName].map(loc => {
+                        const plantsInLocation = instances.filter(i => i.locationId === loc.id).length;
+                        const isEditing = editingId === loc.id;
+              
+                        return (
+                          <LocationCard
+                            key={loc.id}
+                            location={loc}
+                            zoneName={zoneName}
+                            zones={zones}
+                            plantsInLocation={plantsInLocation}
+                            isEditing={isEditing}
+                            editData={editData}
+                            setEditData={setEditData}
+                            onEditStart={() => { setEditingId(loc.id); setEditData(loc); }}
+                            onEditCancel={() => setEditingId(null)}
+                            onSave={(e) => { e.preventDefault(); onUpdate(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
+                            onDelete={() => { if (plantsInLocation === 0 && window.confirm('Delete this location?')) { onDelete(loc.id); showToast('🗑️ Location removed'); } }}
+                            onNavigateLocation={() => onNavigateLocation(loc.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </>
       )}
