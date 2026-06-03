@@ -335,7 +335,6 @@ export const App: FC = () => {
   const handleNavigate = (qrId: string) => navigateTo(`/plant/${qrId}`);
   const handleNavigateLocation = (locId: string) => navigateTo(`/location/${locId}`);
   const handleNavigateZone = (zoneId: string) => navigateTo(`/zone/${zoneId}`);
-  const handleGoHome = () => navigateTo('/');
 
   const handleMenuNavigate = (route: MenuRoute) => {
     setIsMenuOpen(false);
