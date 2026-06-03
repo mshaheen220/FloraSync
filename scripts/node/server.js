@@ -59,13 +59,16 @@ app.post('/api/generate-qrs', (req, res) => {
   const { mode, category, prefix, startId } = req.body;
   let command = '';
 
+  // Smartly use a virtual environment if it exists, otherwise fallback to global python3
+  const pythonCmd = fs.existsSync(path.join(ROOT_DIR, '.venv/bin/python3')) ? '.venv/bin/python3' : 'python3';
+
   if (mode === 'db') {
-    command = `python3 scripts/python/make_qrs.py --from-db`;
+    command = `${pythonCmd} scripts/python/make_qrs.py --from-db`;
   } else if (mode === 'blank') {
     if (!category || !prefix || !startId) {
       return res.status(400).json({ error: 'Missing required fields for blank tags' });
     }
-    command = `python3 scripts/python/make_qrs.py --category ${category} --prefix ${prefix} --start-id ${startId}`;
+    command = `${pythonCmd} scripts/python/make_qrs.py --category ${category} --prefix ${prefix} --start-id ${startId}`;
   } else {
     return res.status(400).json({ error: 'Invalid mode' });
   }
