@@ -260,8 +260,8 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         <section className="mb-8 animate-in fade-in duration-500 delay-[125ms]">
           <Subtitle>🌟 {dailySpotlight.title}</Subtitle>
           <Card onClick={() => onNavigate(dailySpotlight.instance.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 flex items-center gap-4 !p-4">
-            {dailySpotlight.archetype.imageUrl ? (
-              <img src={dailySpotlight.archetype.imageUrl} alt={dailySpotlight.archetype.commonName} className="w-20 h-20 rounded-xl object-cover border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800 flex-shrink-0" />
+            {dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl ? (
+              <img src={dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl} alt={dailySpotlight.archetype.commonName} className="w-20 h-20 rounded-xl object-cover border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800 flex-shrink-0" />
             ) : (
               <div className="w-20 h-20 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-3xl flex-shrink-0">🌿</div>
             )}

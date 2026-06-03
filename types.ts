@@ -24,6 +24,14 @@ export interface PlantArchetype {
   lifecycle: string;
 }
 
+export interface JournalEntry {
+  id: string;
+  timestamp: string; // ISO String
+  title?: string;
+  note?: string;
+  imageUrl?: string;
+}
+
 export interface PlantInstance {
   qrId: string;
   archetypeId: string;
@@ -32,6 +40,8 @@ export interface PlantInstance {
   dateHarvested?: string;
   lastWatered: string; // ISO String
   lastFed: string;     // ISO String
+  imageUrl?: string;   // Instance-specific custom thumbnail
+  journal?: JournalEntry[];
 }
 
 export interface Location {
