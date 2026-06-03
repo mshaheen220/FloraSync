@@ -27,10 +27,12 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   // Filter out any plants that have already completed their lifecycle
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
 
+  const trackedInstances = useMemo(() => activeInstances.filter(i => !i.untracked), [activeInstances]);
+
   // Attention Queue sorting engine logic calculating actual time distance against care intervals
   const attentionQueue = useMemo(() => {
     const today = new Date().getTime();
-    return activeInstances.filter(i => !i.untracked).map(instance => {
+    return trackedInstances.map(instance => {
       const archetype = archetypes.find(a => a.id === instance.archetypeId);
       const location = locations.find(l => l.id === instance.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
@@ -48,7 +50,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         ratio
       };
     }).sort((a, b) => a.ratio - b.ratio);
-  }, [activeInstances, archetypes, locations, zones]);
+  }, [trackedInstances, archetypes, locations, zones]);
 
   const overdueLocations = useMemo(() => {
     const locIds = new Set(attentionQueue.filter(item => item.isOverdue).map(item => item.locationId));
@@ -64,7 +66,6 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   }, [attentionQueue]);
 
   const averageNutrition = useMemo(() => {
-    const trackedInstances = activeInstances.filter(i => !i.untracked);
     if (trackedInstances.length === 0) return 100;
     const today = new Date().getTime();
     const total = trackedInstances.reduce((acc, inst) => {
@@ -75,7 +76,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       return acc + ratio;
     }, 0);
     return Math.round((total / trackedInstances.length) * 100);
-  }, [activeInstances, archetypes]);
+  }, [trackedInstances, archetypes]);
 
   const mostPopulatedZone = useMemo(() => {
     if (activeInstances.length === 0 || zones.length === 0) return { name: 'None', id: null };
@@ -192,7 +193,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
 
   const hungryPlants = useMemo(() => {
     const today = new Date().getTime();
-    return activeInstances.filter(i => !i.untracked).map(inst => {
+    return trackedInstances.map(inst => {
       const archetype = archetypes.find(a => a.id === inst.archetypeId);
       const location = locations.find(l => l.id === inst.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
@@ -201,7 +202,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       const ratio = Math.max(0, 1 - ((today - lastFedTime) / intervalMs));
       return { ...inst, archetype, location, zone, isOverdue: ratio <= 0 };
     }).filter(p => p.isOverdue);
-  }, [activeInstances, archetypes, locations, zones]);
+  }, [trackedInstances, archetypes, locations, zones]);
 
   return (
     <Container>
@@ -239,8 +240,9 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
             onClick={onNavigateInventory}
           >
             <span className="text-3xl mb-2">🌱</span>
-            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{activeInstances.length}</span>
+            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{trackedInstances.length}</span>
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Active Plants</span>
+            <span className="text-[9px] font-semibold text-slate-400/70 dark:text-slate-500 mt-1">{activeInstances.length} in inventory</span>
           </Card>
           <Card 
             className={`!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between transition-colors ${mostPopulatedZone.id ? 'cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700' : ''}`}
