@@ -30,6 +30,13 @@ export interface JournalEntry {
   title?: string;
   note?: string;
   imageUrl?: string;
+  height?: string;
+  fullness?: string;
+  colorAppearance?: string;
+  healthIssues?: string;
+  growthStage?: string;
+  activityType?: string;
+  harvestAmount?: string;
 }
 
 export interface PlantInstance {

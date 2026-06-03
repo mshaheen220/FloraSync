@@ -1,6 +1,6 @@
 import { useEffect, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
 
 interface LocationDetailProps {
@@ -76,9 +76,9 @@ export const LocationDetail: FC<LocationDetailProps> = ({
             </p>
           </div>
         </div>
-        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+        <MenuButton onClick={onOpenMenu}>
           ☰
-        </button>
+        </MenuButton>
       </header>
 
       <Card className="flex flex-col items-center py-6 mb-6">

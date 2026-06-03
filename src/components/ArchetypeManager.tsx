@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, FC, FormEvent } from 'react';
 import { PlantArchetype, PlantInstance } from '../../types';
-import { Container, Title, Input, Toast, Subtitle, Button } from '../styles/StyledElements';
+import { Container, Title, Input, Toast, Subtitle, Button, MenuButton } from '../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
 
 interface ArchetypeManagerProps {
@@ -133,9 +133,9 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
           </button>
           <Title className="!mb-0">Plant Dictionary</Title>
         </div>
-        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+        <MenuButton onClick={onOpenMenu}>
           ☰
-        </button>
+        </MenuButton>
       </header>
 
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">

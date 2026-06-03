@@ -1,6 +1,6 @@
 import { useState, useEffect, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance, PlantArchetype } from '../../types';
-import { Container, Title, Card, Button, Input, Toast, Subtitle } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
 import { Theme } from '../App';
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { ZoneCard } from './ZoneCard';
@@ -179,9 +179,9 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
             {mode === 'inventory' && 'Inventory Manager'}
           </Title>
         </div>
-        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+        <MenuButton onClick={onOpenMenu}>
           ☰
-        </button>
+        </MenuButton>
       </header>
 
       {mode === 'settings' && (

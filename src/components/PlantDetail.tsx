@@ -1,7 +1,8 @@
-import { useEffect, useState, FC, FormEvent, ChangeEvent } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, JournalEntry } from '../../types';
-import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle } from '../styles/StyledElements';
+import { useEffect, useState, FC, FormEvent } from 'react';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
+import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
+import { PlantJournal } from './PlantJournal';
 
 interface PlantDetailProps {
   qrId: string;
@@ -32,9 +33,6 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '', untracked: false });
 
-  const [isAddingJournal, setIsAddingJournal] = useState(false);
-  const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
-  const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   const showToast = (msg: string) => {
@@ -92,57 +90,6 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const handleRegistrationSubmit = (id: string, identifier: string, isNew: boolean, locId: string, isNewLoc?: boolean, zId?: string, isNewZ?: boolean, img?: string) => {
     onRegister(id, identifier, isNew, locId, isNewLoc, zId, isNewZ, img);
     showToast('🌱 Plant registered successfully!');
-  };
-
-  const handleJournalImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setJournalForm({...journalForm, imageUrl: reader.result as string});
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleSaveJournal = (e: FormEvent) => {
-    e.preventDefault();
-    if (!instance) return;
-    
-    const currentJournal = instance.journal || [];
-    const timestamp = journalForm.timestamp ? new Date(journalForm.timestamp).toISOString() : new Date().toISOString();
-    let updatedJournal;
-
-    if (editingJournalId) {
-      updatedJournal = currentJournal.map(entry => 
-        entry.id === editingJournalId ? { ...entry, ...journalForm, timestamp } as JournalEntry : entry
-      );
-    } else {
-      const newEntry: JournalEntry = {
-        id: `j-${Date.now()}`,
-        timestamp,
-        title: journalForm.title || '',
-        note: journalForm.note || '',
-        imageUrl: journalForm.imageUrl || ''
-      };
-      updatedJournal = [newEntry, ...currentJournal].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    }
-    
-    onUpdate(qrId, { journal: updatedJournal });
-    setEditingJournalId(null);
-    setIsAddingJournal(false);
-    setJournalForm({});
-    showToast(editingJournalId ? '📓 Journal updated!' : '📓 Journal entry added!');
-  };
-
-  const handleDeleteJournal = (id: string) => {
-    if (!instance || !window.confirm('Delete this journal entry?')) return;
-    const currentJournal = instance.journal || [];
-    onUpdate(qrId, { journal: currentJournal.filter(j => j.id !== id) });
-    showToast('🗑️ Entry removed');
-  };
-
-  const handleSetThumbnail = (imageUrl: string) => {
-    onUpdate(qrId, { imageUrl });
-    showToast('🖼️ Cover photo updated!');
   };
 
   // 4. Dynamic Just-In-Time Registration Form (when QR isn't mapped in instances)
@@ -390,9 +337,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
             ✏️
           </button>
-          <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          <MenuButton onClick={onOpenMenu}>
             ☰
-          </button>
+          </MenuButton>
         </div>
       </header>
 
@@ -605,79 +552,11 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('journal') ? 'rotate-180' : ''}`}>▼</span>
         </button>
         {expandedSections.includes('journal') && (
-          <div className="mt-2">
-            {!isAddingJournal && !editingJournalId ? (
-              <Button onClick={() => { setIsAddingJournal(true); setJournalForm({ timestamp: new Date().toISOString().slice(0, 16) }); }} className="mb-6">+ Add Journal Entry</Button>
-            ) : (
-              <Card className="mb-6 border-emerald-500 shadow-md">
-                <Subtitle className="!mt-0 mb-4">{editingJournalId ? 'Edit Entry' : 'New Journal Entry'}</Subtitle>
-                <form onSubmit={handleSaveJournal} className="flex flex-col gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Date & Time</label>
-                    <Input type="datetime-local" value={journalForm.timestamp || ''} onChange={e => setJournalForm({...journalForm, timestamp: e.target.value})} className="!mb-0 py-2.5" required />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Title (Optional)</label>
-                    <Input placeholder="e.g. First flowers!" value={journalForm.title || ''} onChange={e => setJournalForm({...journalForm, title: e.target.value})} className="!mb-0 py-2.5" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Note (Optional)</label>
-                    <textarea value={journalForm.note || ''} onChange={e => setJournalForm({...journalForm, note: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} placeholder="Observations, measurements, thoughts..." />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Photo (Optional)</label>
-                    <div className="flex items-center gap-3">
-                      {journalForm.imageUrl && (
-                        <img src={journalForm.imageUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
-                      )}
-                      <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                        📸 {journalForm.imageUrl ? 'Change Photo' : 'Take Photo'}
-                        <input type="file" accept="image/*" capture="environment" onChange={handleJournalImageCapture} className="hidden" />
-                      </label>
-                      {journalForm.imageUrl && (
-                        <button type="button" onClick={() => setJournalForm({...journalForm, imageUrl: ''})} className="text-red-500 text-sm font-semibold">Remove</button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <Button type="button" variant="secondary" onClick={() => { setIsAddingJournal(false); setEditingJournalId(null); setJournalForm({}); }}>Cancel</Button>
-                    <Button type="submit">Save Entry</Button>
-                  </div>
-                </form>
-              </Card>
-            )}
-
-            {instance.journal && instance.journal.length > 0 ? (
-              <div className="relative border-l-2 border-emerald-200 dark:border-emerald-800 ml-4 pl-6 space-y-6 mb-8 mt-2">
-                {instance.journal.map(entry => (
-                  <div key={entry.id} className="relative">
-                    <div className="absolute -left-[31px] bg-emerald-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                        {new Date(entry.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                      </span>
-                      <div className="flex gap-2">
-                        <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: new Date(entry.timestamp).toISOString().slice(0, 16) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-emerald-600 active:scale-90 transition-transform">✏️</button>
-                        <button onClick={() => handleDeleteJournal(entry.id)} className="text-slate-400 hover:text-red-600 active:scale-90 transition-transform">🗑️</button>
-                      </div>
-                    </div>
-                    {entry.title && <h4 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-1">{entry.title}</h4>}
-                    {entry.note && <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{entry.note}</p>}
-                    {entry.imageUrl && (
-                      <div className="mt-2">
-                        <img src={entry.imageUrl} alt={entry.title || 'Journal photo'} className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2" />
-                        <button onClick={() => handleSetThumbnail(entry.imageUrl!)} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-                          {instance.imageUrl === entry.imageUrl ? '★ Current Cover Photo' : 'Set as Cover Photo'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500 italic mt-2 mb-8">No journal entries yet.</p>
-            )}
-          </div>
+          <PlantJournal 
+            instance={instance} 
+            onUpdate={(updates) => onUpdate(qrId, updates)} 
+            showToast={showToast} 
+          />
         )}
       </div>
 
