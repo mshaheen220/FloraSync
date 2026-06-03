@@ -99,7 +99,10 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         });
         showToast('🖨️ QR Sheets generated successfully!');
       } else {
-        showToast('❌ Error generating QRs.');
+        // Python tracebacks or Node exec errors usually have the actual reason on the last line
+        const errorLines = data.error?.split('\n').filter((l: string) => l.trim() !== '') || [];
+        const shortError = errorLines.length > 0 ? errorLines[errorLines.length - 1] : 'Error generating QRs';
+        showToast(`❌ ${shortError}`);
       }
     } catch (e) {
       showToast('❌ Failed to connect to server.');
