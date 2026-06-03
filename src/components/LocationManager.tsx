@@ -281,8 +281,6 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               </button>
             ))}
           </Card>
-        </>
-      )}
 
       <Subtitle>Print Center</Subtitle>
       <Card className="mb-8">
@@ -368,6 +366,8 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
           )}
         </div>
       </Card>
+        </>
+      )}
 
       {mode === 'zones' && (
         <>
