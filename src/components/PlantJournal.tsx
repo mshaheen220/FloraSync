@@ -181,8 +181,8 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   <img src={journalForm.imageUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
                 )}
                 <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                  📸 {journalForm.imageUrl ? 'Change Photo' : 'Take Photo'}
-                  <input type="file" accept="image/*" capture="environment" onChange={handleJournalImageCapture} className="hidden" />
+                  📸 {journalForm.imageUrl ? 'Change Photo' : 'Add Photo'}
+                  <input type="file" accept="image/*" onChange={handleJournalImageCapture} className="hidden" />
                 </label>
                 {journalForm.imageUrl && (
                   <button type="button" onClick={() => setJournalForm({...journalForm, imageUrl: ''})} className="text-red-500 text-sm font-semibold">Remove</button>
