@@ -74,7 +74,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lifecycle</label>
-              <select value={editData.lifecycle || ''} onChange={e => setEditData({...editData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" required>
+              <select value={editData.lifecycle || ''} onChange={e => setEditData({...editData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" required>
                 <option value="Annual">Annual</option>
                 <option value="Biennial">Biennial</option>
                 <option value="Perennial">Perennial</option>

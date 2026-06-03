@@ -90,26 +90,26 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedMode(''); }}>
+      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedMode(''); }}>
         <option value="" disabled>Select a category...</option>
         {groupedArchetypes.sortedCategories.map(category => (
           <option key={category} value={category}>{category}</option>
         ))}
       </select>
       {selectedCategory && (
-        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
+        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
           <option value="" disabled>Select a plant...</option>
           {groupedArchetypes.groups[selectedCategory].map(a => <option key={a.id} value={a.id}>{a.commonName}</option>)}
           <option value="other">+ Other (Add new...)</option>
         </select>
       )}
-      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}>
+      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}>
         <option value="" disabled>Select a zone...</option>
         {sortedZones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
         <option value="other">+ Other (Add new zone...)</option>
       </select>
       {selectedZone && selectedZone !== 'other' && (
-        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)}>
+        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)}>
           <option value="" disabled>Select a location...</option>
           {locations.filter(l => l.zoneId === selectedZone).map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
           <option value="other">+ Other (Add new location...)</option>

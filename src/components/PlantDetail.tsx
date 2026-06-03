@@ -29,7 +29,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '' });
+  const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '', untracked: false });
 
   const [isAddingJournal, setIsAddingJournal] = useState(false);
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
@@ -57,7 +57,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         lastWatered: new Date(instance.lastWatered).toISOString().slice(0, 16),
           lastFed: new Date(instance.lastFed).toISOString().slice(0, 16),
           datePlanted: instance.datePlanted ? new Date(instance.datePlanted).toISOString().slice(0, 16) : '',
-          dateHarvested: instance.dateHarvested ? new Date(instance.dateHarvested).toISOString().slice(0, 16) : ''
+        dateHarvested: instance.dateHarvested ? new Date(instance.dateHarvested).toISOString().slice(0, 16) : '',
+        untracked: instance.untracked || false
       });
     }
   }, [instance]);
@@ -177,7 +178,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         lastWatered: new Date(editData.lastWatered).toISOString(),
         lastFed: new Date(editData.lastFed).toISOString(),
         datePlanted: editData.datePlanted ? new Date(editData.datePlanted).toISOString() : instance.datePlanted,
-        dateHarvested: editData.dateHarvested ? new Date(editData.dateHarvested).toISOString() : undefined
+        dateHarvested: editData.dateHarvested ? new Date(editData.dateHarvested).toISOString() : undefined,
+        untracked: editData.untracked
       });
       setIsEditing(false);
       showToast('✅ Plant updated!');
@@ -200,7 +202,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Location</label>
               <select 
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 value={editData.locationId}
                 onChange={e => setEditData({...editData, locationId: e.target.value})}
               >
@@ -253,6 +255,21 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             />
           </div>
 
+          <div>
+            <label className="flex items-start gap-3 text-sm font-semibold text-slate-700 dark:text-slate-300 mt-2 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors hover:border-emerald-300 dark:hover:border-emerald-700">
+              <input 
+                type="checkbox" 
+                checked={editData.untracked} 
+                onChange={e => setEditData({...editData, untracked: e.target.checked})} 
+                className="w-5 h-5 mt-0.5 accent-emerald-600 rounded cursor-pointer"
+              />
+              <div className="flex-1">
+                <span className="block text-slate-800 dark:text-slate-100">Unmonitored / Rain-fed</span>
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 block mt-0.5 leading-snug">Exclude this plant from your dashboard watering and feeding queues.</span>
+              </div>
+            </label>
+          </div>
+
             <div className="mt-4">
               <Button type="submit">Save Changes</Button>
             </div>
@@ -279,7 +296,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     );
   }
 
-  const isOverdue = (() => {
+  const isOverdue = !instance.untracked && (() => {
     const today = new Date().getTime();
     const lastWateredTime = new Date(instance.lastWatered).getTime();
     const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
@@ -375,8 +392,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-8"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
-          <StatusBadge status={isOverdue ? 'overdue' : 'hydrated'} className="mb-5 shadow-sm">
-            {isOverdue ? 'Watering Overdue' : 'Optimal Hydration'}
+          <StatusBadge status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-5 shadow-sm">
+            {instance.untracked ? 'Unmonitored / Rain-Fed' : (isOverdue ? 'Watering Overdue' : 'Optimal Hydration')}
           </StatusBadge>
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
           <p>Planted: {new Date(instance.datePlanted).toLocaleDateString()}</p>

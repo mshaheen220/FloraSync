@@ -30,13 +30,15 @@ export const Button = styled.button.attrs<{ variant?: 'primary' | 'secondary' | 
   return { className: baseClasses };
 })<{ variant?: 'primary' | 'secondary' | 'batch' }>``;
 
-export const StatusBadge = styled.span.attrs<{ status: 'hydrated' | 'overdue' }>(({ status }) => ({
+export const StatusBadge = styled.span.attrs<{ status: 'hydrated' | 'overdue' | 'unmonitored' }>(({ status }) => ({
   className: `inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
     status === 'hydrated'
       ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300'
-      : 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800'
+      : status === 'overdue'
+        ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800'
+        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
   }`,
-}))<{ status: 'hydrated' | 'overdue' }>``;
+}))<{ status: 'hydrated' | 'overdue' | 'unmonitored' }>``;
 
 export const ProgressBarContainer = styled.div.attrs({
   className: 'w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden',
@@ -48,7 +50,7 @@ export const ProgressBarFill = styled.div.attrs<{ ratio: number }>(({ ratio }) =
 }))<{ ratio: number }>``;
 
 export const Input = styled.input.attrs({
-  className: 'w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 mb-4 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all',
+  className: 'w-full max-w-full min-w-0 border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] mb-4 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all accent-emerald-600 dark:accent-emerald-500',
 })``;
 
 export const Toast = styled.div.attrs<{ $visible: boolean }>(({ $visible }) => ({

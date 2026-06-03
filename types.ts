@@ -40,6 +40,7 @@ export interface PlantInstance {
   dateHarvested?: string;
   lastWatered: string; // ISO String
   lastFed: string;     // ISO String
+  untracked?: boolean; // Exclude from care queues (e.g. established shrubs)
   imageUrl?: string;   // Instance-specific custom thumbnail
   journal?: JournalEntry[];
 }

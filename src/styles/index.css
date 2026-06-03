@@ -4,3 +4,31 @@
 
 /* Optional: Add custom utility classes to hide scrollbars for the horizontal quick actions */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Fix iOS Safari dark mode browser UI elements (calendar icons, select dropdown arrows) */
+html.dark {
+  color-scheme: dark;
+}
+
+/* Explicitly tell mobile OS form controls to use dark mode rendering */
+html.dark input,
+html.dark select,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+/* Force calendar icon to turn white in dark mode on WebKit browsers */
+html.dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* Strip iOS/Android intrinsic sizing locks so height/width match text fields perfectly */
+input[type="datetime-local"] {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box !important;
+  -webkit-appearance: none;
+  appearance: none;
+}

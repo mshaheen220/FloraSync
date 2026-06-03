@@ -30,7 +30,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   // Attention Queue sorting engine logic calculating actual time distance against care intervals
   const attentionQueue = useMemo(() => {
     const today = new Date().getTime();
-    return activeInstances.map(instance => {
+    return activeInstances.filter(i => !i.untracked).map(instance => {
       const archetype = archetypes.find(a => a.id === instance.archetypeId);
       const location = locations.find(l => l.id === instance.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
@@ -64,16 +64,17 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
   }, [attentionQueue]);
 
   const averageNutrition = useMemo(() => {
-    if (activeInstances.length === 0) return 100;
+    const trackedInstances = activeInstances.filter(i => !i.untracked);
+    if (trackedInstances.length === 0) return 100;
     const today = new Date().getTime();
-    const total = activeInstances.reduce((acc, inst) => {
+    const total = trackedInstances.reduce((acc, inst) => {
       const archetype = archetypes.find(a => a.id === inst.archetypeId);
       const intervalMs = (archetype?.feedingIntervalDays || 14) * 24 * 60 * 60 * 1000;
       const timeElapsed = today - new Date(inst.lastFed).getTime();
       const ratio = Math.max(0, 1 - (timeElapsed / intervalMs));
       return acc + ratio;
     }, 0);
-    return Math.round((total / activeInstances.length) * 100);
+    return Math.round((total / trackedInstances.length) * 100);
   }, [activeInstances, archetypes]);
 
   const mostPopulatedZone = useMemo(() => {
@@ -191,7 +192,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
 
   const hungryPlants = useMemo(() => {
     const today = new Date().getTime();
-    return activeInstances.map(inst => {
+    return activeInstances.filter(i => !i.untracked).map(inst => {
       const archetype = archetypes.find(a => a.id === inst.archetypeId);
       const location = locations.find(l => l.id === inst.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
