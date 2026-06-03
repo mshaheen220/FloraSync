@@ -15,10 +15,12 @@ When you want to add a new feature or update the code, you will do all your acti
 Because the deployment server (TheForge) is running an older macOS that cannot natively compile the frontend via `esbuild`, you must build the UI on your laptop and transfer the static files over.
 
 **The Fast Way (Automated)**  
-Run this script on your MacBook to automatically build the UI, compress it, transfer it, and push your code to GitHub:
+Run this script on your MacBook to automatically build the UI, compress it, transfer it, and push your code to GitHub. The message is optional but a good idea as it serves as the commit message.
 ```bash
 ./scripts/bash/deploy-mac.sh "Describe your changes here"
 ```
+
+*Note: it will prompt you for password for theforge. it is easy to forget. just watch the console.*
 
 ---
 
