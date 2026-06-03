@@ -96,6 +96,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
                 key={item.qrId}
                 instance={item}
                 archetype={archetype}
+                zoneModifier={zone?.evaporationModifier}
                 onClick={() => onNavigate(item.qrId)}
               />
             );

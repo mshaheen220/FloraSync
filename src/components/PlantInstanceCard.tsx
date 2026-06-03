@@ -7,11 +7,15 @@ interface PlantInstanceCardProps {
   archetype?: PlantArchetype;
   locationName?: string;
   zoneName?: string;
+  zoneModifier?: number;
   onClick: () => void;
 }
 
-export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archetype, locationName, zoneName, onClick }) => {
-  const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
+export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archetype, locationName, zoneName, zoneModifier = 1.0, onClick }) => {
+  const sunReq = archetype?.sunRequirement?.toLowerCase() || '';
+  const sunModifier = sunReq.includes('full sun') ? 1.2 : (sunReq.includes('shade') && !sunReq.includes('part') ? 0.8 : 1.0);
+  
+  const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
   const timeElapsed = new Date().getTime() - new Date(instance.lastWatered).getTime();
   const ratio = Math.max(0, 1 - (timeElapsed / intervalMs));
   const isOverdue = !instance.untracked && ratio <= 0;

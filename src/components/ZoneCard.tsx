@@ -28,6 +28,25 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Description (Optional)</label>
             <Input value={editZoneData.description || ''} onChange={e => setEditZoneData({...editZoneData, description: e.target.value})} className="!mb-0 py-2.5" />
           </div>
+          <div>
+            <label className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
+              <span>Evaporation Modifier</span>
+              <span className="text-emerald-600 dark:text-emerald-400">{editZoneData.evaporationModifier || 1.0}x</span>
+            </label>
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 pb-2 rounded-xl border border-slate-200 dark:border-slate-700">
+              <input 
+                type="range" min="0.5" max="1.5" step="0.1" 
+                value={editZoneData.evaporationModifier || 1.0} 
+                onChange={e => setEditZoneData({...editZoneData, evaporationModifier: parseFloat(e.target.value)})} 
+                className="w-full accent-emerald-600 dark:accent-emerald-500"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                <span>Slower (0.5x)</span>
+                <span>Normal (1.0x)</span>
+                <span>Faster (1.5x)</span>
+              </div>
+            </div>
+          </div>
           <div className="flex gap-2 mt-2">
             <Button type="button" variant="secondary" onClick={onEditCancel}>Cancel</Button>
             <Button type="submit">Save</Button>

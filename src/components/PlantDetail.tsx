@@ -299,7 +299,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const isOverdue = !instance.untracked && (() => {
     const today = new Date().getTime();
     const lastWateredTime = new Date(instance.lastWatered).getTime();
-    const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
+    
+    const zoneModifier = zone?.evaporationModifier || 1.0;
+    const sunReq = archetype?.sunRequirement?.toLowerCase() || '';
+    const sunModifier = sunReq.includes('full sun') ? 1.2 : (sunReq.includes('shade') && !sunReq.includes('part') ? 0.8 : 1.0);
+    
+    const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
     return (today - lastWateredTime) > intervalMs;
   })();
 

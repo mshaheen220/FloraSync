@@ -104,7 +104,12 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
       const location = locations.find(l => l.id === instance.locationId);
       const zone = zones.find(z => z.id === location?.zoneId);
       const lastWateredTime = new Date(instance.lastWatered).getTime();
-      const intervalMs = (archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000;
+      
+      const zoneModifier = zone?.evaporationModifier || 1.0;
+      const sunReq = archetype?.sunRequirement?.toLowerCase() || '';
+      const sunModifier = sunReq.includes('full sun') ? 1.2 : (sunReq.includes('shade') && !sunReq.includes('part') ? 0.8 : 1.0);
+      
+      const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
       const timeElapsed = today - lastWateredTime;
       const ratio = Math.max(0, 1 - (timeElapsed / intervalMs));
       
@@ -388,6 +393,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                           archetype={item.archetype}
                           locationName={item.location?.name}
                           zoneName={item.zone?.name}
+                          zoneModifier={item.zone?.evaporationModifier}
                           onClick={() => onNavigate(item.qrId)}
                         />
                       ))}
