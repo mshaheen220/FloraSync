@@ -12,64 +12,31 @@ When you want to add a new feature or update the code, you will do all your acti
 3. Open `http://localhost:5173` to test your changes.
 
 ### Preparing for Deployment
-Because the deployment server (TheForge) is running an older macOS that cannot natively compile the frontend via `esbuild`, you must build the UI on your laptop and transfer the static files over:
+Because the deployment server (TheForge) is running an older macOS that cannot natively compile the frontend via `esbuild`, you must build the UI on your laptop and transfer the static files over.
 
-## ⚡ 1. Fast Way (Automated)
-   ```bash
-   ./scripts/bash/deploy-mac.sh
-   ```
-
-## 🐢 2. Manual Way
-1. **Build the production UI:**
-   ```bash
-   npm run build
-   ```
-2. **Compress the build folder:**
-   ```bash
-   tar -czf dist.tar.gz dist
-   ```
-3. **Send the compressed file to TheForge's home folder:** *(Sending to `~` bypasses macOS Full Disk Access restrictions)*
-   ```bash
-   scp dist.tar.gz michael@theforge.local:~
-   ```
-4. **Commit and push your code to GitHub:**
-   ```bash
-   git add .
-   git commit -m "Describe your changes"
-   git push
-   ```
+**The Fast Way (Automated)**  
+Run this script on your MacBook to automatically build the UI, compress it, transfer it, and push your code to GitHub:
+```bash
+./scripts/bash/deploy-mac.sh "Describe your changes here"
+```
 
 ---
 
 ## 🚀 2. Deploying (On TheForge)
 
-Once the UI is compiled and transferred, SSH or Screen Share into *TheForge* and open a terminal.
+Once the UI is compiled and transferred, SSH or Screen Share into TheForge and open a terminal.
 
-### ⚡ 1. Fast Way (Automated)
-   ```bash
-   ./scripts/bash/deploy-forge.sh
-   ```
+### Deployment Steps
+Run this single script on TheForge to automatically pull the latest code, unpack the UI, safely install backend dependencies, and restart the server.
 
-### 🐢 2. Manual Way
+To keep your existing data, be sure to use the --with-backup flag. It will create a backup of florasync.db, pull latest from github repo, then restore the florsync.db from the backup.
 ```bash
-# 1. Navigate to the project folder
-cd /Users/michael/Documents/dev/FloraSync
+./scripts/bash/deploy-forge.sh --with-backup
+```
 
-# 2. Ensure a clean slate and pull the latest backend code from GitHub
-git restore .
-git pull
-
-# 3. Move the zipped UI from the home folder and extract it
-mv ~/dist.tar.gz .
-tar -xzf dist.tar.gz
-
-# 4. Clean the node_modules and strictly install the backend dependencies
-# (The --omit=dev flag prevents Vite/esbuild from crashing the install)
-rm -rf node_modules
-npm install --omit=dev
-
-# 5. Restart the PM2 application to apply the changes
-pm2 restart florasync
+For a clean instance update, omit that flag:
+```bash
+./scripts/bash/deploy-forge.sh
 ```
 
 *Your updates are now live at `https://theforge.local:8080`!*
@@ -99,12 +66,6 @@ Caddy acts as the front door. It listens on Port 8080, handles the secure `https
 caddy start --config ~/.config/caddy/Caddyfile
 ```
 *(If Caddy is already running but acting up, use `caddy reload --config ~/.config/caddy/Caddyfile` instead).*
-
-#### This script should start up both
-   ```bash
-   ./scripts/bash/restart-forge.sh
-   ```
-
 
 ---
 

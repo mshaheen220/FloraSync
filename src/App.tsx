@@ -428,9 +428,9 @@ export const App: FC = () => {
         onBatchFeedAll={handleBatchFeedAll}
         onBatchWaterZone={handleBatchWaterZone}
         onNavigate={handleNavigate} 
-        onOpenScanner={() => setCurrentView('scanner')} 
+        onOpenScanner={() => navigateTo('/scanner')} 
         onOpenMenu={() => setIsMenuOpen(true)} 
-        onNavigateInventory={() => setCurrentView('inventory')} 
+        onNavigateInventory={() => navigateTo('/inventory')} 
         onNavigateZone={handleNavigateZone} 
       />
     );
