@@ -306,6 +306,14 @@ export const App: FC = () => {
     setArchetypes(prev => [...prev, newArchetype]);
   };
 
+  const handleRegisterLocation = (id: string, name: string, zoneId: string) => {
+    setLocations(prev => [...prev, { id, name, zoneId }]);
+  };
+
+  const handleRegisterZone = (id: string, name: string) => {
+    setZones(prev => [...prev, { id, name }]);
+  };
+
   const handleAddZone = (name: string) => {
     const newId = `zn-${Date.now()}`;
     setZones(prev => [...prev, { id: newId, name }]);
@@ -390,7 +398,7 @@ export const App: FC = () => {
       const locationInstances = instances.filter(i => i.locationId === activeLoc);
       
       return (
-        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
+        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
       );
     }
 
@@ -401,7 +409,7 @@ export const App: FC = () => {
       const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
       
       return (
-        <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
+        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
       );
     }
 

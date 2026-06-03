@@ -112,6 +112,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             onCancel={onGoBack} 
             submitLabel="Initialize Care Routine" 
           />
+          <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400">
+            Not a plant? Register this tag as a <button onClick={() => onNavigateLocation(qrId)} className="text-emerald-600 dark:text-emerald-400 font-semibold underline decoration-dotted underline-offset-2">Location</button> or <button onClick={() => onNavigateZone(qrId)} className="text-emerald-600 dark:text-emerald-400 font-semibold underline decoration-dotted underline-offset-2">Zone</button>.
+          </div>
         </Card>
         <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
       </Container>

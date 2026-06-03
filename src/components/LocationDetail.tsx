@@ -1,6 +1,6 @@
 import { useEffect, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Toast, Subtitle, MenuButton, Input } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
 
 interface LocationDetailProps {
@@ -8,8 +8,10 @@ interface LocationDetailProps {
   initialAction: string | null;
   location?: Location;
   zone?: Zone;
+  zones: Zone[];
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
+  onRegisterLocation: (id: string, name: string, zoneId: string) => void;
   onBatchWater: (locationId: string) => void;
   onBatchFeed: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
@@ -20,9 +22,11 @@ interface LocationDetailProps {
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, instances, archetypes, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction 
+  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
+  const [newLocName, setNewLocName] = useState('');
+  const [newLocZone, setNewLocZone] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -47,14 +51,37 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   if (!location) {
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-        <Card className="text-center py-10 shadow-lg">
-          <div className="text-5xl mb-4">🤷</div>
-          <Title>Unknown Location</Title>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 px-2">
-            Location <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> does not exist in your database.
+        <Card className="text-center py-10 shadow-lg border-emerald-500">
+          <div className="text-5xl mb-4">📍</div>
+          <Title>New Location Tag</Title>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
+            Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned.
+            Where is this located?
           </p>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (!newLocName || !newLocZone) return;
+            onRegisterLocation(locationId, newLocName, newLocZone);
+            showToast('📍 Location registered!');
+          }} className="flex flex-col gap-3 text-left">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
+              <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={newLocZone} onChange={e => setNewLocZone(e.target.value)} required>
+                <option value="" disabled>Select a zone...</option>
+                {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Location Name</label>
+              <Input placeholder="e.g. Top Shelf" value={newLocName} onChange={e => setNewLocName(e.target.value)} className="!mb-0 py-2.5" required />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button type="button" variant="secondary" onClick={onGoBack}>Cancel</Button>
+              <Button type="submit">Register</Button>
+            </div>
+          </form>
         </Card>
-        <Button variant="secondary" onClick={onGoBack} className="mt-2">Go Back</Button>
+        <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
       </Container>
     );
   }

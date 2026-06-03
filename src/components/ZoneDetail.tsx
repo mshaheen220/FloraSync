@@ -1,14 +1,16 @@
 import { useEffect, useState, useMemo, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Toast, Subtitle, MenuButton, Input } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
 
 interface ZoneDetailProps {
+  zoneId: string;
   zone?: Zone;
   initialAction: string | null;
   locations: Location[];
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
+  onRegisterZone: (id: string, name: string) => void;
   onBatchWaterZone: (zoneId: string) => void;
   onBatchFeedZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
@@ -18,10 +20,11 @@ interface ZoneDetailProps {
 }
 
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
-  zone, initialAction, locations, instances, archetypes, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction 
+  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
+  const [newZoneName, setNewZoneName] = useState('');
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -75,14 +78,30 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   if (!zone) {
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-        <Card className="text-center py-10 shadow-lg">
-          <div className="text-5xl mb-4">🤷</div>
-          <Title>Unknown Zone</Title>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 px-2">
-            Zone does not exist in your database.
+        <Card className="text-center py-10 shadow-lg border-emerald-500">
+          <div className="text-5xl mb-4">🌍</div>
+          <Title>New Zone Tag</Title>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
+            Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned.
+            What is the name of this macro zone?
           </p>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            if (!newZoneName) return;
+            onRegisterZone(zoneId, newZoneName);
+            showToast('🌍 Zone registered!');
+          }} className="flex flex-col gap-3 text-left">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Zone Name</label>
+              <Input placeholder="e.g. Greenhouse" value={newZoneName} onChange={e => setNewZoneName(e.target.value)} className="!mb-0 py-2.5" required />
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button type="button" variant="secondary" onClick={onGoBack}>Cancel</Button>
+              <Button type="submit">Register</Button>
+            </div>
+          </form>
         </Card>
-        <Button variant="secondary" onClick={onGoBack} className="mt-2">Go Back</Button>
+        <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
       </Container>
     );
   }
