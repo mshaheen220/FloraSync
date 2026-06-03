@@ -24,3 +24,8 @@ dist.tar.gz
 
 # OS generated files
 .DS_Store
+
+# SQLite Database files
+*.db
+*.db-journal
+*.db-wal

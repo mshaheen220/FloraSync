@@ -1,4 +1,4 @@
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, useMemo, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Button, Toast, Subtitle } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
@@ -20,11 +20,41 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   zone, initialAction, locations, instances, archetypes, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoHome, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
+  const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
+
+  const toggleLocation = (locName: string) => {
+    setExpandedLocations(prev => 
+      prev.includes(locName)
+        ? prev.filter(l => l !== locName)
+        : [...prev, locName]
+    );
+  };
+
+  const groupedInstances = useMemo(() => {
+    const groups = instances.reduce((acc, inst) => {
+      const loc = locations.find(l => l.id === inst.locationId);
+      const locName = loc ? loc.name : 'Unassigned Location';
+      if (!acc[locName]) acc[locName] = [];
+      acc[locName].push(inst);
+      return acc;
+    }, {} as Record<string, PlantInstance[]>);
+
+    const sortedLocations = Object.keys(groups).sort();
+    sortedLocations.forEach(loc => {
+      groups[loc].sort((a, b) => {
+        const archA = archetypes.find(ar => ar.id === a.archetypeId);
+        const archB = archetypes.find(ar => ar.id === b.archetypeId);
+        return (archA?.commonName || '').localeCompare(archB?.commonName || '');
+      });
+    });
+
+    return { groups, sortedLocations };
+  }, [instances, locations, archetypes]);
 
   // "Zero-Click" Action Handling for entire zones
   useEffect(() => {
@@ -86,26 +116,43 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
         </div>
       </Card>
 
-      <Subtitle>Plants in {zone.name}</Subtitle>
-      <div className="space-y-3">
+      <Subtitle className="!mb-0">Plants in {zone.name}</Subtitle>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">(grouped by Location)</p>
+      <div className="space-y-4">
         {instances.length === 0 ? (
            <p className="text-sm text-slate-500 italic mt-4">No plants currently assigned to this zone.</p>
         ) : (
-          instances.map(item => {
-            const archetype = archetypes.find(a => a.id === item.archetypeId);
-            const itemLocation = locations.find(l => l.id === item.locationId);
-
-            return (
-              <PlantInstanceCard 
-                key={item.qrId}
-                instance={item}
-                archetype={archetype}
-                locationName={itemLocation?.name}
-                zoneModifier={zone?.evaporationModifier}
-                onClick={() => onNavigate(item.qrId)}
-              />
-            );
-          })
+          groupedInstances.sortedLocations.map(locName => (
+            <div key={locName} className="border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0">
+              <button 
+                onClick={() => toggleLocation(locName)}
+                className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
+              >
+                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                  {locName} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedInstances.groups[locName].length})</span>
+                </Subtitle>
+                <span className={`text-slate-400 transition-transform duration-200 ${expandedLocations.includes(locName) ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              
+              {expandedLocations.includes(locName) && (
+                <div className="space-y-3 mb-4">
+                  {groupedInstances.groups[locName].map(item => {
+                    const archetype = archetypes.find(a => a.id === item.archetypeId);
+                    return (
+                      <PlantInstanceCard 
+                        key={item.qrId}
+                        instance={item}
+                        archetype={archetype}
+                        locationName={locName}
+                        zoneModifier={zone?.evaporationModifier}
+                        onClick={() => onNavigate(item.qrId)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
