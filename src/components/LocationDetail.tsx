@@ -14,12 +14,13 @@ interface LocationDetailProps {
   onBatchFeed: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
   onNavigateZone: (zoneName: string) => void;
-  onGoHome: () => void;
+  onGoBack: () => void;
+  onOpenMenu: () => void;
   onClearAction: () => void;
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, instances, archetypes, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoHome, onClearAction 
+  locationId, initialAction, location, zone, instances, archetypes, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
 
@@ -33,12 +34,12 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     if (location && initialAction === 'water') {
       onBatchWater(locationId);
       showToast('💦 All plants watered successfully!');
-      window.history.replaceState({}, '', `/location/${locationId}`);
+      window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     } else if (location && initialAction === 'feed') {
       onBatchFeed(locationId);
       showToast('🪴 All plants fed successfully!');
-      window.history.replaceState({}, '', `/location/${locationId}`);
+      window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     }
   }, [location, initialAction, locationId, onBatchWater, onBatchFeed, onClearAction]);
@@ -53,26 +54,31 @@ export const LocationDetail: FC<LocationDetailProps> = ({
             Location <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> does not exist in your database.
           </p>
         </Card>
-        <Button variant="secondary" onClick={onGoHome} className="mt-2">Go Back</Button>
+        <Button variant="secondary" onClick={onGoBack} className="mt-2">Go Back</Button>
       </Container>
     );
   }
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <header className="mb-6 flex items-center gap-3 pt-6">
-        <button onClick={onGoHome} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-          &larr;
-        </button>
-        <div>
-          <Title className="!mb-0">{location.name}</Title>
-          <p 
-            className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2"
-            onClick={() => zone && onNavigateZone(zone.id)}
-          >
-            {zone?.name}
-          </p>
+      <header className="mb-6 flex items-center justify-between pt-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            &larr;
+          </button>
+          <div>
+            <Title className="!mb-0">{location.name}</Title>
+            <p 
+              className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2"
+              onClick={() => zone && onNavigateZone(zone.id)}
+            >
+              {zone?.name}
+            </p>
+          </div>
         </div>
+        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          ☰
+        </button>
       </header>
 
       <Card className="flex flex-col items-center py-6 mb-6">

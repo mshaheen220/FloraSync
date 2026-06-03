@@ -18,14 +18,15 @@ interface PlantDetailProps {
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
   onUpdate: (qrId: string, updates: Partial<PlantInstance>) => void;
   onDelete: (qrId: string) => void;
-  onGoHome: () => void;
+  onGoBack: () => void;
+  onOpenMenu: () => void;
   onClearAction: () => void;
   onNavigateLocation: (locId: string) => void;
   onNavigateZone: (zoneName: string) => void;
 }
 
 export const PlantDetail: FC<PlantDetailProps> = ({ 
-  qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoHome, onClearAction, onNavigateLocation, onNavigateZone
+  qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -68,12 +69,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     if (instance && initialAction === 'water') {
       onWater(qrId);
       showToast('💦 Plant watered successfully!');
-      window.history.replaceState({}, '', `/plant/${qrId}`); // Cleans the URL state post-action
+      window.history.replaceState({ internal: true }, '', `/plant/${qrId}`);
       onClearAction();
     } else if (instance && initialAction === 'feed') {
       onFeed(qrId);
       showToast('🪴 Plant fed successfully!');
-      window.history.replaceState({}, '', `/plant/${qrId}`); // Cleans the URL state post-action
+      window.history.replaceState({ internal: true }, '', `/plant/${qrId}`);
       onClearAction();
     }
   }, [instance, initialAction, qrId, onWater, onFeed, onClearAction]);
@@ -161,7 +162,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             locations={locations} 
             zones={zones} 
             onRegister={handleRegistrationSubmit} 
-            onCancel={onGoHome} 
+            onCancel={onGoBack} 
             submitLabel="Initialize Care Routine" 
           />
         </Card>
@@ -367,12 +368,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <header className="mb-6 flex items-center justify-between pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={onGoHome} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+      <header className="mb-6 flex items-start justify-between pt-6">
+        <div className="flex items-start gap-3">
+          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800 leading-none">
             &larr;
           </button>
-          <div>
+          <div className="pt-1">
             <Title className="!mb-0">{archetype?.commonName}</Title>
             {location ? (
               <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">
@@ -385,9 +386,14 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             )}
           </div>
         </div>
-        <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
-          ✏️
-        </button>
+        <div className="flex items-center gap-2 pt-0.5">
+          <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+            ✏️
+          </button>
+          <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+            ☰
+          </button>
+        </div>
       </header>
 
       <Card className="flex flex-col items-center pb-10 mb-6 relative overflow-hidden !px-0 !pt-0">

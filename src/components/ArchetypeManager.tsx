@@ -10,9 +10,10 @@ interface ArchetypeManagerProps {
   onUpdate: (id: string, updates: Partial<PlantArchetype>) => void;
   onDelete: (id: string) => void;
   onGoBack: () => void;
+  onOpenMenu: () => void;
 }
 
-export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instances, onAdd, onUpdate, onDelete, onGoBack }) => {
+export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instances, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -125,11 +126,16 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <header className="mb-6 flex items-center gap-3 pt-6">
-        <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-          &larr;
+      <header className="mb-6 flex items-center justify-between pt-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            &larr;
+          </button>
+          <Title className="!mb-0">Plant Dictionary</Title>
+        </div>
+        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          ☰
         </button>
-        <Title className="!mb-0">Plant Dictionary</Title>
       </header>
 
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">

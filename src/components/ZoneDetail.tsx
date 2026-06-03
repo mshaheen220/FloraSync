@@ -12,12 +12,13 @@ interface ZoneDetailProps {
   onBatchWaterZone: (zoneId: string) => void;
   onBatchFeedZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
-  onGoHome: () => void;
+  onGoBack: () => void;
+  onOpenMenu: () => void;
   onClearAction: () => void;
 }
 
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
-  zone, initialAction, locations, instances, archetypes, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoHome, onClearAction 
+  zone, initialAction, locations, instances, archetypes, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
@@ -61,12 +62,12 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     if (zone && locations.length > 0 && initialAction === 'water') {
       onBatchWaterZone(zone.id);
       showToast('💦 Entire zone watered successfully!');
-      window.history.replaceState({}, '', `/zone/${zone.id}`);
+      window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
     } else if (zone && locations.length > 0 && initialAction === 'feed') {
       onBatchFeedZone(zone.id);
       showToast('🪴 Entire zone fed successfully!');
-      window.history.replaceState({}, '', `/zone/${zone.id}`);
+      window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
     }
   }, [locations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
@@ -81,21 +82,26 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
             Zone does not exist in your database.
           </p>
         </Card>
-        <Button variant="secondary" onClick={onGoHome} className="mt-2">Go Back</Button>
+        <Button variant="secondary" onClick={onGoBack} className="mt-2">Go Back</Button>
       </Container>
     );
   }
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <header className="mb-6 flex items-center gap-3 pt-6">
-        <button onClick={onGoHome} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-          &larr;
-        </button>
-        <div>
-          <Title className="!mb-0">{zone.name}</Title>
-          <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">Macro Zone</p>
+      <header className="mb-6 flex items-center justify-between pt-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            &larr;
+          </button>
+          <div>
+            <Title className="!mb-0">{zone.name}</Title>
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">Macro Zone</p>
+          </div>
         </div>
+        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          ☰
+        </button>
       </header>
 
       <Card className="flex flex-col items-center pb-8 mb-6 relative overflow-hidden !px-0 !pt-0">

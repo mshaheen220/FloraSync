@@ -108,28 +108,65 @@ export const App: FC = () => {
     .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
   }, [instances, archetypes, locations, zones, isDbLoaded]);
 
-  // Router mimicking layer: Extracts specific URL query contexts to determine view execution
-  useEffect(() => {
+  const syncRoute = useCallback(() => {
     const pathname = window.location.pathname;
-    const parts = pathname.split('/').filter(Boolean); // e.g. ['plant', 'qr-001', 'water']
+    const parts = pathname.split('/').filter(Boolean);
     
-    if (parts.length > 0) {
-      const [type, id, action] = parts;
-      if (type === 'plant') {
-        setActiveQr(id);
-        setInitialAction(action || null);
-        setCurrentView('detail');
-      } else if (type === 'location') {
-        setActiveLoc(id);
-        setInitialAction(action || null);
-        setCurrentView('locationDetail');
-      } else if (type === 'zone') {
-        setActiveZone(decodeURIComponent(id));
-        setInitialAction(action || null);
-        setCurrentView('zoneDetail');
-      }
+    if (parts.length === 0) {
+      setCurrentView('dashboard');
+      setActiveQr(null);
+      setActiveLoc(null);
+      setActiveZone(null);
+      setInitialAction(null);
+      return;
+    }
+
+    const [type, id, action] = parts;
+    
+    if (type === 'plant' && id) {
+      setActiveQr(id);
+      setInitialAction(action || null);
+      setCurrentView('detail');
+    } else if (type === 'location' && id) {
+      setActiveLoc(id);
+      setInitialAction(action || null);
+      setCurrentView('locationDetail');
+    } else if (type === 'zone' && id) {
+      setActiveZone(decodeURIComponent(id));
+      setInitialAction(action || null);
+      setCurrentView('zoneDetail');
+    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner'].includes(type)) {
+      setCurrentView(type as any);
+      setActiveQr(null);
+      setActiveLoc(null);
+      setActiveZone(null);
+      setInitialAction(null);
+    } else {
+      setCurrentView('dashboard');
     }
   }, []);
+
+  useEffect(() => {
+    if (!window.history.state?.internal) {
+      window.history.replaceState({ internal: true }, '', window.location.pathname);
+    }
+    syncRoute();
+    window.addEventListener('popstate', syncRoute);
+    return () => window.removeEventListener('popstate', syncRoute);
+  }, [syncRoute]);
+
+  const navigateTo = useCallback((path: string) => {
+    window.history.pushState({ internal: true }, '', path);
+    syncRoute();
+  }, [syncRoute]);
+
+  const handleGoBack = useCallback(() => {
+    if (window.history.state?.internal) {
+      window.history.back();
+    } else {
+      navigateTo('/');
+    }
+  }, [navigateTo]);
 
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
@@ -254,7 +291,7 @@ export const App: FC = () => {
 
   const handleDeleteInstance = (qrId: string) => {
     setInstances(prev => prev.filter(inst => inst.qrId !== qrId));
-    handleGoHome();
+    handleGoBack();
   };
 
   const handleUpdateArchetype = (id: string, updates: Partial<PlantArchetype>) => {
@@ -295,42 +332,17 @@ export const App: FC = () => {
     setLocations(prev => prev.filter(loc => loc.id !== id));
   };
 
-  const handleNavigate = (qrId: string) => {
-    setActiveQr(qrId);
-    setInitialAction(null);
-    setCurrentView('detail');
-    window.history.pushState({}, '', `/plant/${qrId}`);
-  };
-
-  const handleNavigateLocation = (locId: string) => {
-    setActiveLoc(locId);
-    setInitialAction(null);
-    setCurrentView('locationDetail');
-    window.history.pushState({}, '', `/location/${locId}`);
-  };
-
-  const handleNavigateZone = (zoneId: string) => {
-    setActiveZone(zoneId);
-    setInitialAction(null);
-    setCurrentView('zoneDetail');
-    window.history.pushState({}, '', `/zone/${zoneId}`);
-  };
-
-  const handleGoHome = () => {
-    setCurrentView('dashboard');
-    setActiveQr(null);
-    setActiveLoc(null);
-    setActiveZone(null);
-    setInitialAction(null);
-    window.history.pushState({}, '', `/`);
-  };
+  const handleNavigate = (qrId: string) => navigateTo(`/plant/${qrId}`);
+  const handleNavigateLocation = (locId: string) => navigateTo(`/location/${locId}`);
+  const handleNavigateZone = (zoneId: string) => navigateTo(`/zone/${zoneId}`);
+  const handleGoHome = () => navigateTo('/');
 
   const handleMenuNavigate = (route: MenuRoute) => {
     setIsMenuOpen(false);
     if (route === 'dashboard') {
-      handleGoHome();
+      navigateTo('/');
     } else {
-      setCurrentView(route);
+      navigateTo(`/${route}`);
     }
   };
 
@@ -339,25 +351,10 @@ export const App: FC = () => {
       // By providing the current origin as the base, it seamlessly supports both relative paths and absolute URLs!
       const url = new URL(qrString, window.location.origin);
       const parts = url.pathname.split('/').filter(Boolean);
-      const [type, id, action] = parts;
+      const [type, id] = parts;
       
-      if (type === 'plant' && id) {
-        setActiveQr(id);
-        setInitialAction(action || null);
-        setCurrentView('detail');
-        window.history.pushState({}, '', url.pathname);
-        return;
-      } else if (type === 'location' && id) {
-        setActiveLoc(id);
-        setInitialAction(action || null);
-        setCurrentView('locationDetail');
-        window.history.pushState({}, '', url.pathname);
-        return;
-      } else if (type === 'zone' && id) {
-        setActiveZone(decodeURIComponent(id));
-        setInitialAction(action || null);
-        setCurrentView('zoneDetail');
-        window.history.pushState({}, '', url.pathname);
+      if (['plant', 'location', 'zone'].includes(type) && id) {
+        navigateTo(url.pathname);
         return;
       }
     } catch (e) {
@@ -384,7 +381,7 @@ export const App: FC = () => {
       const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
       return (
-        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoHome={handleGoHome} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
+        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
       );
     }
 
@@ -394,7 +391,7 @@ export const App: FC = () => {
       const locationInstances = instances.filter(i => i.locationId === activeLoc);
       
       return (
-        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} instances={locationInstances} archetypes={archetypes} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
       );
     }
 
@@ -405,20 +402,20 @@ export const App: FC = () => {
       const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
       
       return (
-        <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoHome={handleGoHome} onClearAction={handleClearAction} />
+        <ZoneDetail zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
       );
     }
 
     if (currentView === 'scanner') {
-      return <Scanner onScan={handleScanResult} onClose={handleGoHome} />
+      return <Scanner onScan={handleScanResult} onClose={handleGoBack} />
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoHome={handleGoHome} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
     }
 
     if (currentView === 'archetypes') {
-      return <ArchetypeManager archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoHome} />;
+      return <ArchetypeManager archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
     }
 
     return (

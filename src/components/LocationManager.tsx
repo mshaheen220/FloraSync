@@ -21,14 +21,15 @@ interface LocationManagerProps {
   onAdd: (name: string, zoneId: string) => void;
   onUpdate: (id: string, updates: Partial<Location>) => void;
   onDelete: (id: string) => void;
-  onGoHome: () => void;
+  onGoBack: () => void;
+  onOpenMenu: () => void;
   onNavigateLocation: (id: string) => void;
   onNavigateZone: (id: string) => void;
   onNavigate: (qrId: string) => void;
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoHome, onNavigateLocation, onNavigateZone, onNavigate, onRegister }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [newName, setNewName] = useState('');
@@ -166,16 +167,21 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <header className="mb-6 flex items-center gap-3 pt-6">
-        <button onClick={onGoHome} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-          &larr;
+      <header className="mb-6 flex items-center justify-between pt-6">
+        <div className="flex items-center gap-3">
+          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            &larr;
+          </button>
+          <Title className="!mb-0">
+            {mode === 'settings' && 'General Settings'}
+            {mode === 'zones' && 'Zone Manager'}
+            {mode === 'locations' && 'Location Manager'}
+            {mode === 'inventory' && 'Inventory Manager'}
+          </Title>
+        </div>
+        <button onClick={onOpenMenu} className="text-xl p-2 px-3 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center">
+          ☰
         </button>
-        <Title className="!mb-0">
-          {mode === 'settings' && 'General Settings'}
-          {mode === 'zones' && 'Zone Manager'}
-          {mode === 'locations' && 'Location Manager'}
-          {mode === 'inventory' && 'Inventory Manager'}
-        </Title>
       </header>
 
       {mode === 'settings' && (
