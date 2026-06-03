@@ -9,6 +9,9 @@ interface DashboardProps {
   locations: Location[];
   zones: Zone[];
   onBatchWater: (locationId: string) => void;
+  onBatchWaterAll: () => void;
+  onBatchFeedAll: () => void;
+  onBatchWaterZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenScanner: () => void;
   onOpenMenu: () => void;
@@ -16,7 +19,7 @@ interface DashboardProps {
   onNavigateZone: (zoneId: string) => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
+export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -99,6 +102,9 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
     const zone = zones.find(z => z.id === maxZoneId);
     return zone ? { name: zone.name, id: zone.id } : { name: 'None', id: null };
   }, [activeInstances, locations, zones]);
+
+  const greenhouseZone = useMemo(() => zones.find(z => z.name.toLowerCase().includes('greenhouse')), [zones]);
+  const coveredBedZone = useMemo(() => zones.find(z => z.name.toLowerCase().includes('covered raised bed') || z.name.toLowerCase().includes('covered bed') || z.name.toLowerCase().includes('raised bed')), [zones]);
 
   const dailySpotlight = useMemo(() => {
     if (activeInstances.length === 0) return null;
@@ -219,6 +225,28 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         </button>
       </header>
 
+      <section className="mb-8 animate-in fade-in duration-500">
+        <Subtitle>Quick Actions</Subtitle>
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <Card onClick={() => { onBatchWaterAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+            <span className="text-2xl mb-1">💦</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
+          </Card>
+          <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+            <span className="text-2xl mb-1">🪴</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
+          </Card>
+          <Card onClick={() => greenhouseZone ? onBatchWaterZone(greenhouseZone.id) : alert('Greenhouse zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+            <span className="text-2xl mb-1">🏠</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>House</span>
+          </Card>
+          <Card onClick={() => coveredBedZone ? onBatchWaterZone(coveredBedZone.id) : alert('Covered Raised Bed zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+            <span className="text-2xl mb-1">🛏️</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>Bed</span>
+          </Card>
+        </div>
+      </section>
+
       <section className="mb-8 animate-in fade-in duration-500 delay-100">
         <Subtitle>Garden Vitality</Subtitle>
         <div className="grid grid-cols-2 gap-3">
@@ -308,7 +336,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
 
       {overdueLocations.length > 0 && (
         <section className="mb-8 animate-in fade-in duration-500 delay-300">
-          <Subtitle>Quick Actions</Subtitle>
+          <Subtitle>Urgent Location Care</Subtitle>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {overdueLocations.map(loc => (
               <Button key={loc.id} variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">

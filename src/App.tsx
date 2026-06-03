@@ -157,6 +157,16 @@ export const App: FC = () => {
     setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { ...inst, lastFed: now } : inst));
   }, [locations]);
 
+  const handleBatchWaterAll = useCallback(() => {
+    const now = new Date().toISOString();
+    setInstances(prev => prev.map(inst => ({ ...inst, lastWatered: now })));
+  }, []);
+
+  const handleBatchFeedAll = useCallback(() => {
+    const now = new Date().toISOString();
+    setInstances(prev => prev.map(inst => ({ ...inst, lastFed: now })));
+  }, []);
+
   const handleWater = useCallback((qrId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
@@ -418,6 +428,9 @@ export const App: FC = () => {
         locations={locations} 
         zones={zones} 
         onBatchWater={handleBatchWater} 
+        onBatchWaterAll={handleBatchWaterAll}
+        onBatchFeedAll={handleBatchFeedAll}
+        onBatchWaterZone={handleBatchWaterZone}
         onNavigate={handleNavigate} 
         onOpenScanner={() => setCurrentView('scanner')} 
         onOpenMenu={() => setIsMenuOpen(true)} 
