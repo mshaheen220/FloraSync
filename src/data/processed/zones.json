@@ -1,0 +1,27 @@
+[
+  {
+    "id": "zn-greenhouse",
+    "name": "Greenhouse",
+    "description": "Main backyard greenhouse"
+  },
+  {
+    "id": "zn-raised-bed",
+    "name": "Covered Raised Bed",
+    "description": "Covered raised bed in the backyard"
+  },
+  {
+    "id": "zn-rear-patio",
+    "name": "Rear Patio",
+    "description": "Rear patio area"
+  },
+  {
+    "id": "zn-house-perimeter",
+    "name": "House Perimeter",
+    "description": "Area immediately against the house"
+  },
+  {
+    "id": "zn-house-front",
+    "name": "House Front",
+    "description": "Area in front of house with mulch"
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "gh-l1",
+    "name": "Left Shelf 1",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-l2",
+    "name": "Left Shelf 2",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-l3",
+    "name": "Left Shelf 3",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-r1",
+    "name": "Right Shelf 1",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-r2",
+    "name": "Right Shelf 2",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-r3",
+    "name": "Right Shelf 3",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-b1",
+    "name": "Back Shelf 1",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-b2",
+    "name": "Back Shelf 2",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "gh-b3",
+    "name": "Back Shelf 3",
+    "zoneId": "zn-greenhouse"
+  },
+  {
+    "id": "crb-a",
+    "name": "Side A",
+    "zoneId": "zn-raised-bed"
+  },
+  {
+    "id": "crb-b",
+    "name": "Side B",
+    "zoneId": "zn-raised-bed"
+  },
+  {
+    "id": "rp-l",
+    "name": "Left Rail",
+    "zoneId": "zn-rear-patio"
+  },
+  {
+    "id": "rp-r",
+    "name": "Right Rail",
+    "zoneId": "zn-rear-patio"
+  },
+  {
+    "id": "rp-b",
+    "name": "Back Rail",
+    "zoneId": "zn-rear-patio"
+  },
+  {
+    "id": "hs-l",
+    "name": "House Side Left",
+    "zoneId": "zn-house-perimeter"
+  },
+  {
+    "id": "hs-r",
+    "name": "House Side Right",
+    "zoneId": "zn-house-perimeter"
+  },
+  {
+    "id": "hf-mb",
+    "name": "Around Mailbox",
+    "zoneId": "zn-house-front"
+  },
+  {
+    "id": "hf-sp",
+    "name": "Steps Perimeter",
+    "zoneId": "zn-house-front"
+  },
+  {
+    "id": "hf-l",
+    "name": "Mulched area left of steps",
+    "zoneId": "zn-house-front"
+  },
+  {
+    "id": "hf-r",
+    "name": "Mulched area right of steps",
+    "zoneId": "zn-house-front"
+  }
+]

@@ -4,7 +4,12 @@ env/
 venv/
 
 # Data directory containing sensitive family info
-data/
+data/*
+src/data/*
+
+# Allow seed imports and processed data to be tracked
+!src/data/imports/
+!src/data/processed/
 
 # Python cache
 __pycache__/
