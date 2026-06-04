@@ -1,8 +1,9 @@
-import { FC, useState, FormEvent, ChangeEvent } from 'react';
+import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
 import { PlantInstance, JournalEntry } from '../../types';
 import { Card, Button, Input, Subtitle } from '../styles/StyledElements';
 import { User } from '../App';
 
+// TODO: Add ability to add journal entries to a zone or loc. it would simply save to each plant's individual journal but would be a nice shortcut for users who want to make a general note about a zone or location that applies to all plants within it. Maybe add a "Apply to all plants in this zone/location" checkbox when creating the entry that only shows if there are multiple plants in the same zone/location?
 interface PlantJournalProps {
   instance: PlantInstance;
   onUpdate: (updates: Partial<PlantInstance>) => void;
@@ -14,6 +15,14 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
   const [isAddingJournal, setIsAddingJournal] = useState(false);
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
   const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
+  const [showRoutineCare, setShowRoutineCare] = useState(false);
+  const routineTypes = ['Watered', 'Fed'];
+
+  const visibleJournal = useMemo(() => {
+    return (instance.journal || []).filter(entry => 
+      showRoutineCare ? true : !routineTypes.includes(entry.activityType || '')
+    );
+  }, [instance.journal, showRoutineCare]);
 
   const handleJournalImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,9 +99,20 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
 
   return (
     <div className="mt-2">
-      {!isAddingJournal && !editingJournalId ? (
-        <Button onClick={() => { setIsAddingJournal(true); setJournalForm({ timestamp: new Date().toISOString().slice(0, 16) }); }} className="mb-6">+ Add Journal Entry</Button>
-      ) : (
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+        {!isAddingJournal && !editingJournalId && (
+          <Button onClick={() => { setIsAddingJournal(true); setJournalForm({ timestamp: new Date().toISOString().slice(0, 16) }); }} className="w-auto flex-shrink-0">+ Add Journal Entry</Button>
+        )}
+        
+        {(instance.journal || []).some(j => routineTypes.includes(j.activityType || '')) && (
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer ml-auto bg-slate-50 dark:bg-slate-800/50 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+            <input type="checkbox" checked={showRoutineCare} onChange={e => setShowRoutineCare(e.target.checked)} className="accent-emerald-600 w-3.5 h-3.5 rounded" />
+            Show Routine Care
+          </label>
+        )}
+      </div>
+
+      {(!isAddingJournal && !editingJournalId) ? null : (
         <Card className="mb-6 border-emerald-500 shadow-md">
           <Subtitle className="!mt-0 mb-4">{editingJournalId ? 'Edit Entry' : 'New Journal Entry'}</Subtitle>
           <form onSubmit={handleSaveJournal} className="flex flex-col gap-3">
@@ -113,6 +133,8 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   <option value="Harvest">🧺 Harvest</option>
                   <option value="Pruning">✂️ Pruning</option>
                   <option value="Treatment">🧪 Treatment (Pest/Disease)</option>
+                  <option value="Watered">💦 Watered</option>
+                  <option value="Fed">🪴 Fed</option>
                 </select>
               </div>
               <div>
@@ -201,9 +223,9 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         </Card>
       )}
 
-      {instance.journal && instance.journal.length > 0 ? (
+      {visibleJournal.length > 0 ? (
         <div className="relative border-l-2 border-emerald-200 dark:border-emerald-800 ml-4 pl-6 space-y-6 mb-8 mt-2">
-          {instance.journal.map(entry => (
+          {visibleJournal.map(entry => (
             <div key={entry.id} className="relative">
               <div className="absolute -left-[31px] bg-emerald-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
               <div className="mb-1 flex items-center justify-between">
@@ -235,7 +257,11 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                 <div className="flex flex-wrap gap-2 mb-3 mt-1">
                   {entry.activityType && entry.activityType !== 'Observation' && (
                     <span className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-bold">
-                      {entry.activityType === 'Harvest' ? '🧺 Harvest' : entry.activityType === 'Pruning' ? '✂️ Pruning' : '🧪 Treatment'}
+                      {entry.activityType === 'Harvest' ? '🧺 Harvest' : 
+                       entry.activityType === 'Pruning' ? '✂️ Pruning' : 
+                       entry.activityType === 'Watered' ? '💦 Watered' :
+                       entry.activityType === 'Fed' ? '🪴 Fed' :
+                       entry.activityType === 'Treatment' ? ' Treatment' : entry.activityType}
                     </span>
                   )}
                   {entry.harvestAmount && <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800 font-bold">⚖️ {entry.harvestAmount}</span>}
@@ -261,7 +287,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
           ))}
         </div>
       ) : (
-        <p className="text-sm text-slate-500 italic mt-2 mb-8">No journal entries yet.</p>
+        <p className="text-sm text-slate-500 italic mt-2 mb-8">No journal entries to display.</p>
       )}
     </div>
   );

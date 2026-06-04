@@ -260,52 +260,132 @@ export const App: FC = () => {
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { ...inst, lastWatered: now } : inst
+      inst.locationId === locationId ? { 
+        ...inst, 
+        lastWatered: now,
+        journal: [{
+          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Watered',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as any, ...(inst.journal || [])]
+      } : inst
     ));
-  }, []);
+  }, [currentUser]);
 
   const handleBatchFeed = useCallback((locationId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { ...inst, lastFed: now } : inst
+      inst.locationId === locationId ? { 
+        ...inst, 
+        lastFed: now,
+        journal: [{
+          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Fed',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as any, ...(inst.journal || [])]
+      } : inst
     ));
-  }, []);
+  }, [currentUser]);
 
   const handleBatchWaterZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
-    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { ...inst, lastWatered: now } : inst));
-  }, [locations]);
+    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
+      ...inst, 
+      lastWatered: now,
+      journal: [{
+        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: now,
+        activityType: 'Watered',
+        authorName: currentUser?.name || '',
+        authorImageUrl: currentUser?.imageUrl || ''
+      } as any, ...(inst.journal || [])]
+    } : inst));
+  }, [locations, currentUser]);
 
   const handleBatchFeedZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
-    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { ...inst, lastFed: now } : inst));
-  }, [locations]);
+    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
+      ...inst, 
+      lastFed: now,
+      journal: [{
+        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: now,
+        activityType: 'Fed',
+        authorName: currentUser?.name || '',
+        authorImageUrl: currentUser?.imageUrl || ''
+      } as any, ...(inst.journal || [])]
+    } : inst));
+  }, [locations, currentUser]);
 
   const handleBatchWaterAll = useCallback(() => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ ...inst, lastWatered: now })));
-  }, []);
+    setInstances(prev => prev.map(inst => ({ 
+      ...inst, 
+      lastWatered: now,
+      journal: [{
+        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: now,
+        activityType: 'Watered',
+        authorName: currentUser?.name || '',
+        authorImageUrl: currentUser?.imageUrl || ''
+      } as any, ...(inst.journal || [])]
+    })));
+  }, [currentUser]);
 
   const handleBatchFeedAll = useCallback(() => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ ...inst, lastFed: now })));
-  }, []);
+    setInstances(prev => prev.map(inst => ({ 
+      ...inst, 
+      lastFed: now,
+      journal: [{
+        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: now,
+        activityType: 'Fed',
+        authorName: currentUser?.name || '',
+        authorImageUrl: currentUser?.imageUrl || ''
+      } as any, ...(inst.journal || [])]
+    })));
+  }, [currentUser]);
 
   const handleWater = useCallback((qrId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.qrId === qrId ? { ...inst, lastWatered: now } : inst
+      inst.qrId === qrId ? { 
+        ...inst, 
+        lastWatered: now,
+        journal: [{
+          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Watered',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as any, ...(inst.journal || [])]
+      } : inst
     ));
-  }, []);
+  }, [currentUser]);
 
   const handleFeed = useCallback((qrId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.qrId === qrId ? { ...inst, lastFed: now } : inst
+      inst.qrId === qrId ? { 
+        ...inst, 
+        lastFed: now,
+        journal: [{
+          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Fed',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as any, ...(inst.journal || [])]
+      } : inst
     ));
-  }, []);
+  }, [currentUser]);
 
   const handleClearAction = useCallback(() => {
     setInitialAction(null);
