@@ -13,14 +13,22 @@ pip3 install Pillow qrcode
 
 ---
 
-## 🚀 Modes of Operation
+## 🚀 How to Generate Tags
 
-The script can be run in three different ways depending on what you need to print.
+### 1. The Print Center UI (Easiest Method)
+You can now generate, download, and manage QR code sheets directly from the FloraSync app!
+1. Open FloraSync and navigate to **Settings** via the hamburger menu.
+2. Scroll down to the **Print Center**.
+3. Choose either **Database Export** (to print tags for everything currently in your database) or **Blank Tags** (to print unassigned tags for future use).
+4. Click **Generate Sheets**.
+5. Once finished, click the ⬇️ icon next to the sheet name to download the PNG directly to your device!
 
-### 1. Database Export Mode (Recommended)
-This is the easiest and most powerful way to print tags. It reads your live SQLite database and generates tags for every single Plant, Zone, and Location that currently exists in your system. 
+---
 
-Crucially, it pulls the human-readable names from your dictionary (e.g., "Sweet Basil" instead of "qr-001") and centers them neatly beneath the QR codes.
+### 2. Command Line: Database Export
+If you prefer the terminal, you can run the script manually. This is the CLI equivalent of the Database Export in the Print Center.
+
+It reads your live SQLite database and generates tags for every single Plant, Zone, and Location that currently exists in your system. Crucially, it pulls the human-readable names from your dictionary (e.g., "Sweet Basil" instead of "qr-001") and centers them neatly beneath the QR codes.
 
 **Command:**
 ```bash
@@ -30,7 +38,7 @@ python3 scripts/python/make_qrs.py --from-db
 
 ---
 
-### 2. Sequential Blank Tag Generation
+### 3. Command Line: Sequential Blank Tag Generation
 If you just want to print a fresh sheet of unassigned, blank tags to stick into pots later, you can generate a sequential list of IDs (e.g., `qr-001`, `qr-002`, etc.).
 
 You must provide the `--category`, a `--prefix`, and a numeric `--start-id`. The script will automatically generate exactly enough IDs to fill one complete sheet (48 tags).
@@ -49,7 +57,7 @@ python3 scripts/python/make_qrs.py --category location --prefix loc --start-id 0
 
 ---
 
-### 3. Custom List Generation
+### 4. Command Line: Custom List Generation
 If you only want to reprint a few specific tags that got damaged in the garden, you can feed the script a custom text file.
 
 1. Create a text file in `src/data/` (e.g., `reprints.txt`).

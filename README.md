@@ -37,6 +37,9 @@ The central dashboard acts as a dynamic sorting engine and garden command center
 ### 4. Dynamic Just-In-Time Registration
 New blank QR codes deployed to the garden can be initialized dynamically. Scanning an unmapped tag opens a lightweight onboarding form. Selecting a plant from the dictionary inherits robust cultivation metrics (sunlight, harvest intervals, pruning tips) from the baseline archetype schema.
 
+### 5. Bulk Data Import
+Share and import plant dictionaries or location setups seamlessly via the UI. Paste a JSON array of Archetypes, Zones, or Locations into the Settings Data Import tool, and FloraSync will intelligently merge it into your database while skipping duplicates to protect your existing garden.
+
 ---
 
 ## 💾 Core Schema Reference
@@ -57,7 +60,7 @@ FloraSync includes powerful Node and Python CLI tools to manage your physical an
 - **`npm run seed`**: Imports baseline Dictionary Archetypes, Zones, and Locations from `src/data/imports/` into the SQLite database.
 - **`npm run backup`**: Safely extracts all living Plant Instances into a timestamped JSON file in `src/data/backups/`.
 - **`npm run restore`**: Restores the database's live Plant Instances from the most recent backup.
-- **`python3 scripts/python/make_qrs.py --from-db`**: Automatically queries the SQLite database and generates perfectly spaced Avery-compatible printable PNG sheets containing QR codes for every active plant, zone, and location in your system.
+- **Print Center / CLI**: Generate perfectly spaced Avery-compatible printable PNG sheets containing QR codes for every active plant, zone, and location in your system directly from the UI or via `python3 scripts/python/make_qrs.py --from-db`.
 
 ## 🛠️ Getting Started
 

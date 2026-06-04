@@ -37,6 +37,13 @@ The magic of FloraSync lies in the physical QR tags placed in your pots and beds
 
 *!Screenshot: The in-app camera scanner targeting a physical QR code on a plant stake.*
 
+### Printing Tags (The Print Center)
+You can generate and download perfectly formatted sheets of QR codes directly from the app!
+1. Open the Hamburger Menu and go to **Settings**.
+2. Scroll to the **Print Center**.
+3. Choose **Database Export** to print tags with names for everything currently in your system, or **Blank Tags** to print unassigned stickers.
+4. Click **Generate** and download your PNG sheets!
+
 ### "Zero-Click" Care
 If you generate a QR code with an action built-in (e.g., a "Water Me" tag), simply scanning that tag instantly updates the database and resets the hydration bar to 100%. No buttons to press, no forms to fill out.
 
@@ -94,7 +101,21 @@ All entries stack into a beautiful vertical timeline so you can see the complete
 
 ---
 
-## 💡 7. Pro-Tips
+##  7. Bulk Data Import
+
+If you have a lot of existing garden data or want to share a customized plant dictionary with a friend, you can use the bulk Data Import tool instead of typing everything out manually!
+
+1. Open the Hamburger Menu and go to **Settings**.
+2. Scroll down to the **Data Import** section.
+3. Select the type of data you are importing from the dropdown (*Plant Dictionary (Archetypes)*, *Zones*, or *Locations*).
+4. Click **❓ Schema Help** to see the exact JSON format required.
+5. Paste your formatted JSON array into the text box and click **Import Data**.
+
+FloraSync will automatically read the data, skip any items with duplicate IDs to protect your existing garden, and seamlessly merge the new information into your database!
+
+---
+
+## 💡 8. Pro-Tips
 
 **Unmonitored / Rain-Fed Plants**
 Got a mature rhododendron in the front yard that you want in your inventory, but you don't want it begging for water every 4 days? 
