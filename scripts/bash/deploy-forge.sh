@@ -17,6 +17,8 @@ rm -rf node_modules
 npm install --omit=dev
 
 echo "4️⃣ Restarting PM2 server..."
-pm2 restart florasync
+# Ensure global binary paths are loaded so the script can find PM2
+export PATH=$PATH:/usr/local/bin:/opt/homebrew/bin:~/.npm-global/bin
+pm2 restart florasync || npx pm2 restart florasync
 
 echo "✅ Success! FloraSync is live at https://theforge.local:8080"
