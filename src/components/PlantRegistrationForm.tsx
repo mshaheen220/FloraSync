@@ -118,7 +118,7 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
       {(selectedZone === 'other' || selectedLocation === 'other') && (
         <div className="flex gap-3 mt-1">
           {selectedZone === 'other' && <div className="flex-1"><Input placeholder="Zone (e.g. Garden)" value={customZoneName} onChange={(e) => setCustomZoneName(e.target.value)} className="!mb-0" /></div>}
-          <div className="flex-1"><Input placeholder="Name (e.g. Bed 1)" value={customLocationName} onChange={(e) => setCustomLocationName(e.target.value)} className="!mb-0" /></div>
+          <div className="flex-1"><Input placeholder="Location (e.g. Bed 1)" value={customLocationName} onChange={(e) => setCustomLocationName(e.target.value)} className="!mb-0" /></div>
         </div>
       )}
       {selectedMode === 'other' && (
