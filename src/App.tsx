@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, FC } from 'react';
+import { useState, useEffect, useCallback, FC, useRef } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../types';
 import { Dashboard } from './components/Dashboard';
 import { PlantDetail } from './components/PlantDetail';
@@ -8,8 +8,15 @@ import { ArchetypeManager } from './components/ArchetypeManager';
 import { LocationDetail } from './components/LocationDetail';
 import { ZoneDetail } from './components/ZoneDetail';
 import { NavigationMenu, MenuRoute } from './components/NavigationMenu';
+import { LoginScreen } from './components/LoginScreen';
 
 export type Theme = 'light' | 'dark' | 'system';
+
+export interface User {
+  id: string;
+  name: string;
+  imageUrl?: string;
+}
 
 export const App: FC = () => {
   const [instances, setInstances] = useState<PlantInstance[]>([]);
@@ -17,8 +24,14 @@ export const App: FC = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [isDbLoaded, setIsDbLoaded] = useState(false);
+  const [initialLoadSuccess, setInitialLoadSuccess] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('florasync_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
@@ -26,6 +39,8 @@ export const App: FC = () => {
   const [initialAction, setInitialAction] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
+
+  const skipNextSync = useRef(false);
 
   // Theme persistence and OS matching logic
   useEffect(() => {
@@ -55,11 +70,43 @@ export const App: FC = () => {
   }, [currentView]);
 
   useEffect(() => {
-    fetch('/api/state', { cache: 'no-store' })
-      .then(res => res.json())
+    if (!currentUser) {
+      // On logout, reset all data to prevent flicker of old data on next login
+      setInstances([]);
+      setArchetypes([]);
+      setLocations([]);
+      setZones([]);
+      setIsDbLoaded(false);
+      setInitialLoadSuccess(null);
+      setSyncStatus('synced');
+      return;
+    }
+
+    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+    fetch(`${apiBase}/api/state`, { cache: 'no-store' })
+      .then(async res => {
+        console.log(`[Frontend] Fetch /api/state response: HTTP ${res.status} ${res.statusText}`);
+        if (!res.ok) {
+          const errBody = await res.text().catch(() => 'no body');
+          console.error(`[Frontend] Error body from server:`, errBody);
+          throw new Error(`Server responded with HTTP ${res.status}: ${errBody}`);
+        }
+        const text = await res.text();
+        if (!text) return {};
+        try {
+          return JSON.parse(text);
+        } catch (e) {
+          console.error('Invalid JSON from server:', text);
+          throw new Error('Invalid JSON payload');
+        }
+      })
       .then(data => {
-        if (data.instances && data.instances.length > 0) setInstances(data.instances);
-        if (data.archetypes && data.archetypes.length > 0) setArchetypes(data.archetypes);
+        skipNextSync.current = true;
+        
+        setInstances(data.instances || []);
+        setArchetypes(data.archetypes || []);
         
         let loadedZones: Zone[] = data.zones || [];
         let loadedLocations: Location[] = data.locations || [];
@@ -82,17 +129,34 @@ export const App: FC = () => {
         setLocations(loadedLocations);
         
         setIsDbLoaded(true);
+        setInitialLoadSuccess(true);
+        setSyncStatus('synced');
       })
       .catch(err => {
-        console.error('Database connection failed, falling back to mock data:', err);
+        console.error('[Frontend] Database connection failed completely. Trace:', err);
+        if (err instanceof TypeError) {
+          console.error('[Frontend] Note: A TypeError usually means the server is entirely unreachable, or the Vite proxy is failing to forward the request to port 3001.');
+        }
         setIsDbLoaded(true);
+        setInitialLoadSuccess(false);
+        setSyncStatus('error');
       });
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
-    if (!isDbLoaded) return;
+    // Only sync back to the server if the initial data load was successful.
+    if (!isDbLoaded || !currentUser || !initialLoadSuccess) return;
+
+    if (skipNextSync.current) {
+      skipNextSync.current = false;
+      return; // Skip automatic sync right after initial load
+    }
+
     setSyncStatus('syncing');
-    fetch('/api/state', {
+    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+    fetch(`${apiBase}/api/state`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ instances, archetypes, locations, zones })
@@ -106,7 +170,7 @@ export const App: FC = () => {
       }
     })
     .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
-  }, [instances, archetypes, locations, zones, isDbLoaded]);
+  }, [instances, archetypes, locations, zones, isDbLoaded, currentUser, initialLoadSuccess]);
 
   const syncRoute = useCallback(() => {
     const pathname = window.location.pathname;
@@ -167,6 +231,31 @@ export const App: FC = () => {
       navigateTo('/');
     }
   }, [navigateTo]);
+
+  const handleLogin = (name: string) => {
+    const userId = name.toLowerCase().replace(/\s+/g, '-');
+    const savedUsers = JSON.parse(localStorage.getItem('florasync_users') || '{}');
+    const user = savedUsers[userId] || { id: userId, name, imageUrl: '' };
+    setCurrentUser(user);
+    localStorage.setItem('florasync_user', JSON.stringify(user));
+    savedUsers[userId] = user;
+    localStorage.setItem('florasync_users', JSON.stringify(savedUsers));
+  };
+
+  const handleUpdateUser = (updates: Partial<User>) => {
+    if (!currentUser) return;
+    const updatedUser = { ...currentUser, ...updates };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('florasync_user', JSON.stringify(updatedUser));
+    const savedUsers = JSON.parse(localStorage.getItem('florasync_users') || '{}');
+    savedUsers[updatedUser.id] = updatedUser;
+    localStorage.setItem('florasync_users', JSON.stringify(savedUsers));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('florasync_user');
+  };
 
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
@@ -377,8 +466,32 @@ export const App: FC = () => {
   };
 
   const renderView = () => {
+    if (!currentUser) {
+      return <LoginScreen onLogin={handleLogin} />;
+    }
+
     if (!isDbLoaded) {
-      return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-emerald-800 font-medium">Syncing with Greenhouse...</div>;
+      return <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-emerald-800 dark:text-emerald-400 font-medium">Syncing with Greenhouse...</div>;
+    }
+
+    if (initialLoadSuccess === false) {
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Connection Error</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-sm leading-relaxed">
+            Could not securely connect to the FloraSync database. Your garden data is safe on the server, but cannot be loaded right now.
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">
+              Retry Connection
+            </button>
+            <button onClick={handleLogout} className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-6 py-2 rounded-xl font-bold active:scale-95 transition-all">
+              Log Out
+            </button>
+          </div>
+        </div>
+      );
     }
 
     if (currentView === 'detail' && activeQr) {
@@ -388,7 +501,7 @@ export const App: FC = () => {
       const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
       return (
-        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />
+        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} currentUser={currentUser || undefined} />
       );
     }
 
@@ -418,7 +531,7 @@ export const App: FC = () => {
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />;
     }
 
     if (currentView === 'archetypes') {

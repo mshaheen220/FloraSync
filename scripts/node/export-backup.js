@@ -18,19 +18,29 @@ if (!fs.existsSync(BACKUP_DIR)) {
 
 try {
   const db = new Database(DB_FILE, { fileMustExist: true });
-  const row = db.prepare('SELECT instances FROM app_state WHERE id = 1').get();
+  const row = db.prepare('SELECT instances, archetypes, locations, zones FROM app_state WHERE id = 1').get();
   
-  if (row && row.instances) {
-    const instances = JSON.parse(row.instances);
+  if (row) {
+    const safeParse = (str) => {
+      try { return JSON.parse(str || '[]'); } catch (e) { return []; }
+    };
+    
+    const state = {
+      instances: safeParse(row.instances),
+      archetypes: safeParse(row.archetypes),
+      locations: safeParse(row.locations),
+      zones: safeParse(row.zones)
+    };
     
     // Create a timestamped backup file
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = path.join(BACKUP_DIR, `instances_backup_${timestamp}.json`);
+    const backupPath = path.join(BACKUP_DIR, `full_backup_${timestamp}.json`);
     
-    fs.writeFileSync(backupPath, JSON.stringify(instances, null, 2));
-    console.log(`✅ Successfully backed up ${instances.length} active plant instances to:\n   ${backupPath}`);
+    fs.writeFileSync(backupPath, JSON.stringify(state, null, 2));
+    const totalInstances = state.instances.length;
+    console.log(`✅ Successfully backed up ${totalInstances} active plant instances (and all other data) to:\n   ${backupPath}`);
   } else {
-    console.log('⚠️ No instances found in the database to backup.');
+    console.log('⚠️ No state found in the database to backup.');
   }
 } catch (err) {
   console.error('❌ Failed to backup database:', err.message);

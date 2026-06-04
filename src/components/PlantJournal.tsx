@@ -1,14 +1,16 @@
 import { FC, useState, FormEvent, ChangeEvent } from 'react';
 import { PlantInstance, JournalEntry } from '../../types';
 import { Card, Button, Input, Subtitle } from '../styles/StyledElements';
+import { User } from '../App';
 
 interface PlantJournalProps {
   instance: PlantInstance;
   onUpdate: (updates: Partial<PlantInstance>) => void;
   showToast: (msg: string) => void;
+  currentUser?: User;
 }
 
-export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showToast }) => {
+export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showToast, currentUser }) => {
   const [isAddingJournal, setIsAddingJournal] = useState(false);
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
   const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
@@ -34,7 +36,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         entry.id === editingJournalId ? { ...entry, ...journalForm, timestamp } as JournalEntry : entry
       );
     } else {
-      const newEntry: JournalEntry = {
+      const newEntry = {
         id: `j-${Date.now()}`,
         timestamp,
         title: journalForm.title || '',
@@ -46,8 +48,10 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         healthIssues: journalForm.healthIssues || '',
         growthStage: journalForm.growthStage || '',
         activityType: journalForm.activityType || 'Observation',
-        harvestAmount: journalForm.harvestAmount || ''
-      };
+        harvestAmount: journalForm.harvestAmount || '',
+        authorName: currentUser?.name || '',
+        authorImageUrl: currentUser?.imageUrl || ''
+      } as JournalEntry;
       updatedJournal = [newEntry, ...currentJournal].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }
     
@@ -203,9 +207,23 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
             <div key={entry.id} className="relative">
               <div className="absolute -left-[31px] bg-emerald-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                  {new Date(entry.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                    {new Date(entry.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                  </span>
+                  {(entry as any).authorName && (
+                    <div className="flex items-center gap-1.5 ml-2 border-l border-emerald-200 dark:border-emerald-800 pl-2">
+                      {(entry as any).authorImageUrl ? (
+                        <img src={(entry as any).authorImageUrl} alt={(entry as any).authorName} className="w-4 h-4 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-[8px] font-bold text-emerald-700 dark:text-emerald-400">
+                          {(entry as any).authorName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{(entry as any).authorName}</span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex gap-2">
                   <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: new Date(entry.timestamp).toISOString().slice(0, 16) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-emerald-600 active:scale-90 transition-transform">✏️</button>
                   <button onClick={() => handleDeleteJournal(entry.id)} className="text-slate-400 hover:text-red-600 active:scale-90 transition-transform">🗑️</button>

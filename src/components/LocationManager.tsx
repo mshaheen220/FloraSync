@@ -1,7 +1,7 @@
 import { useState, useEffect, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance, PlantArchetype } from '../../types';
 import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
-import { Theme } from '../App';
+import { Theme, User } from '../App';
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { ZoneCard } from './ZoneCard';
 import { LocationCard } from './LocationCard';
@@ -27,9 +27,12 @@ interface LocationManagerProps {
   onNavigateZone: (id: string) => void;
   onNavigate: (qrId: string) => void;
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
+  currentUser?: User;
+  onUpdateUser?: (updates: Partial<User>) => void;
+  onLogout?: () => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister, currentUser, onUpdateUser, onLogout }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [newName, setNewName] = useState('');
@@ -53,10 +56,13 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [showImportHelp, setShowImportHelp] = useState(false);
   const [importType, setImportType] = useState<'archetypes' | 'zones' | 'locations'>('archetypes');
 
+  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
   // Fetch existing print files when the settings view loads
   useEffect(() => {
     if (mode === 'settings') {
-      fetch('/api/prints')
+      fetch(`${apiBase}/api/prints`)
         .then(res => res.json())
         .then(data => {
           if (data.files) {
@@ -65,7 +71,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         })
         .catch(err => console.error('Failed to load prints:', err));
     }
-  }, [mode]);
+  }, [mode, apiBase]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -84,7 +90,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
     setIsGenerating(true);
     setGeneratedFiles([]);
     try {
-      const res = await fetch('/api/generate-qrs', {
+      const res = await fetch(`${apiBase}/api/generate-qrs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -97,7 +103,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
       const data = await res.json();
       if (data.success) {
         // Refresh the list to get all files sorted properly
-        fetch('/api/prints').then(r => r.json()).then(d => {
+        fetch(`${apiBase}/api/prints`).then(r => r.json()).then(d => {
           if (d.files) setGeneratedFiles(d.files);
         });
         showToast('🖨️ QR Sheets generated successfully!');
@@ -117,7 +123,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const handleDeletePrint = async (filename: string) => {
     if (!window.confirm('Delete this print sheet?')) return;
     try {
-      const res = await fetch(`/api/prints/${filename}`, { method: 'DELETE' });
+      const res = await fetch(`${apiBase}/api/prints/${filename}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.success) {
         showToast('🗑️ Print sheet deleted');
@@ -182,7 +188,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         return;
       }
       
-      const res = await fetch('/api/import', {
+      const res = await fetch(`${apiBase}/api/import`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: importType, data: dataToImport })
@@ -351,6 +357,43 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
 
       {mode === 'settings' && (
         <>
+          {currentUser && onUpdateUser && onLogout && (
+            <>
+              <Subtitle>Account Info</Subtitle>
+              <Card className="mb-8">
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="relative">
+                    {currentUser.imageUrl ? (
+                      <img src={currentUser.imageUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-400 border-2 border-emerald-500">
+                        {currentUser.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <label className="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-emerald-600 transition-colors shadow-md text-xs leading-none">
+                      📷
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => onUpdateUser({ imageUrl: reader.result as string });
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Display Name</label>
+                    <Input value={currentUser.name} onChange={e => onUpdateUser({ name: e.target.value })} className="!mb-0" />
+                  </div>
+                </div>
+                <Button variant="secondary" onClick={onLogout} className="w-full !text-red-600 dark:!text-red-400 !border-red-200 dark:!border-red-900/50 hover:!bg-red-50 dark:hover:!bg-red-900/20">
+                  Log Out
+                </Button>
+              </Card>
+            </>
+          )}
+
           <Subtitle>Appearance</Subtitle>
           <Card className="flex gap-2 !p-2 mb-8">
             {(['light', 'dark', 'system'] as const).map(t => (
@@ -440,7 +483,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                     </div>
                     <div className="flex items-center gap-2">
                       <a 
-                        href={`/api/prints/${file.name}`} 
+                        href={`${apiBase}/api/prints/${file.name}`} 
                         download 
                         target="_blank"
                         rel="noreferrer"

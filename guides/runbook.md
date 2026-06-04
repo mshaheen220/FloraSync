@@ -9,7 +9,9 @@ When you want to add a new feature or update the code, you will do all your acti
 ### Local Development
 1. Start the backend API: `npm run api`
 2. Start the Vite frontend: `npm run dev`
-3. Open `http://localhost:5173` to test your changes.
+3. Open `http://localhost:5173` in your browser to test your changes.
+
+*Note: The API and the frontend must be running at the same time in two separate terminal windows. If you ever create or modify `vite.config.ts`, you must stop and restart the frontend (`npm run dev`) for the changes to take effect.*
 
 ### Preparing for Deployment
 Because the deployment server (TheForge) is running an older macOS that cannot natively compile the frontend via `esbuild`, you must build the UI on your laptop and transfer the static files over.
@@ -73,10 +75,10 @@ caddy start --config ~/.config/caddy/Caddyfile
 
 ## 💾 4. Database Management & Backups
 
-Your entire physical garden (your `PlantInstances`) lives solely inside the `florasync.db` SQLite file on TheForge. Always back it up before making major changes!
+Your entire garden state (plants, dictionary, locations, zones) lives inside the `florasync.db` SQLite file on TheForge. Always back it up before making major changes!
 
 ### Backing up the garden
-Run this command on TheForge to safely export your living garden to a timestamped JSON file in `src/data/backups/`:
+Run this command on TheForge to safely export your entire garden state to a timestamped JSON file in `src/data/backups/`:
 ```bash
 npm run backup
 ```

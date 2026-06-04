@@ -31,14 +31,27 @@ const backupPath = path.join(BACKUP_DIR, latestBackup);
 try {
   const db = new Database(DB_FILE, { fileMustExist: true });
   const backupData = fs.readFileSync(backupPath, 'utf8');
-  const instances = JSON.parse(backupData);
+  const state = JSON.parse(backupData);
 
-  if (!Array.isArray(instances)) {
-    throw new Error('Backup file does not contain a valid array of instances.');
+  // Handle both old (array of instances) and new (state object) backup formats
+  let instances, archetypes, locations, zones;
+  if (Array.isArray(state)) {
+    console.log('Legacy backup format detected (instances only).');
+    instances = state;
+    archetypes = [];
+    locations = [];
+    zones = [];
+  } else {
+    instances = state.instances || [];
+    archetypes = state.archetypes || [];
+    locations = state.locations || [];
+    zones = state.zones || [];
   }
 
-  db.prepare('UPDATE app_state SET instances = ? WHERE id = 1').run(JSON.stringify(instances));
-  console.log(`✅ Successfully restored ${instances.length} active plant instances from:\n   ${latestBackup}`);
+  db.prepare('UPDATE app_state SET instances = ?, archetypes = ?, locations = ?, zones = ? WHERE id = 1')
+    .run(JSON.stringify(instances), JSON.stringify(archetypes), JSON.stringify(locations), JSON.stringify(zones));
+    
+  console.log(`✅ Successfully restored ${instances.length} active plant instances (and all other data) from:\n   ${latestBackup}`);
 } catch (err) {
   console.error('❌ Failed to restore database:', err.message);
 }

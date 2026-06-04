@@ -14,9 +14,22 @@ const PRINTS_DIR = path.join(ROOT_DIR, 'src/data/code-prints');
 const IMPORTS_DIR = path.join(ROOT_DIR, 'src/data/imports');
 
 const app = express();
-app.use(cors());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  next();
+});
 app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ limit: '200mb', extended: true }));
+
+// Simple request logger to verify proxy is working
+app.use((req, res, next) => {
+  console.log(`[API REQUEST] ${req.method} ${req.url}`);
+  next();
+});
 
 // Initialize the SQLite database file
 const db = new Database(DB_FILE);
@@ -46,12 +59,24 @@ if (!stmt.get()) {
 }
 
 app.get('/api/state', (req, res) => {
-  const row = db.prepare('SELECT instances, archetypes, locations, zones FROM app_state WHERE id = 1').get();
-  res.json({ instances: JSON.parse(row.instances), archetypes: JSON.parse(row.archetypes), locations: row.locations ? JSON.parse(row.locations) : [], zones: row.zones ? JSON.parse(row.zones) : [] });
+  try {
+    const row = db.prepare('SELECT instances, archetypes, locations, zones FROM app_state WHERE id = 1').get();
+    
+    const safeParse = (str, fallback) => {
+      if (!str || str === 'undefined') return fallback;
+      try { return JSON.parse(str); } catch (e) { return fallback; }
+    };
+
+    res.json({ instances: safeParse(row.instances, []), archetypes: safeParse(row.archetypes, []), locations: safeParse(row.locations, []), zones: safeParse(row.zones, []) });
+  } catch (err) {
+    console.error('Error fetching state:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/api/state', (req, res) => {
-  db.prepare('UPDATE app_state SET instances = ?, archetypes = ?, locations = ?, zones = ? WHERE id = 1').run(JSON.stringify(req.body.instances), JSON.stringify(req.body.archetypes), JSON.stringify(req.body.locations), JSON.stringify(req.body.zones));
+  db.prepare('UPDATE app_state SET instances = ?, archetypes = ?, locations = ?, zones = ? WHERE id = 1')
+    .run(JSON.stringify(req.body.instances || []), JSON.stringify(req.body.archetypes || []), JSON.stringify(req.body.locations || []), JSON.stringify(req.body.zones || []));
   res.json({ success: true });
 });
 
@@ -182,5 +207,5 @@ app.get(/.*/, (req, res) => {
   res.sendFile(path.join(DIST_DIR, 'index.html'));
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => console.log(`✅ 🌿 FloraSync SQLite API is running on port ${PORT}`));
+const PORT = process.env.PORT || 5050;
+app.listen(PORT, () => console.log(`✅ 🌿 FloraSync SQLite API is running on port ${PORT} (Dual Stack)`));

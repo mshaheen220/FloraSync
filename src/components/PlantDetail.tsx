@@ -3,6 +3,7 @@ import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
+import { User } from '../App';
 
 interface PlantDetailProps {
   qrId: string;
@@ -24,10 +25,11 @@ interface PlantDetailProps {
   onClearAction: () => void;
   onNavigateLocation: (locId: string) => void;
   onNavigateZone: (zoneName: string) => void;
+  currentUser?: User;
 }
 
 export const PlantDetail: FC<PlantDetailProps> = ({ 
-  qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
+  qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone, currentUser
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -559,6 +561,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             instance={instance} 
             onUpdate={(updates) => onUpdate(qrId, updates)} 
             showToast={showToast} 
+            currentUser={currentUser}
           />
         )}
       </div>
