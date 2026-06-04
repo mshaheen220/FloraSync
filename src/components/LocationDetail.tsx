@@ -1,7 +1,8 @@
 import { useEffect, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle, MenuButton, Input } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
+import { PageHeader } from './PageHeader';
 
 interface LocationDetailProps {
   locationId: string;
@@ -88,25 +89,19 @@ export const LocationDetail: FC<LocationDetailProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <header className="mb-6 flex items-center justify-between pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-            &larr;
-          </button>
-          <div>
-            <Title className="!mb-0">{location.name}</Title>
-            <p 
-              className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2"
-              onClick={() => zone && onNavigateZone(zone.id)}
-            >
-              {zone?.name}
-            </p>
-          </div>
-        </div>
-        <MenuButton onClick={onOpenMenu}>
-          ☰
-        </MenuButton>
-      </header>
+      <PageHeader 
+        title={location.name}
+        subtitle={
+          <span 
+            className="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2"
+            onClick={() => zone && onNavigateZone(zone.id)}
+          >
+            {zone?.name}
+          </span>
+        }
+        onGoBack={onGoBack} 
+        onOpenMenu={onOpenMenu} 
+      />
 
       <Card className="flex flex-col items-center py-6 mb-6">
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} in this location.</p>

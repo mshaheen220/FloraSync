@@ -11,6 +11,7 @@ const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '../../');
 const DB_FILE = path.join(ROOT_DIR, 'florasync.db');
 const PRINTS_DIR = path.join(ROOT_DIR, 'src/data/code-prints');
+const IMPORTS_DIR = path.join(ROOT_DIR, 'src/data/imports');
 
 const app = express();
 app.use(cors());
@@ -121,6 +122,56 @@ app.get('/api/prints/:filename', (req, res) => {
     res.download(filePath);
   } else {
     res.status(404).send('File not found');
+  }
+});
+
+// API to securely delete a generated sheet
+app.delete('/api/prints/:filename', (req, res) => {
+  const filename = req.params.filename;
+  if (!filename || filename.includes('..') || filename.includes('/')) {
+    return res.status(400).json({ success: false, error: 'Invalid file' });
+  }
+  const filePath = path.join(PRINTS_DIR, filename);
+  if (fs.existsSync(filePath)) {
+    try {
+      fs.unlinkSync(filePath);
+      res.json({ success: true });
+    } catch (err) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  } else {
+    res.status(404).json({ success: false, error: 'File not found' });
+  }
+});
+
+// API to import a JSON array by leveraging the import-seed.js script
+app.post('/api/import', (req, res) => {
+  const { type, data } = req.body;
+
+  if (!['archetypes', 'zones', 'locations'].includes(type) || !Array.isArray(data)) {
+    return res.status(400).json({ success: false, error: 'Invalid import type or data format.' });
+  }
+
+  try {
+    // 1. Write the data to the imports directory using the type as the filename
+    if (!fs.existsSync(IMPORTS_DIR)) {
+      fs.mkdirSync(IMPORTS_DIR, { recursive: true });
+    }
+    
+    const filePath = path.join(IMPORTS_DIR, `${type}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+    // 2. Execute the existing seed script
+    exec('node scripts/node/import-seed.js', { cwd: ROOT_DIR }, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Import error: ${error.message}`);
+        return res.status(500).json({ success: false, error: error.message });
+      }
+      res.json({ success: true, message: stdout });
+    });
+  } catch (err) {
+    console.error('Import failed:', err);
+    res.status(500).json({ success: false, error: 'Server error during import.' });
   }
 });
 

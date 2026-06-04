@@ -49,6 +49,9 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [blankCategory, setBlankCategory] = useState<'plant' | 'location' | 'zone'>('plant');
   const [blankPrefix, setBlankPrefix] = useState('qr');
   const [blankStartId, setBlankStartId] = useState('001');
+  const [importJson, setImportJson] = useState('');
+  const [showImportHelp, setShowImportHelp] = useState(false);
+  const [importType, setImportType] = useState<'archetypes' | 'zones' | 'locations'>('archetypes');
 
   // Fetch existing print files when the settings view loads
   useEffect(() => {
@@ -109,6 +112,89 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleDeletePrint = async (filename: string) => {
+    if (!window.confirm('Delete this print sheet?')) return;
+    try {
+      const res = await fetch(`/api/prints/${filename}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        showToast('🗑️ Print sheet deleted');
+        setGeneratedFiles(prev => prev.filter(f => f.name !== filename));
+      } else {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (e) {
+      showToast('❌ Failed to connect to server.');
+    }
+  };
+
+  const getExampleSchema = () => {
+    let example = {};
+    if (importType === 'archetypes') {
+      example = [{
+        "id": "hylotelephium-telephioides-cuttings",
+        "commonName": "Allegheny Stonecrop (Cuttings)",
+        "scientificName": "Hylotelephium telephioides",
+        "category": "Foliage Accent",
+        "lifecycle": "Perennial",
+        "sunRequirement": "Full Sun to Partial Shade",
+        "waterIntervalDays": 10,
+        "feedingIntervalDays": 60,
+        "whatToFeed": "Rarely requires fertilizer; a light dusting of bone meal or low-nitrogen organic compost scratched into the surface layers in early spring.",
+        "pruningTips": "Not applicable to fresh cuttings. Established plants benefit from being cut back by half in late spring (Chelsea Chop) to encourage branching and prevent them from splitting open.",
+        "flavorProfile": "Not edible. Grown strictly as an ornamental or structural foliage accent plant.",
+        "companionPlants": ["Coneflowers", "Tall Bearded Iris", "Ornamental Grasses", "Blue Chalksticks"],
+        "combativePlants": ["None reported"],
+        "growthHabit": "Sprawling Mounded (once established)",
+        "daysToHarvest": 60,
+        "imageUrl": "/images/foliage/Allegheny Stonecrop Cuttings.jpg",
+        "whenToPlant": "Zone 6/7: Direct plant unrooted cuttings outdoors from late spring (May) through early autumn (September), ideally when nights are above 50°F.",
+        "whenToHarvest": "Not applicable; admired for its continuous distinctive texture and summer-to-autumn display of pink or white flower clusters.",
+        "usesForLargeHarvests": "Excellent structural groundcover, rock garden filler, or low-maintenance border edging.",
+        "hardinessZones": [4, 9],
+        "hardinessNote": "Hardy perennial. Cuttings form a resilient, drought-resistant stonecrop plant over their first season.",
+        "plantingInstructions": "To plant unrooted cuttings: 1. Let the fresh cuts callous for a couple of days in a cool, dry, shaded spot. 2. Plant directly into the ground, burying 1-2 inches of the stem and leaves in a well-loosened patch of soil. 3. Backfill firmly and water once lightly to settle.",
+        "growthRequirements": "Requires completely average, lean, gritty, loose loam with top-tier internal drainage and a pH range of 6.0 to 7.0. Roots must dry out thoroughly; avoid overwatering or pooling water. Thrives in highly bright sun."
+      }];
+    } else if (importType === 'zones') {
+      example = [{
+        "id": "zn-custom",
+        "name": "Custom Zone",
+        "evaporationModifier": 1.2
+      }];
+    } else if (importType === 'locations') {
+      example = [{
+        "id": "loc-custom",
+        "name": "Custom Location",
+        "zoneId": "zn-167..."
+      }];
+    }
+    return JSON.stringify(example, null, 2);
+  };
+
+  const handleImportJson = async () => {
+    try {
+      const dataToImport = JSON.parse(importJson);
+      if (!Array.isArray(dataToImport)) {
+        showToast('❌ Invalid JSON. Must be an array of objects.');
+        return;
+      }
+      
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: importType, data: dataToImport })
+      });
+      const result = await res.json();
+      if (result.success) {
+        showToast(`✅ Import successful! Refreshing...`);
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showToast(`❌ Import failed: ${result.error || 'Check data format.'}`);
+      }
+    } catch (e) { showToast('❌ Invalid JSON format.'); }
   };
 
   const formatPrintName = (filename: string) => {
@@ -340,12 +426,8 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
               <Subtitle className="!text-sm mb-2">Ready to Print</Subtitle>
               <div className="flex flex-col gap-2">
                 {generatedFiles.map((file, i) => (
-                  <a 
+                  <div 
                     key={i} 
-                    href={`/api/prints/${file.name}`} 
-                    download 
-                    target="_blank"
-                    rel="noreferrer"
                     className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
                   >
                     <div className="flex flex-col truncate mr-4">
@@ -356,14 +438,70 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                         {new Date(file.time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                       </span>
                     </div>
-                    <span className="text-xl text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform p-1">
-                      ⬇️
-                    </span>
-                  </a>
+                    <div className="flex items-center gap-2">
+                      <a 
+                        href={`/api/prints/${file.name}`} 
+                        download 
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1"
+                      >
+                        ⬇️
+                      </a>
+                      <button onClick={() => handleDeletePrint(file.name)} className="text-xl text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
           )}
+        </div>
+      </Card>
+
+      <Subtitle>Data Import</Subtitle>
+      <Card className="mb-8">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Import Type</label>
+            <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              ❓ <span className="underline decoration-dotted underline-offset-2">Schema Help</span>
+            </button>
+          </div>
+          <select value={importType} onChange={e => setImportType(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+            <option value="archetypes">Plant Dictionary (Archetypes)</option>
+            <option value="zones">Zones</option>
+            <option value="locations">Locations</option>
+          </select>
+
+          {showImportHelp && (
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs animate-in fade-in duration-300">
+              <p className="text-slate-500 dark:text-slate-400 mb-2">Paste a valid JSON array. The <code className="text-xs">id</code> must be unique. Example for <strong className="text-slate-700 dark:text-slate-200">{importType}</strong>:</p>
+              <pre className="bg-slate-200 dark:bg-slate-900 p-2 rounded text-slate-600 dark:text-slate-300 overflow-x-auto text-[10px]">
+                <code>{getExampleSchema()}</code>
+              </pre>
+            </div>
+          )}
+
+          <textarea 
+            value={importJson} 
+            onChange={e => setImportJson(e.target.value)} 
+            className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm font-mono" 
+            rows={8} 
+            placeholder={`Paste JSON array for ${importType} here...`} 
+          />
+          
+          <Button 
+            onClick={handleImportJson} 
+            disabled={!importJson.trim()}
+            className="flex justify-center items-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+            </svg>
+            Import Data
+          </Button>
         </div>
       </Card>
         </>
