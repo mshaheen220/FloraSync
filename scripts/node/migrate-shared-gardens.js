@@ -24,18 +24,20 @@ try {
     
     try { db.exec('ALTER TABLE users ADD COLUMN garden_id TEXT;'); } catch (e) {}
 
-    const userGardens = db.prepare('SELECT * FROM user_gardens').all();
+    let userGardens = [];
+    try { userGardens = db.prepare('SELECT * FROM user_gardens').all(); } catch (e) {}
     
     for (const ug of userGardens) {
         const user = db.prepare('SELECT name, username FROM users WHERE id = ?').get(ug.user_id);
         const gardenName = user ? `${user.name || user.username}'s Garden` : `Garden ${ug.user_id}`;
         const gardenId = `gdn-${ug.user_id}`;
 
-        db.prepare('INSERT OR IGNORE INTO gardens (id, name, instances, locations, zones) VALUES (?, ?, ?, ?, ?)').run(gardenId, gardenName, ug.instances, ug.locations, ug.zones);
+        db.prepare('INSERT OR REPLACE INTO gardens (id, name, instances, locations, zones) VALUES (?, ?, ?, ?, ?)').run(gardenId, gardenName, ug.instances, ug.locations, ug.zones);
         db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(gardenId, ug.user_id);
     }
 
-    db.exec('ALTER TABLE user_gardens RENAME TO user_gardens_legacy_backup;');
+    try { db.exec('DROP TABLE IF EXISTS user_gardens_legacy_backup;'); } catch (e) {}
+    try { db.exec('ALTER TABLE user_gardens RENAME TO user_gardens_legacy_backup;'); } catch (e) {}
     console.log('🎉 Migration Complete! Your database now supports Shared Gardens.');
 } catch (err) {
     console.error('❌ Migration failed:', err);

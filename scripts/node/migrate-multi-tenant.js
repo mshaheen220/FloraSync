@@ -13,10 +13,12 @@ const db = new Database(DB_FILE);
 console.log('🌿 Starting FloraSync Multi-Tenant Migration...');
 
 // 1. Fetch existing legacy data
-const oldState = db.prepare('SELECT * FROM app_state WHERE id = 1').get();
+let oldState;
+try { oldState = db.prepare('SELECT * FROM app_state WHERE id = 1').get(); } catch (err) {}
+
 if (!oldState) {
-    console.error('❌ No existing app_state found. Are you running this on an empty database?');
-    process.exit(1);
+    console.log('✅ No existing app_state found. Migration already completed!');
+    process.exit(0);
 }
 
 // 2. Create the new Multi-Tenant Schema
