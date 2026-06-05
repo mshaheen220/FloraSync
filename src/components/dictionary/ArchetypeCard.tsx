@@ -16,6 +16,7 @@ interface ArchetypeCardProps {
   onEditCancel: () => void;
   onSave: (e: FormEvent) => void;
   onDelete: () => void;
+  canEdit?: boolean;
 }
 
 export const ArchetypeCard: FC<ArchetypeCardProps> = ({
@@ -29,7 +30,8 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
   onEditStart,
   onEditCancel,
   onSave,
-  onDelete
+  onDelete,
+  canEdit
 }) => {
   const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -184,8 +186,12 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
         </div>
         <div className="flex gap-1">
           <button onClick={onViewToggle} className={`p-2 rounded-lg transition-colors active:scale-90 ${isViewing ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`} title="View Details">👁️</button>
-          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-          <button onClick={onDelete} disabled={inUseCount > 0} className={`p-2 rounded-lg transition-colors ${inUseCount > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          {canEdit && (
+            <>
+              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+              <button onClick={onDelete} disabled={inUseCount > 0} className={`p-2 rounded-lg transition-colors ${inUseCount > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+            </>
+          )}
         </div>
       </div>
       {isViewing && (

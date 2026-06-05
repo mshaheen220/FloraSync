@@ -15,9 +15,10 @@ interface LocationCardProps {
   onSave: (e: FormEvent) => void;
   onDelete: () => void;
   onNavigateLocation: () => void;
+  canEdit?: boolean;
 }
 
-export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones, plantsInLocation, isEditing, editData, setEditData, onEditStart, onEditCancel, onSave, onDelete, onNavigateLocation }) => {
+export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones, plantsInLocation, isEditing, editData, setEditData, onEditStart, onEditCancel, onSave, onDelete, onNavigateLocation, canEdit }) => {
   if (isEditing) {
     return (
       <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
@@ -53,8 +54,12 @@ export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones,
         </div>
         <div className="flex gap-1">
           <button onClick={onNavigateLocation} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Location">👁️</button>
-          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-          <button onClick={onDelete} disabled={plantsInLocation > 0} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          {canEdit && (
+            <>
+              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+              <button onClick={onDelete} disabled={plantsInLocation > 0} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+            </>
+          )}
         </div>
       </div>
     </Card>

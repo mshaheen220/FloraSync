@@ -22,6 +22,7 @@ export interface User {
   name: string;
   imageUrl?: string;
   accesses?: { id: string, name: string, role: string }[];
+  workspaceRole?: string;
 }
 
 export interface GardenProfile {
@@ -709,7 +710,7 @@ export const App: FC = () => {
       const locationInstances = instances.filter(i => i.locationId === activeLoc);
       
       return (
-        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
+        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
       );
     }
 
@@ -720,7 +721,7 @@ export const App: FC = () => {
       const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
       
       return (
-        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} />
+        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
       );
     }
 
@@ -729,11 +730,11 @@ export const App: FC = () => {
     }
 
     if (currentView === 'zones') {
-      return <ZoneManager gardenName={gardenProfile?.name || 'FloraSync'} zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      return <ZoneManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'inventory') {
-      return <InventoryManager gardenName={gardenProfile?.name || 'FloraSync'} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      return <InventoryManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'settings') {
@@ -741,16 +742,17 @@ export const App: FC = () => {
     }
 
     if (currentView === 'locations') {
-      return <LocationManager gardenName={gardenProfile?.name || 'FloraSync'} locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      return <LocationManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'archetypes') {
-      return <ArchetypeManager gardenName={gardenProfile?.name || 'FloraSync'} archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      return <ArchetypeManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     return (
       <Dashboard 
         gardenProfile={gardenProfile}
+        currentUser={currentUser}
         instances={instances} 
         archetypes={archetypes} 
         locations={locations} 

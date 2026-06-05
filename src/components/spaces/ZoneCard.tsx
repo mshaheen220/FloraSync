@@ -13,9 +13,10 @@ interface ZoneCardProps {
   onSave: (e: FormEvent) => void;
   onDelete: () => void;
   onNavigateZone: () => void;
+  canEdit?: boolean;
 }
 
-export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone }) => {
+export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone, canEdit }) => {
   if (isEditing) {
     return (
       <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
@@ -66,8 +67,12 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
         </div>
         <div className="flex gap-1">
           <button onClick={onNavigateZone} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Zone">👁️</button>
-          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-          <button onClick={onDelete} disabled={locationsInZone > 0} className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          {canEdit && (
+            <>
+              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+              <button onClick={onDelete} disabled={locationsInZone > 0} className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+            </>
+          )}
         </div>
       </div>
     </Card>

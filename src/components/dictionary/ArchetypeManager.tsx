@@ -3,6 +3,7 @@ import { PlantArchetype, PlantInstance } from '../../../types';
 import { Container, Input, Toast, Subtitle, Button } from '../../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 interface ArchetypeManagerProps {
   gardenName: string;
@@ -13,9 +14,10 @@ interface ArchetypeManagerProps {
   onDelete: (id: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
+  currentUser: User;
 }
 
-export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, archetypes, instances, onAdd, onUpdate, onDelete, onOpenMenu, onOpenWorkspaceMenu }) => {
+export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, currentUser, archetypes, instances, onAdd, onUpdate, onDelete, onOpenMenu, onOpenWorkspaceMenu }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -134,9 +136,10 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, archet
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
       </p>
 
-      {!isAdding ? (
+      {!isAdding && currentUser?.role === 'god-admin' && (
         <Button onClick={() => setIsAdding(true)} className="mb-6">+ Add New Plant</Button>
-      ) : (
+      )}
+      {isAdding && currentUser?.role === 'god-admin' && (
         <div className="mb-8">
           <Subtitle>Add New Plant</Subtitle>
           <ArchetypeCard
@@ -188,6 +191,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, archet
 
                     return (
                       <ArchetypeCard
+                        canEdit={currentUser?.role === 'god-admin'}
                         key={arch.id}
                         arch={arch}
                         inUseCount={inUseCount}

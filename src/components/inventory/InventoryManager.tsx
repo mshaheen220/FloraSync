@@ -4,6 +4,7 @@ import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/St
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 interface InventoryManagerProps {
   gardenName: string;
@@ -15,10 +16,11 @@ interface InventoryManagerProps {
   onNavigate: (qrId: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
+  currentUser: User;
 }
 
 export const InventoryManager: FC<InventoryManagerProps> = ({ 
-  gardenName, instances, archetypes, locations, zones, onRegister, onNavigate, onOpenMenu, onOpenWorkspaceMenu 
+  gardenName, currentUser, instances, archetypes, locations, zones, onRegister, onNavigate, onOpenMenu, onOpenWorkspaceMenu 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [isAddingPlant, setIsAddingPlant] = useState(false);
@@ -111,9 +113,10 @@ export const InventoryManager: FC<InventoryManagerProps> = ({
       <PageHeader title="Inventory Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Your Plants</Subtitle>
-      {!isAddingPlant ? (
+      {!isAddingPlant && currentUser?.workspaceRole !== 'viewer' && (
         <Button onClick={() => setIsAddingPlant(true)} className="mb-6">+ Add New Plant</Button>
-      ) : (
+      )}
+      {isAddingPlant && currentUser?.workspaceRole !== 'viewer' && (
         <Card className="mb-6 shadow-md border-emerald-500 dark:border-emerald-500">
           <Subtitle className="!mt-0 mb-4">Add New Plant</Subtitle>
           <PlantRegistrationForm 

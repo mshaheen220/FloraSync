@@ -3,6 +3,7 @@ import { Location, Zone, PlantInstance } from '../../../types';
 import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { LocationCard } from './LocationCard';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 interface LocationManagerProps {
   gardenName: string;
@@ -15,9 +16,10 @@ interface LocationManagerProps {
   onOpenMenu: () => void;
   onNavigateLocation: (id: string) => void;
   onOpenWorkspaceMenu?: () => void;
+  currentUser: User;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ gardenName, locations, zones, instances, onAdd, onUpdate, onDelete, onOpenMenu, onNavigateLocation, onOpenWorkspaceMenu }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ gardenName, currentUser, locations, zones, instances, onAdd, onUpdate, onDelete, onOpenMenu, onNavigateLocation, onOpenWorkspaceMenu }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
   const [selectedZoneId, setSelectedZoneId] = useState('');
@@ -68,7 +70,8 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, location
       <PageHeader title="Location Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Locations</Subtitle>
-      <Card>
+      {currentUser?.workspaceRole !== 'viewer' && (
+       <Card>
         <form onSubmit={handleAdd} className="flex flex-col gap-3 mt-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
@@ -84,6 +87,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, location
           <Button type="submit" className="mt-2">Add Location</Button>
         </form>
       </Card>
+      )}
 
       <Subtitle className="!mb-0">Existing Locations</Subtitle>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">(grouped by Zone)</p>
@@ -118,6 +122,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, location
                         zoneName={zoneName}
                         zones={zones}
                         plantsInLocation={plantsInLocation}
+                            canEdit={currentUser?.workspaceRole !== 'viewer'}
                         isEditing={isEditing}
                         editData={editData}
                         setEditData={setEditData}

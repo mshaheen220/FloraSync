@@ -3,6 +3,7 @@ import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 interface LocationDetailProps {
   locationId: string;
@@ -20,10 +21,11 @@ interface LocationDetailProps {
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
+  currentUser?: User;
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction 
+  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, currentUser 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newLocName, setNewLocName] = useState('');
@@ -50,6 +52,19 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   }, [location, initialAction, locationId, onBatchWater, onBatchFeed, onClearAction]);
 
   if (!location) {
+    if (currentUser?.workspaceRole === 'viewer') {
+      return (
+        <Container className="flex flex-col justify-center animate-in fade-in duration-500">
+          <Card className="text-center py-10 shadow-lg border-emerald-500">
+            <div className="text-5xl mb-4">📍</div>
+            <Title>Unassigned Tag</Title>
+            <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
+              Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned. Viewers do not have permission to register new locations.
+            </p>
+          </Card>
+        </Container>
+      );
+    }
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg border-emerald-500">
@@ -105,10 +120,12 @@ export const LocationDetail: FC<LocationDetailProps> = ({
 
       <Card className="flex flex-col items-center py-6 mb-6">
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} in this location.</p>
-        <div className="w-full flex gap-3 px-2">
-          <Button onClick={() => { onBatchWater(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
-          <Button $variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
-        </div>
+        {currentUser?.workspaceRole !== 'viewer' && (
+          <div className="w-full flex gap-3 px-2">
+            <Button onClick={() => { onBatchWater(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
+            <Button $variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
+          </div>
+        )}
       </Card>
 
       <Subtitle>Plants in {location.name}</Subtitle>

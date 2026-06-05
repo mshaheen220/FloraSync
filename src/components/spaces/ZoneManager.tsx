@@ -3,6 +3,7 @@ import { Zone, Location } from '../../../types';
 import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { ZoneCard } from './ZoneCard';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 interface ZoneManagerProps {
   gardenName: string;
@@ -14,10 +15,11 @@ interface ZoneManagerProps {
   onNavigateZone: (id: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
+  currentUser: User;
 }
 
 export const ZoneManager: FC<ZoneManagerProps> = ({ 
-  gardenName, zones, locations, onAddZone, onUpdateZone, onDeleteZone, onNavigateZone, onOpenMenu, onOpenWorkspaceMenu 
+  gardenName, currentUser, zones, locations, onAddZone, onUpdateZone, onDeleteZone, onNavigateZone, onOpenMenu, onOpenWorkspaceMenu 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
@@ -42,7 +44,8 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
       <PageHeader title="Zone Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Zones</Subtitle>
-      <Card>
+      {currentUser?.workspaceRole !== 'viewer' && (
+       <Card>
         <form onSubmit={handleAddZone} className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">New Macro Zone</label>
@@ -51,6 +54,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
           <Button type="submit" className="mt-2">Add Zone</Button>
         </form>
       </Card>
+      )}
 
       <Subtitle>Existing Zones</Subtitle>
       <div className="space-y-3 mb-8">
@@ -59,6 +63,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
           const isEditing = editingZoneId === zone.id;
           return (
             <ZoneCard
+              canEdit={currentUser?.workspaceRole !== 'viewer'}
               key={zone.id} zone={zone} locationsInZone={locationsInZone} isEditing={isEditing}
               editZoneData={editZoneData} setEditZoneData={setEditZoneData}
               onEditStart={() => { setEditingZoneId(zone.id); setEditZoneData(zone); }} onEditCancel={() => setEditingZoneId(null)}

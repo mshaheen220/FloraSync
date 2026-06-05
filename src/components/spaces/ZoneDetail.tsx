@@ -3,6 +3,7 @@ import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
+import { User } from '../../App';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -20,10 +21,11 @@ interface ZoneDetailProps {
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
+  currentUser?: User;
 }
 
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
-  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction 
+  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction, currentUser 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
@@ -79,6 +81,19 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   }, [locations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
 
   if (!zone) {
+    if (currentUser?.workspaceRole === 'viewer') {
+      return (
+        <Container className="flex flex-col justify-center animate-in fade-in duration-500">
+          <Card className="text-center py-10 shadow-lg border-emerald-500">
+            <div className="text-5xl mb-4">🌍</div>
+            <Title>Unassigned Tag</Title>
+            <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
+              Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned. Viewers do not have permission to register new zones.
+            </p>
+          </Card>
+        </Container>
+      );
+    }
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg border-emerald-500">
@@ -129,10 +144,12 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
             <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-6 italic text-center leading-relaxed">"{zone.description}"</p>
           )}
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} across {locations.length} locations.</p>
-          <div className="w-full flex gap-3 px-2">
-            <Button onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
-            <Button $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
-          </div>
+          {currentUser?.workspaceRole !== 'viewer' && (
+            <div className="w-full flex gap-3 px-2">
+              <Button onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
+              <Button $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+            </div>
+          )}
         </div>
       </Card>
 

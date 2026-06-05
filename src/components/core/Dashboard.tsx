@@ -2,7 +2,7 @@ import { useMemo, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container, Title, Card, Subtitle, Button, FAB, StatusBadge, MenuButton } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
-import { GardenProfile } from '../../App';
+import { GardenProfile, User } from '../../App';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -22,9 +22,10 @@ interface DashboardProps {
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
   onOpenWorkspaceMenu?: () => void;
+  currentUser: User;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu }) => {
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu, currentUser }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -252,27 +253,29 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         </MenuButton>
       </header>
 
-      <section className="mb-8 animate-in fade-in duration-500">
-        <Subtitle>Quick Actions</Subtitle>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-          <Card onClick={() => { onBatchWaterAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <span className="text-2xl mb-1">💦</span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
-          </Card>
-          <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <span className="text-2xl mb-1">🪴</span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
-          </Card>
-          <Card onClick={() => greenhouseZone ? onBatchWaterZone(greenhouseZone.id) : alert('Greenhouse zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <span className="text-2xl mb-1">🏠</span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>House</span>
-          </Card>
-          <Card onClick={() => coveredBedZone ? onBatchWaterZone(coveredBedZone.id) : alert('Covered Raised Bed zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <span className="text-2xl mb-1">🛏️</span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>Bed</span>
-          </Card>
-        </div>
-      </section>
+      {currentUser?.workspaceRole !== 'viewer' && (
+        <section className="mb-8 animate-in fade-in duration-500">
+          <Subtitle>Quick Actions</Subtitle>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <Card onClick={() => { onBatchWaterAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+              <span className="text-2xl mb-1">💦</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
+            </Card>
+            <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+              <span className="text-2xl mb-1">🪴</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
+            </Card>
+            <Card onClick={() => greenhouseZone ? onBatchWaterZone(greenhouseZone.id) : alert('Greenhouse zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+              <span className="text-2xl mb-1">🏠</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>House</span>
+            </Card>
+            <Card onClick={() => coveredBedZone ? onBatchWaterZone(coveredBedZone.id) : alert('Covered Raised Bed zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+              <span className="text-2xl mb-1">🛏️</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>Bed</span>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section className="mb-8 animate-in fade-in duration-500 delay-100">
         <Subtitle>Garden Vitality</Subtitle>
@@ -361,7 +364,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         </section>
       )}
 
-      {overdueLocations.length > 0 && (
+      {overdueLocations.length > 0 && currentUser?.workspaceRole !== 'viewer' && (
         <section className="mb-8 animate-in fade-in duration-500 delay-300">
           <Subtitle>Urgent Location Care</Subtitle>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
