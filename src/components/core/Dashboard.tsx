@@ -1,8 +1,8 @@
 import { useMemo, useState, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Subtitle, Button, FAB, StatusBadge, MenuButton } from '../styles/StyledElements';
-import { PlantInstanceCard } from './PlantInstanceCard';
-import { GardenProfile } from '../App';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
+import { Container, Title, Card, Subtitle, Button, FAB, StatusBadge, MenuButton } from '../../styles/StyledElements';
+import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
+import { GardenProfile } from '../../App';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -30,6 +30,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
     index: Math.floor(Math.random() * 1000000),
     prompt: Math.floor(Math.random() * 8)
   }));
+  const [isGardenImageExpanded, setIsGardenImageExpanded] = useState(false);
 
   // Filter out any plants that have already completed their lifecycle
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
@@ -225,7 +226,12 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         <div>
           <div className="flex items-center gap-2 mb-1">
             {gardenProfile?.imageUrl ? (
-              <img src={gardenProfile.imageUrl} alt="Garden Logo" className="w-8 h-8 rounded-lg object-cover" />
+              <img 
+                src={gardenProfile.imageUrl} 
+                alt="Garden Logo" 
+                className="w-8 h-8 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-sm"
+                onClick={() => setIsGardenImageExpanded(true)}
+              />
             ) : (
               <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
             )}
@@ -371,7 +377,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
             <p className="text-slate-500 dark:text-slate-400 font-medium">All plants are perfectly hydrated!</p>
           </Card>
         ) : (
-          <div className="space-y-3 mb-8">
+          <div className="grid grid-cols-2 gap-3 mb-8">
             {overduePlants.map(item => (
               <PlantInstanceCard 
                 key={item.qrId} 
@@ -380,6 +386,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
                 locationName={item.location?.name} 
                 zoneName={item.zone?.name} 
                 zoneModifier={item.zone?.evaporationModifier}
+                compact
                 onClick={() => onNavigate(item.qrId)} 
               />
             ))}
@@ -390,17 +397,19 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
       {hungryPlants.length > 0 && (
         <section className="animate-in fade-in duration-500 delay-[400ms]">
           <Subtitle>🍽️ Hungry Plants</Subtitle>
-          <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             {hungryPlants.map(item => (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-amber-300 dark:hover:border-amber-700 !border-amber-200 dark:!border-amber-900/50 !bg-amber-50/30 dark:!bg-amber-900/10">
-                <div className="flex justify-between items-start mb-1">
+              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-amber-300 dark:hover:border-amber-700 !border-amber-200 dark:!border-amber-900/50 !bg-amber-50/30 dark:!bg-amber-900/10 !p-3 flex flex-col h-full">
+                <div className="flex flex-col gap-2 mb-2">
                   <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
+                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight line-clamp-1">{item.archetype?.commonName}</h3>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wide font-semibold line-clamp-1">{item.zone?.name} • {item.location?.name}</p>
                   </div>
-              <StatusBadge $status="overdue">Needs Feed</StatusBadge>
+                  <StatusBadge $status="overdue" className="!text-[9px] !px-2 !py-0.5 self-start">Needs Feed</StatusBadge>
                 </div>
-                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-3 italic">Feed: {item.archetype?.whatToFeed || 'Balanced fertilizer'}</p>
+                <div className="mt-auto pt-1">
+                  <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium italic line-clamp-2">Feed: {item.archetype?.whatToFeed || 'Balanced fertilizer'}</p>
+                </div>
               </Card>
             ))}
           </div>
@@ -410,6 +419,28 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
       <FAB onClick={onOpenScanner}>
         📷
       </FAB>
+
+      {isGardenImageExpanded && gardenProfile?.imageUrl && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4"
+          onClick={() => setIsGardenImageExpanded(false)}
+        >
+          <div className="relative flex flex-col items-end max-w-full max-h-full">
+            <button 
+              className="text-white text-3xl font-bold p-2 mb-2 active:scale-90 transition-transform hover:text-slate-300"
+              onClick={() => setIsGardenImageExpanded(false)}
+            >
+              ✕
+            </button>
+            <img 
+              src={gardenProfile.imageUrl} 
+              alt="Garden Logo Enlarged" 
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
+        </div>
+      )}
     </Container>
   );
 };

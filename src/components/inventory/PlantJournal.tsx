@@ -1,7 +1,7 @@
 import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
-import { PlantInstance, JournalEntry } from '../../types';
-import { Card, Button, Input, Subtitle } from '../styles/StyledElements';
-import { User } from '../App';
+import { PlantInstance, JournalEntry } from '../../../types';
+import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
+import { User } from '../../App';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -18,6 +18,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
   const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
   const [showRoutineCare, setShowRoutineCare] = useState(false);
+  const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
   const routineTypes = ['Watered', 'Fed'];
 
   const visibleJournal = useMemo(() => {
@@ -279,7 +280,13 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               {entry.note && <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{entry.note}</p>}
               {entry.imageUrl && (
                 <div className="mt-2">
-                  <img src={entry.imageUrl} alt={entry.title || 'Journal photo'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2" />
+                  <img 
+                    src={entry.imageUrl} 
+                    alt={entry.title || 'Journal photo'} 
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} 
+                    className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2 cursor-pointer hover:opacity-90 transition-opacity" 
+                    onClick={() => setExpandedImageUrl(entry.imageUrl!)}
+                  />
                   <button onClick={() => handleSetThumbnail(entry.imageUrl!)} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
                     {instance.imageUrl === entry.imageUrl ? '★ Current Cover Photo' : 'Set as Cover Photo'}
                   </button>
@@ -290,6 +297,28 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         </div>
       ) : (
         <p className="text-sm text-slate-500 italic mt-2 mb-8">No journal entries to display.</p>
+      )}
+
+      {expandedImageUrl && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4"
+          onClick={() => setExpandedImageUrl(null)}
+        >
+          <div className="relative flex flex-col items-end max-w-full max-h-full">
+            <button 
+              className="text-white text-3xl font-bold p-2 mb-2 active:scale-90 transition-transform hover:text-slate-300"
+              onClick={() => setExpandedImageUrl(null)}
+            >
+              ✕
+            </button>
+            <img 
+              src={expandedImageUrl} 
+              alt="Enlarged journal photo" 
+              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
+        </div>
       )}
     </div>
   );

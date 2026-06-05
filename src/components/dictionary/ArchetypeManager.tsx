@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, FC, FormEvent } from 'react';
-import { PlantArchetype, PlantInstance } from '../../types';
-import { Container, Title, Input, Toast, Subtitle, Button, MenuButton } from '../styles/StyledElements';
+import React, { useState, useMemo, useEffect, FC } from 'react';
+import { PlantArchetype, PlantInstance } from '../../../types';
+import { Container, Title, Input, Toast, Subtitle, Button, MenuButton } from '../../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
 
 interface ArchetypeManagerProps {
@@ -63,14 +63,14 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ archetypes, instan
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleSave = (e: FormEvent, id: string) => {
+  const handleSave = (e: React.FormEvent, id: string) => {
     e.preventDefault();
     onUpdate(id, editData);
     setEditingId(null);
     showToast('📖 Plant reference updated!');
   };
 
-  const handleAddSubmit = (e: FormEvent) => {
+  const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newData.commonName?.trim()) {
       showToast('⚠️ Common Name is required!');

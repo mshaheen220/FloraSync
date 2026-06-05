@@ -1,9 +1,9 @@
 import { useEffect, useState, FC, FormEvent } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
+import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
-import { User } from '../App';
+import { User } from '../../App';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 

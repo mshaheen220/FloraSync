@@ -1,8 +1,8 @@
 import { useEffect, useState, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../styles/StyledElements';
-import { PlantInstanceCard } from './PlantInstanceCard';
-import { PageHeader } from './PageHeader';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
+import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
+import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
+import { PageHeader } from '../common/PageHeader';
 
 interface LocationDetailProps {
   locationId: string;

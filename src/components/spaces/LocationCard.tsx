@@ -1,6 +1,6 @@
 import { FC, FormEvent } from 'react';
-import { Location, Zone } from '../../types';
-import { Card, Button, Input } from '../styles/StyledElements';
+import { Location, Zone } from '../../../types';
+import { Card, Button, Input } from '../../styles/StyledElements';
 
 interface LocationCardProps {
   location: Location;

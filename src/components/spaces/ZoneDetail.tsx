@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
-import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../styles/StyledElements';
-import { PlantInstanceCard } from './PlantInstanceCard';
-import { PageHeader } from './PageHeader';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
+import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
+import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
+import { PageHeader } from '../common/PageHeader';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 

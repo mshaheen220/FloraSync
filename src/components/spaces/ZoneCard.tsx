@@ -1,6 +1,6 @@
 import { FC, FormEvent } from 'react';
-import { Zone } from '../../types';
-import { Card, Button, Input } from '../styles/StyledElements';
+import { Zone } from '../../../types';
+import { Card, Button, Input } from '../../styles/StyledElements';
 
 interface ZoneCardProps {
   zone: Zone;

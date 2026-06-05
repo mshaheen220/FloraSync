@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback, FC, useRef } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../types';
-import { Dashboard } from './components/Dashboard';
-import { PlantDetail } from './components/PlantDetail';
-import { Scanner } from './components/Scanner';
-import { LocationManager } from './components/LocationManager';
-import { ArchetypeManager } from './components/ArchetypeManager';
-import { LocationDetail } from './components/LocationDetail';
-import { ZoneDetail } from './components/ZoneDetail';
-import { NavigationMenu, MenuRoute } from './components/NavigationMenu';
-import { LoginScreen } from './components/LoginScreen';
+import { Dashboard } from './components/core/Dashboard';
+import { PlantDetail } from './components/inventory/PlantDetail';
+import { Scanner } from './components/common/Scanner';
+import { LocationManager } from './components/spaces/LocationManager';
+import { ArchetypeManager } from './components/dictionary/ArchetypeManager';
+import { ZoneManager } from './components/spaces/ZoneManager';
+import { SettingsManager } from './components/core/SettingsManager';
+import { InventoryManager } from './components/inventory/InventoryManager';
+import { LocationDetail } from './components/spaces/LocationDetail';
+import { ZoneDetail } from './components/spaces/ZoneDetail';
+import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
+import { LoginScreen } from './components/core/LoginScreen';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -676,8 +679,20 @@ export const App: FC = () => {
       return <Scanner onScan={handleScanResult} onClose={handleGoBack} />
     }
 
-    if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
+    if (currentView === 'zones') {
+      return <ZoneManager zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
+    }
+
+    if (currentView === 'inventory') {
+      return <InventoryManager instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
+    }
+
+    if (currentView === 'settings') {
+      return <SettingsManager theme={theme} onThemeChange={setTheme} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
+    }
+
+    if (currentView === 'locations') {
+      return <LocationManager locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />;
     }
 
     if (currentView === 'archetypes') {

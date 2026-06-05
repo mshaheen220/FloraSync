@@ -1,5 +1,5 @@
 import { useState, FC, FormEvent } from 'react';
-import { Container, Title, Card, Button, Input, Subtitle } from '../styles/StyledElements';
+import { Container, Title, Card, Button, Input, Subtitle } from '../../styles/StyledElements';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;

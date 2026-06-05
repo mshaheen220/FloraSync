@@ -1,5 +1,5 @@
 import { FC, ReactNode } from 'react';
-import { Title, MenuButton } from '../styles/StyledElements';
+import { Title, MenuButton } from '../../styles/StyledElements';
 
 interface PageHeaderProps {
   title: ReactNode;

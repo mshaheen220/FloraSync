@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Scanner as QrScanner } from '@yudiel/react-qr-scanner';
-import { Container, Title } from '../styles/StyledElements';
+import { Container, Title } from '../../styles/StyledElements';
 
 interface ScannerProps {
   onScan: (qrString: string) => void;
