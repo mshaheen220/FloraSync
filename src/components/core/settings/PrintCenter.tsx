@@ -109,6 +109,45 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
       .replace(' Sheet 1', '');
   };
 
+  const handleDownload = async (filename: string) => {
+    try {
+      const res = await fetch(`${apiBase}/api/prints/${filename}?token=${token}`);
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      
+      // Try native share sheet first (perfect for iOS PWAs)
+      if (navigator.share) {
+        try {
+          const file = new File([blob], filename, { type: blob.type || 'image/png' });
+          await navigator.share({
+            files: [file],
+            title: formatPrintName(filename)
+          });
+          return;
+        } catch (shareError: any) {
+          if (shareError.name === 'AbortError') return; // User cancelled
+          console.warn('Share API failed, falling back to standard download:', shareError);
+        }
+      }
+      
+      // Standard browser download fallback
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+    } catch (e) {
+      console.error(e);
+      showToast('❌ Failed to download file.');
+    }
+  };
+
   return (
     <Card className="mb-4">
       <div className="flex flex-col gap-4">
@@ -171,9 +210,9 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <a href={`${apiBase}/api/prints/${file.name}?token=${token}`} download target="_blank" rel="noreferrer" className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1">
+                    <button onClick={() => handleDownload(file.name)} className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1">
                       ⬇️
-                    </a>
+                    </button>
                     <button onClick={() => handleDeletePrint(file.name)} className="text-xl text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
                       🗑️
                     </button>
