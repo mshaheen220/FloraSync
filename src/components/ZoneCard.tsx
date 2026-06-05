@@ -48,7 +48,7 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
             </div>
           </div>
           <div className="flex gap-2 mt-2">
-            <Button type="button" variant="secondary" onClick={onEditCancel}>Cancel</Button>
+          <Button type="button" $variant="secondary" onClick={onEditCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
           </div>
         </form>

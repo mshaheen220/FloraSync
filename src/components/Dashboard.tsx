@@ -344,7 +344,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
           <Subtitle>Urgent Location Care</Subtitle>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {overdueLocations.map(loc => (
-              <Button key={loc.id} variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">
+            <Button key={loc.id} $variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">
                 💦 Water all on {loc.name}
               </Button>
             ))}
@@ -387,7 +387,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
                     <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight">{item.archetype?.commonName}</h3>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{item.zone?.name} • {item.location?.name}</p>
                   </div>
-                  <StatusBadge status="overdue">Needs Feed</StatusBadge>
+              <StatusBadge $status="overdue">Needs Feed</StatusBadge>
                 </div>
                 <p className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-3 italic">Feed: {item.archetype?.whatToFeed || 'Balanced fertilizer'}</p>
               </Card>

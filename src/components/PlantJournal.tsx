@@ -216,7 +216,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               </div>
             </div>
             <div className="flex gap-2 mt-2">
-              <Button type="button" variant="secondary" onClick={() => { setIsAddingJournal(false); setEditingJournalId(null); setJournalForm({}); }}>Cancel</Button>
+              <Button type="button" $variant="secondary" onClick={() => { setIsAddingJournal(false); setEditingJournalId(null); setJournalForm({}); }}>Cancel</Button>
               <Button type="submit" disabled={isSubmitDisabled}>Save Entry</Button>
             </div>
           </form>

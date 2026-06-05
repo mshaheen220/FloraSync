@@ -34,7 +34,7 @@ export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones,
             <Input value={editData.name || ''} onChange={e => setEditData({...editData, name: e.target.value})} className="!mb-0 py-2.5" required />
           </div>
           <div className="flex gap-2 mt-2">
-            <Button type="button" variant="secondary" onClick={onEditCancel}>Cancel</Button>
+          <Button type="button" $variant="secondary" onClick={onEditCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
           </div>
         </form>

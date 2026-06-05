@@ -14,6 +14,8 @@ export type Theme = 'light' | 'dark' | 'system';
 
 export interface User {
   id: string;
+  username: string;
+  role?: string;
   name: string;
   imageUrl?: string;
 }
@@ -26,6 +28,7 @@ export const App: FC = () => {
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [initialLoadSuccess, setInitialLoadSuccess] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('florasync_token'));
   
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('florasync_user');
@@ -70,7 +73,7 @@ export const App: FC = () => {
   }, [currentView]);
 
   useEffect(() => {
-    if (!currentUser) {
+    if (!currentUser || !token) {
       // On logout, reset all data to prevent flicker of old data on next login
       setInstances([]);
       setArchetypes([]);
@@ -85,7 +88,10 @@ export const App: FC = () => {
     const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
     const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
-    fetch(`${apiBase}/api/state`, { cache: 'no-store' })
+    fetch(`${apiBase}/api/state`, { 
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(async res => {
         console.log(`[Frontend] Fetch /api/state response: HTTP ${res.status} ${res.statusText}`);
         if (!res.ok) {
@@ -105,6 +111,16 @@ export const App: FC = () => {
       .then(data => {
         skipNextSync.current = true;
         
+        if (data.user) {
+          setCurrentUser(prev => {
+            if (!prev || JSON.stringify(prev) !== JSON.stringify(data.user)) {
+              localStorage.setItem('florasync_user', JSON.stringify(data.user));
+              return data.user;
+            }
+            return prev;
+          });
+        }
+
         setInstances(data.instances || []);
         setArchetypes(data.archetypes || []);
         
@@ -141,11 +157,11 @@ export const App: FC = () => {
         setInitialLoadSuccess(false);
         setSyncStatus('error');
       });
-  }, [currentUser]);
+  }, [currentUser, token]);
 
   useEffect(() => {
-    // Only sync back to the server if the initial data load was successful.
-    if (!isDbLoaded || !currentUser || !initialLoadSuccess) return;
+    // Only sync back to the server if the initial data load was successful and authenticated.
+    if (!isDbLoaded || !currentUser || !token || !initialLoadSuccess) return;
 
     if (skipNextSync.current) {
       skipNextSync.current = false;
@@ -158,7 +174,10 @@ export const App: FC = () => {
 
     fetch(`${apiBase}/api/state`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ instances, archetypes, locations, zones })
     })
     .then(res => {
@@ -170,7 +189,7 @@ export const App: FC = () => {
       }
     })
     .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
-  }, [instances, archetypes, locations, zones, isDbLoaded, currentUser, initialLoadSuccess]);
+  }, [instances, archetypes, locations, zones, isDbLoaded, currentUser, token, initialLoadSuccess]);
 
   const syncRoute = useCallback(() => {
     const pathname = window.location.pathname;
@@ -232,14 +251,27 @@ export const App: FC = () => {
     }
   }, [navigateTo]);
 
-  const handleLogin = (name: string) => {
-    const userId = name.toLowerCase().replace(/\s+/g, '-');
-    const savedUsers = JSON.parse(localStorage.getItem('florasync_users') || '{}');
-    const user = savedUsers[userId] || { id: userId, name, imageUrl: '' };
-    setCurrentUser(user);
-    localStorage.setItem('florasync_user', JSON.stringify(user));
-    savedUsers[userId] = user;
-    localStorage.setItem('florasync_users', JSON.stringify(savedUsers));
+  const handleLogin = async (username: string, password: string): Promise<void> => {
+    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+    const res = await fetch(`${apiBase}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Login failed');
+    }
+
+    setToken(data.token);
+    const userObj = { ...data.user, name: data.user.name || data.user.username, imageUrl: data.user.imageUrl || '' };
+    setCurrentUser(userObj);
+    localStorage.setItem('florasync_token', data.token);
+    localStorage.setItem('florasync_user', JSON.stringify(userObj));
+    navigateTo('/');
   };
 
   const handleUpdateUser = (updates: Partial<User>) => {
@@ -247,14 +279,24 @@ export const App: FC = () => {
     const updatedUser = { ...currentUser, ...updates };
     setCurrentUser(updatedUser);
     localStorage.setItem('florasync_user', JSON.stringify(updatedUser));
-    const savedUsers = JSON.parse(localStorage.getItem('florasync_users') || '{}');
-    savedUsers[updatedUser.id] = updatedUser;
-    localStorage.setItem('florasync_users', JSON.stringify(savedUsers));
+
+    if (token) {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+      fetch(`${apiBase}/api/users/${updatedUser.id}/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name: updatedUser.name, imageUrl: updatedUser.imageUrl })
+      }).catch(err => console.error('Failed to sync profile update:', err));
+    }
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setToken(null);
+    localStorage.removeItem('florasync_token');
     localStorage.removeItem('florasync_user');
+    navigateTo('/');
   };
 
   const handleBatchWater = useCallback((locationId: string) => {
@@ -546,7 +588,7 @@ export const App: FC = () => {
   };
 
   const renderView = () => {
-    if (!currentUser) {
+    if (!currentUser || !token) {
       return <LoginScreen onLogin={handleLogin} />;
     }
 
@@ -611,7 +653,7 @@ export const App: FC = () => {
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} onLogout={handleLogout} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} onLogout={handleLogout} token={token} />;
     }
 
     if (currentView === 'archetypes') {
