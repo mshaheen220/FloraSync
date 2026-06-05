@@ -97,7 +97,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
               <Input placeholder="e.g. Greenhouse" value={newZoneName} onChange={e => setNewZoneName(e.target.value)} className="!mb-0 py-2.5" required />
             </div>
             <div className="flex gap-2 mt-4">
-              <Button type="button" variant="secondary" onClick={onGoBack}>Cancel</Button>
+              <Button type="button" $variant="secondary" onClick={onGoBack}>Cancel</Button>
               <Button type="submit">Register</Button>
             </div>
           </form>
@@ -129,7 +129,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} across {locations.length} locations.</p>
           <div className="w-full flex gap-3 px-2">
             <Button onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
-            <Button variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+            <Button $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
           </div>
         </div>
       </Card>

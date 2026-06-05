@@ -18,36 +18,36 @@ export const Subtitle = styled.h2.attrs({
 })``;
 
 // Prop-driven structural styling
-export const Button = styled.button.attrs<{ variant?: 'primary' | 'secondary' | 'batch' }>(({ variant }) => {
+export const Button = styled.button.attrs<{ $variant?: 'primary' | 'secondary' | 'batch' }>(({ $variant }) => {
   let baseClasses = 'w-full flex justify-center items-center py-3.5 px-4 rounded-xl font-medium transition-colors shadow-sm active:scale-95 duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ';
-  if (variant === 'secondary') {
+  if ($variant === 'secondary') {
     baseClasses += 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/50';
-  } else if (variant === 'batch') {
+  } else if ($variant === 'batch') {
     baseClasses += 'bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-700 dark:hover:bg-slate-600 py-2 text-sm';
   } else {
     baseClasses += 'bg-emerald-700 dark:bg-emerald-600 text-white hover:bg-emerald-800 dark:hover:bg-emerald-700 shadow-emerald-700/20 dark:shadow-emerald-900/50 shadow-md';
   }
   return { className: baseClasses };
-})<{ variant?: 'primary' | 'secondary' | 'batch' }>``;
+})<{ $variant?: 'primary' | 'secondary' | 'batch' }>``;
 
-export const StatusBadge = styled.span.attrs<{ status: 'hydrated' | 'overdue' | 'unmonitored' }>(({ status }) => ({
+export const StatusBadge = styled.span.attrs<{ $status: 'hydrated' | 'overdue' | 'unmonitored' }>(({ $status }) => ({
   className: `inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-    status === 'hydrated'
+    $status === 'hydrated'
       ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300'
-      : status === 'overdue'
+      : $status === 'overdue'
         ? 'bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800'
         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
   }`,
-}))<{ status: 'hydrated' | 'overdue' | 'unmonitored' }>``;
+}))<{ $status: 'hydrated' | 'overdue' | 'unmonitored' }>``;
 
 export const ProgressBarContainer = styled.div.attrs({
   className: 'w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 mt-2 overflow-hidden',
 })``;
 
-export const ProgressBarFill = styled.div.attrs<{ ratio: number }>(({ ratio }) => ({
-  className: `h-full rounded-full transition-all duration-700 ${ratio <= 0 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-emerald-500 dark:bg-emerald-400'}`,
-  style: { width: `${Math.max(0, Math.min(100, ratio * 100))}%` }
-}))<{ ratio: number }>``;
+export const ProgressBarFill = styled.div.attrs<{ $ratio: number }>(({ $ratio }) => ({
+  className: `h-full rounded-full transition-all duration-700 ${$ratio <= 0 ? 'bg-amber-500 dark:bg-amber-400' : 'bg-emerald-500 dark:bg-emerald-400'}`,
+  style: { width: `${Math.max(0, Math.min(100, $ratio * 100))}%` }
+}))<{ $ratio: number }>``;
 
 export const Input = styled.input.attrs({
   className: 'w-full max-w-full min-w-0 border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] mb-4 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all accent-emerald-600 dark:accent-emerald-500',

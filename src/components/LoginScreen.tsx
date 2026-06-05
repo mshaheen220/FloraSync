@@ -2,26 +2,29 @@ import { useState, FC, FormEvent } from 'react';
 import { Container, Title, Card, Button, Input, Subtitle } from '../styles/StyledElements';
 
 interface LoginScreenProps {
-  onLogin: (name: string) => void;
+  onLogin: (username: string, password: string) => Promise<void>;
 }
 
 export const LoginScreen: FC<LoginScreenProps> = ({ onLogin }) => {
-  const [name, setName] = useState('');
-  const [passcode, setPasscode] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // Simple gateway passcode to protect your data
-    if (passcode !== 'florasync2024') {
-      setError('Invalid app passcode');
+    setError('');
+    if (!username.trim() || !password.trim()) {
+      setError('Username and password are required');
       return;
     }
-    if (!name.trim()) {
-      setError('Name is required');
-      return;
+    setIsLoading(true);
+    try {
+      await onLogin(username.trim(), password.trim());
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+      setIsLoading(false);
     }
-    onLogin(name.trim());
   };
 
   return (
@@ -35,15 +38,15 @@ export const LoginScreen: FC<LoginScreenProps> = ({ onLogin }) => {
         
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 text-left">
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Your Name</label>
-            <Input placeholder="e.g. Alice" value={name} onChange={e => setName(e.target.value)} required />
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Username</label>
+            <Input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">App Passcode</label>
-            <Input type="password" placeholder="Passcode" value={passcode} onChange={e => setPasscode(e.target.value)} required />
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Password</label>
+            <Input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
           {error && <p className="text-red-500 text-sm font-semibold">{error}</p>}
-          <Button type="submit" className="mt-2">Log In</Button>
+          <Button type="submit" disabled={isLoading} className="mt-2">{isLoading ? 'Logging In...' : 'Log In'}</Button>
         </form>
       </Card>
     </Container>

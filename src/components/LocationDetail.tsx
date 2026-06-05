@@ -77,7 +77,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
               <Input placeholder="e.g. Top Shelf" value={newLocName} onChange={e => setNewLocName(e.target.value)} className="!mb-0 py-2.5" required />
             </div>
             <div className="flex gap-2 mt-4">
-              <Button type="button" variant="secondary" onClick={onGoBack}>Cancel</Button>
+            <Button type="button" $variant="secondary" onClick={onGoBack}>Cancel</Button>
               <Button type="submit">Register</Button>
             </div>
           </form>
@@ -107,7 +107,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} in this location.</p>
         <div className="w-full flex gap-3 px-2">
           <Button onClick={() => { onBatchWater(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
-          <Button variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
+          <Button $variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
         </div>
       </Card>
 

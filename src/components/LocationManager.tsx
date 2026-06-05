@@ -30,9 +30,10 @@ interface LocationManagerProps {
   currentUser?: User;
   onUpdateUser?: (updates: Partial<User>) => void;
   onLogout?: () => void;
+  token?: string | null;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister, currentUser, onUpdateUser, onLogout }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister, currentUser, onUpdateUser, onLogout, token }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [newName, setNewName] = useState('');
@@ -55,14 +56,29 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [importJson, setImportJson] = useState('');
   const [showImportHelp, setShowImportHelp] = useState(false);
   const [importType, setImportType] = useState<'archetypes' | 'zones' | 'locations'>('archetypes');
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newFullName, setNewFullName] = useState('');
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [usersList, setUsersList] = useState<User[]>([]);
+  const [gardensList, setGardensList] = useState<{id: string, name: string}[]>([]);
+  const [selectedGardenId, setSelectedGardenId] = useState('');
+  
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [changeNewPassword, setChangeNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
   // Fetch existing print files when the settings view loads
   useEffect(() => {
-    if (mode === 'settings') {
-      fetch(`${apiBase}/api/prints`)
+    if (mode === 'settings' && token) {
+      fetch(`${apiBase}/api/prints`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
         .then(res => res.json())
         .then(data => {
           if (data.files) {
@@ -71,7 +87,27 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         })
         .catch(err => console.error('Failed to load prints:', err));
     }
-  }, [mode, apiBase]);
+  }, [mode, apiBase, token]);
+
+  // Fetch users list for admin
+  useEffect(() => {
+    if (mode === 'settings' && currentUser?.role === 'god-admin' && token) {
+      fetch(`${apiBase}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.users) setUsersList(data.users);
+        })
+        .catch(err => console.error('Failed to load users:', err));
+        
+      // Also fetch available gardens for the assignment dropdown
+      fetch(`${apiBase}/api/gardens`, { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.gardens) setGardensList(data.gardens);
+        })
+        .catch(err => console.error('Failed to load gardens:', err));
+    }
+  }, [mode, currentUser, apiBase, token]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -92,7 +128,10 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
     try {
       const res = await fetch(`${apiBase}/api/generate-qrs`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           mode: printMode,
           category: blankCategory,
@@ -103,7 +142,9 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
       const data = await res.json();
       if (data.success) {
         // Refresh the list to get all files sorted properly
-        fetch(`${apiBase}/api/prints`).then(r => r.json()).then(d => {
+        fetch(`${apiBase}/api/prints`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json()).then(d => {
           if (d.files) setGeneratedFiles(d.files);
         });
         showToast('🖨️ QR Sheets generated successfully!');
@@ -123,7 +164,10 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const handleDeletePrint = async (filename: string) => {
     if (!window.confirm('Delete this print sheet?')) return;
     try {
-      const res = await fetch(`${apiBase}/api/prints/${filename}`, { method: 'DELETE' });
+      const res = await fetch(`${apiBase}/api/prints/${filename}`, { 
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       const data = await res.json();
       if (data.success) {
         showToast('🗑️ Print sheet deleted');
@@ -190,7 +234,10 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
       
       const res = await fetch(`${apiBase}/api/import`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ type: importType, data: dataToImport })
       });
       const result = await res.json();
@@ -201,6 +248,101 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
         showToast(`❌ Import failed: ${result.error || 'Check data format.'}`);
       }
     } catch (e) { showToast('❌ Invalid JSON format.'); }
+  };
+
+  const handleCreateUser = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newUsername || !newPassword) return;
+    setIsCreatingUser(true);
+    try {
+      const res = await fetch(`${apiBase}/api/users`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ username: newUsername, password: newPassword, name: newFullName, gardenId: selectedGardenId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✅ User ${data.user.username} created successfully!`);
+        setNewUsername('');
+        setNewPassword('');
+        setNewFullName('');
+        setSelectedGardenId('');
+        setUsersList(prev => [...prev, data.user]);
+        if (data.newGarden) {
+          setGardensList(prev => [...prev, data.newGarden]);
+        }
+      } else {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) { showToast('❌ Failed to create user.'); }
+    setIsCreatingUser(false);
+  };
+
+  const handleDeleteUser = async (userId: string, username: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete user '${username}' and all their garden data?`)) return;
+    try {
+      const res = await fetch(`${apiBase}/api/users/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`🗑️ User ${username} deleted.`);
+        setUsersList(prev => prev.filter(u => u.id !== userId));
+      } else {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) { showToast('❌ Failed to delete user.'); }
+  };
+
+  const handleResetPassword = async (userId: string, username: string) => {
+    const newPass = window.prompt(`Enter new password for ${username}:`);
+    if (!newPass) return;
+    try {
+      const res = await fetch(`${apiBase}/api/users/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ password: newPass })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`✅ Password updated for ${username}.`);
+      } else {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) { showToast('❌ Failed to update user.'); }
+  };
+
+  const handleChangePassword = async (e: FormEvent) => {
+    e.preventDefault();
+    if (changeNewPassword !== confirmPassword) {
+      showToast('❌ New passwords do not match!');
+      return;
+    }
+    setIsUpdatingPassword(true);
+    try {
+      const res = await fetch(`${apiBase}/api/users/${currentUser?.id}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword, newPassword: changeNewPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('✅ Password changed successfully!');
+        setShowPasswordForm(false);
+        setCurrentPassword('');
+        setChangeNewPassword('');
+        setConfirmPassword('');
+      } else {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) {
+      showToast('❌ Failed to change password.');
+    }
+    setIsUpdatingPassword(false);
   };
 
   const formatPrintName = (filename: string) => {
@@ -387,10 +529,97 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                     <Input value={currentUser.name} onChange={e => onUpdateUser({ name: e.target.value })} className="!mb-0" />
                   </div>
                 </div>
-                <Button variant="secondary" onClick={onLogout} className="w-full !text-red-600 dark:!text-red-400 !border-red-200 dark:!border-red-900/50 hover:!bg-red-50 dark:hover:!bg-red-900/20">
+                
+                {!showPasswordForm ? (
+                  <Button $variant="secondary" type="button" onClick={() => setShowPasswordForm(true)} className="w-full mb-3 text-sm">
+                    Change Password
+                  </Button>
+                ) : (
+                  <form onSubmit={handleChangePassword} className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4 flex flex-col gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Current Password</label>
+                      <Input type="password" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} className="!mb-0 py-2 text-sm" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">New Password</label>
+                      <Input type="password" value={changeNewPassword} onChange={e => setChangeNewPassword(e.target.value)} className="!mb-0 py-2 text-sm" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Confirm New Password</label>
+                      <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="!mb-0 py-2 text-sm" required />
+                    </div>
+                    <div className="flex gap-2 mt-1">
+                      <Button type="button" $variant="secondary" onClick={() => setShowPasswordForm(false)}>Cancel</Button>
+                      <Button type="submit" disabled={isUpdatingPassword}>{isUpdatingPassword ? 'Saving...' : 'Save Password'}</Button>
+                    </div>
+                  </form>
+                )}
+
+                <Button $variant="secondary" onClick={onLogout} className="w-full !text-red-600 dark:!text-red-400 !border-red-200 dark:!border-red-900/50 hover:!bg-red-50 dark:hover:!bg-red-900/20">
                   Log Out
                 </Button>
               </Card>
+
+              {currentUser.role === 'god-admin' && (
+                <>
+                  <Subtitle>User Administration</Subtitle>
+                  <Card className="mb-8 border-emerald-500 dark:border-emerald-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Provision new garden accounts for your friends. They will have their own private gardens but share your global Plant Dictionary.</p>
+                    <form onSubmit={handleCreateUser} className="flex flex-col gap-3">
+                      <div className="flex gap-3">
+                        <div className="flex-1">
+                          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Username</label>
+                          <Input value={newUsername} onChange={e => setNewUsername(e.target.value)} className="!mb-0 py-2" required />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                          <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="!mb-0 py-2" required />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Full Name (Optional)</label>
+                        <Input value={newFullName} onChange={e => setNewFullName(e.target.value)} className="!mb-0 py-2" placeholder="e.g. Alice Gardener" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Garden</label>
+                        <select value={selectedGardenId} onChange={e => setSelectedGardenId(e.target.value)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm mb-1">
+                          <option value="">🌱 Create New Private Garden</option>
+                          {gardensList.map(g => (
+                            <option key={g.id} value={g.id}>🤝 Share: {g.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <Button type="submit" disabled={isCreatingUser} className="mt-1">
+                        {isCreatingUser ? 'Creating...' : '+ Create Account'}
+                      </Button>
+                    </form>
+                    
+                    {usersList.length > 0 && (
+                      <div className="mt-6 pt-4 border-t border-emerald-200 dark:border-emerald-800/50">
+                        <Subtitle className="!text-sm mb-3">Existing Accounts</Subtitle>
+                        <div className="flex flex-col gap-2">
+                          {usersList.map(u => (
+                            <div key={u.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                              <div>
+                                <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">{u.name || u.username}</span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">{u.role === 'god-admin' ? 'Admin' : 'Member'} • 🏡 {(u as any).gardenName}</span>
+                              </div>
+                              {u.id !== currentUser.id ? (
+                                <div className="flex gap-2">
+                                  <button onClick={() => handleResetPassword(u.id, u.username)} className="text-xs bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-semibold transition-colors active:scale-95">Reset Pass</button>
+                                  <button onClick={() => handleDeleteUser(u.id, u.username)} className="text-xs bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-600 dark:text-red-400 px-2 py-1 rounded font-semibold transition-colors active:scale-95">Delete</button>
+                                </div>
+                              ) : (
+                                <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-2">You</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </>
+              )}
             </>
           )}
 
@@ -483,7 +712,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                     </div>
                     <div className="flex items-center gap-2">
                       <a 
-                        href={`${apiBase}/api/prints/${file.name}`} 
+                    href={`${apiBase}/api/prints/${file.name}?token=${token}`} 
                         download 
                         target="_blank"
                         rel="noreferrer"

@@ -139,7 +139,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
             <Input value={editData.combativePlants?.join(', ') || ''} onChange={e => setEditData({...editData, combativePlants: e.target.value.split(',').map(s => s.trim()).filter(s => s.length > 0)})} className="!mb-0 py-2" />
           </div>
           <div className="flex gap-2 mt-2">
-            <Button type="button" variant="secondary" onClick={onEditCancel}>Cancel</Button>
+          <Button type="button" $variant="secondary" onClick={onEditCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
           </div>
         </form>

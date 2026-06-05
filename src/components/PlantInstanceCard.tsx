@@ -29,7 +29,7 @@ export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archet
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wide font-semibold">{[zoneName, locationName].filter(Boolean).join(' • ')}</p>
           )}
         </div>
-        <StatusBadge status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')}>
+      <StatusBadge $status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')}>
           {instance.untracked ? 'Unmonitored' : (isOverdue ? 'Overdue' : 'Hydrated')}
         </StatusBadge>
       </div>
@@ -39,9 +39,9 @@ export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archet
             <span>Hydration Level</span>
             <span className={isOverdue ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(ratio * 100)}%</span>
           </div>
-          <ProgressBarContainer>
-            <ProgressBarFill ratio={ratio} />
-          </ProgressBarContainer>
+        <ProgressBarContainer>
+          <ProgressBarFill $ratio={ratio} />
+        </ProgressBarContainer>
         </div>
       ) : (
         <div className="mt-4 opacity-50">

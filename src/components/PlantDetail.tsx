@@ -355,7 +355,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-8"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
-          <StatusBadge status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-5 shadow-sm">
+          <StatusBadge $status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-5 shadow-sm">
             {instance.untracked ? 'Unmonitored / Rain-Fed' : (isOverdue ? 'Watering Overdue' : 'Optimal Hydration')}
           </StatusBadge>
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
@@ -367,7 +367,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           
           <div className="w-full flex gap-3 px-2">
             <Button onClick={handleManualWater}>💦 Water</Button>
-            <Button variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
+            <Button $variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
           </div>
         </div>
       </Card>
