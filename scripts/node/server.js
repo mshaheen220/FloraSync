@@ -522,18 +522,19 @@ app.post('/api/state', authenticateToken, (req, res) => {
 // Endpoint to trigger Python QR Generator
 app.post('/api/generate-qrs', authenticateToken, (req, res) => {
   const { mode, category, prefix, startId } = req.body;
+  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   let command = '';
 
   // Smartly use a virtual environment if it exists, otherwise fallback to global python3
   const pythonCmd = fs.existsSync(path.join(ROOT_DIR, '.venv/bin/python3')) ? '.venv/bin/python3' : 'python3';
 
   if (mode === 'db') {
-    command = `${pythonCmd} scripts/python/make_qrs.py --from-db`;
+    command = `${pythonCmd} scripts/python/make_qrs.py --from-db --garden-id "${gardenId}"`;
   } else if (mode === 'blank') {
     if (!category || !prefix || !startId) {
       return res.status(400).json({ error: 'Missing required fields for blank tags' });
     }
-    command = `${pythonCmd} scripts/python/make_qrs.py --category ${category} --prefix ${prefix} --start-id ${startId}`;
+    command = `${pythonCmd} scripts/python/make_qrs.py --category ${category} --prefix ${prefix} --start-id ${startId} --garden-id "${gardenId}"`;
   } else {
     return res.status(400).json({ error: 'Invalid mode' });
   }
@@ -561,13 +562,15 @@ app.post('/api/generate-qrs', authenticateToken, (req, res) => {
 // API to list all generated QR sheets
 app.get('/api/prints', authenticateToken, (req, res) => {
   try {
-    if (!fs.existsSync(PRINTS_DIR)) {
+    const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
+    if (!fs.existsSync(gardenPrintsDir)) {
       return res.json({ files: [] });
     }
     // Return files sorted by newest first
-    const files = fs.readdirSync(PRINTS_DIR)
+    const files = fs.readdirSync(gardenPrintsDir)
       .filter(f => f.endsWith('.png'))
-      .map(f => ({ name: f, time: fs.statSync(path.join(PRINTS_DIR, f)).mtime.getTime() }))
+      .map(f => ({ name: f, time: fs.statSync(path.join(gardenPrintsDir, f)).mtime.getTime() }))
       .sort((a, b) => b.time - a.time);
     res.json({ files });
   } catch (err) {
@@ -581,7 +584,9 @@ app.get('/api/prints/:filename', authenticateToken, (req, res) => {
   if (!filename || filename.includes('..') || filename.includes('/')) {
     return res.status(400).send('Invalid file');
   }
-  const filePath = path.join(PRINTS_DIR, filename);
+  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
+  const filePath = path.join(gardenPrintsDir, filename);
   if (fs.existsSync(filePath)) {
     res.download(filePath);
   } else {
@@ -595,7 +600,9 @@ app.delete('/api/prints/:filename', authenticateToken, (req, res) => {
   if (!filename || filename.includes('..') || filename.includes('/')) {
     return res.status(400).json({ success: false, error: 'Invalid file' });
   }
-  const filePath = path.join(PRINTS_DIR, filename);
+  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
+  const filePath = path.join(gardenPrintsDir, filename);
   if (fs.existsSync(filePath)) {
     try {
       fs.unlinkSync(filePath);

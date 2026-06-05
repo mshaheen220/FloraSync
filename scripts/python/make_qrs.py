@@ -14,10 +14,6 @@ ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, "../../"))
 ICONS_DIR = os.path.join(ROOT_DIR, "public", "images", "icons", "qr")
 DATA_DIR = os.path.join(ROOT_DIR, "src", "data")
 
-OUTPUT_DIR = os.path.join(DATA_DIR, "code-prints")
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
-
 # ==========================================
 # 1. GRID & TEMPLATE CONFIGURATION (In Inches)
 # Optimized for manual cutting on vinyl sticker sheets
@@ -76,7 +72,7 @@ def generate_qr(data_url):
 # ==========================================
 # 3. GENERATOR ENGINE
 # ==========================================
-def generate_sheets(category, ids_to_process, output_basename, start_id=None):
+def generate_sheets(category, ids_to_process, output_basename, output_dir, start_id=None):
     if not ids_to_process:
         print(f"No IDs to process for category '{category}'. Skipping.")
         return
@@ -113,12 +109,17 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
 
             item = ids_to_process[id_index]
             if isinstance(item, tuple):
-                base_id, label_text = item
+                if len(item) == 3:
+                    item_cat, base_id, label_text = item
+                else:
+                    base_id, label_text = item
+                    item_cat = category
             else:
                 base_id = item
                 label_text = str(item)
+                item_cat = category
             
-            url = f"/{category}/{base_id}"
+            url = f"/{item_cat}/{base_id}"
             
             qr_thumb = generate_qr(url)
             
@@ -172,7 +173,7 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
             
             id_index += 1
 
-        output_filename = os.path.join(OUTPUT_DIR, f"{output_basename}_sheet_{sheet_num + 1}.png")
+        output_filename = os.path.join(output_dir, f"{output_basename}_sheet_{sheet_num + 1}.png")
         page.save(output_filename, "PNG", dpi=(DPI, DPI))
         print(f"Success! Saved printable template to {output_filename}")
 
@@ -184,6 +185,7 @@ def generate_sheets(category, ids_to_process, output_basename, start_id=None):
 def main():
     parser = argparse.ArgumentParser(description="Generate a sheet of paired garden QR codes.")
     parser.add_argument("--from-db", action="store_true", help="Pull all existing IDs directly from the database.")
+    parser.add_argument("--garden-id", type=str, required=False, help="The specific garden ID to pull from and use for the output folder.")
     parser.add_argument(
         "--category", 
         type=str, 
@@ -201,6 +203,11 @@ def main():
 
     args = parser.parse_args()
     
+    garden_id_str = args.garden_id if args.garden_id else "default"
+    output_dir = os.path.join(DATA_DIR, "code-prints", garden_id_str)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     if args.from_db:
         db_path = os.path.join(ROOT_DIR, "florasync.db")
         if not os.path.exists(db_path):
@@ -209,19 +216,39 @@ def main():
         
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("SELECT instances, locations, zones, archetypes FROM app_state WHERE id = 1")
-        row = c.fetchone()
+        
+        c.execute("SELECT archetypes FROM shared_dictionary WHERE id = 1")
+        dict_row = c.fetchone()
+        archetypes = json.loads(dict_row[0] if dict_row and dict_row[0] else "[]")
+        
+        instances = []
+        locations = []
+        zones = []
+        
+        if args.garden_id:
+            c.execute("SELECT instances, locations, zones FROM gardens WHERE id = ?", (args.garden_id,))
+            row = c.fetchone()
+            if row:
+                instances = json.loads(row[0] or "[]")
+                locations = json.loads(row[1] or "[]")
+                zones = json.loads(row[2] or "[]")
+        else:
+            try:
+                c.execute("SELECT instances, locations, zones FROM app_state WHERE id = 1")
+                row = c.fetchone()
+                if row:
+                    instances = json.loads(row[0] or "[]")
+                    locations = json.loads(row[1] or "[]")
+                    zones = json.loads(row[2] or "[]")
+            except sqlite3.OperationalError:
+                pass
+                
         conn.close()
         
-        if not row:
+        if not instances and not locations and not zones:
             print("Database is empty!")
             sys.exit(1)
             
-        instances = json.loads(row[0] or "[]")
-        locations = json.loads(row[1] or "[]")
-        zones = json.loads(row[2] or "[]")
-        archetypes = json.loads(row[3] or "[]")
-        
         arch_dict = {a.get('id'): a.get('commonName', 'Unknown') for a in archetypes}
         zone_dict = {z.get('id'): z.get('name', 'Unknown Zone') for z in zones}
         
@@ -231,11 +258,16 @@ def main():
         
         print("--- Database Export Mode ---")
         if not args.category or args.category == "plant":
-            generate_sheets("plant", plant_ids, "db_export_plants")
-        if not args.category or args.category == "location":
-            generate_sheets("location", loc_ids, "db_export_locations")
-        if not args.category or args.category == "zone":
-            generate_sheets("zone", zone_ids, "db_export_zones")
+            generate_sheets("plant", plant_ids, "db_export_plants", output_dir)
+        if not args.category:
+            mixed_ids = [("zone", z[0], z[1]) for z in zone_ids] + [("location", l[0], l[1]) for l in loc_ids]
+            if mixed_ids:
+                generate_sheets("Spaces (Zones & Locations)", mixed_ids, "db_export_spaces", output_dir)
+        else:
+            if args.category == "location":
+                generate_sheets("location", loc_ids, "db_export_locations", output_dir)
+            if args.category == "zone":
+                generate_sheets("zone", zone_ids, "db_export_zones", output_dir)
         return
 
     if not args.category:
@@ -272,7 +304,7 @@ def main():
     else:
         parser.error("Error: You must provide either --file or both --prefix and --start-id.")
 
-    generate_sheets(args.category, ids_to_process, output_basename, args.start_id)
+    generate_sheets(args.category, ids_to_process, output_basename, output_dir, args.start_id)
 
 if __name__ == "__main__":
     main()

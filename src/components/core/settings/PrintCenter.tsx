@@ -102,6 +102,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
       .replace('db_export_plants', 'Plant Inventory')
       .replace('db_export_locations', 'Locations')
       .replace('db_export_zones', 'Zones')
+      .replace('db_export_spaces', 'Spaces (Zones & Locations)')
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')
@@ -122,7 +123,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
         
         {printMode === 'db' ? (
           <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            Generate printable sheets for every active Plant, Location, and Zone currently in your system. Output files will be saved to <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">src/data/code-prints/</code> on the server.
+            Generate printable sheets for every active Plant, Location, and Zone currently in your system. Output files will be saved to <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">src/data/code-prints/[garden-id]/</code> on the server.
           </p>
         ) : (
           <div className="flex flex-col gap-3">
