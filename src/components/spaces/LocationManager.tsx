@@ -1,21 +1,23 @@
 import { useState, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance } from '../../../types';
-import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
+import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { LocationCard } from './LocationCard';
+import { PageHeader } from '../common/PageHeader';
 
 interface LocationManagerProps {
+  gardenName: string;
   locations: Location[];
   zones: Zone[];
   instances: PlantInstance[];
   onAdd: (name: string, zoneId: string) => void;
   onUpdate: (id: string, updates: Partial<Location>) => void;
   onDelete: (id: string) => void;
-  onGoBack: () => void;
   onOpenMenu: () => void;
   onNavigateLocation: (id: string) => void;
+  onOpenWorkspaceMenu?: () => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ locations, zones, instances, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ gardenName, locations, zones, instances, onAdd, onUpdate, onDelete, onOpenMenu, onNavigateLocation, onOpenWorkspaceMenu }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
   const [selectedZoneId, setSelectedZoneId] = useState('');
@@ -63,17 +65,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ locations, zones, in
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <header className="mb-6 flex items-center justify-between pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-            &larr;
-          </button>
-          <Title className="!mb-0">Location Manager</Title>
-        </div>
-        <MenuButton onClick={onOpenMenu}>
-          ☰
-        </MenuButton>
-      </header>
+      <PageHeader title="Location Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Locations</Subtitle>
       <Card>

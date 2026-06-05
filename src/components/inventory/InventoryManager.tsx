@@ -1,22 +1,24 @@
 import { useState, useMemo, useEffect, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
-import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
+import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
+import { PageHeader } from '../common/PageHeader';
 
 interface InventoryManagerProps {
+  gardenName: string;
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
   locations: Location[];
   zones: Zone[];
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
   onNavigate: (qrId: string) => void;
-  onGoBack: () => void;
   onOpenMenu: () => void;
+  onOpenWorkspaceMenu?: () => void;
 }
 
 export const InventoryManager: FC<InventoryManagerProps> = ({ 
-  instances, archetypes, locations, zones, onRegister, onNavigate, onGoBack, onOpenMenu 
+  gardenName, instances, archetypes, locations, zones, onRegister, onNavigate, onOpenMenu, onOpenWorkspaceMenu 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [isAddingPlant, setIsAddingPlant] = useState(false);
@@ -106,17 +108,7 @@ export const InventoryManager: FC<InventoryManagerProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <header className="mb-6 flex items-center justify-between pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-            &larr;
-          </button>
-          <Title className="!mb-0">Inventory Manager</Title>
-        </div>
-        <MenuButton onClick={onOpenMenu}>
-          ☰
-        </MenuButton>
-      </header>
+      <PageHeader title="Inventory Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Your Plants</Subtitle>
       {!isAddingPlant ? (

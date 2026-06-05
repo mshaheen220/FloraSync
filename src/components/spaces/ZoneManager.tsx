@@ -1,21 +1,23 @@
 import { useState, FC, FormEvent } from 'react';
 import { Zone, Location } from '../../../types';
-import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
+import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { ZoneCard } from './ZoneCard';
+import { PageHeader } from '../common/PageHeader';
 
 interface ZoneManagerProps {
+  gardenName: string;
   zones: Zone[];
   locations: Location[];
   onAddZone: (name: string) => void;
   onUpdateZone: (id: string, updates: Partial<Zone>) => void;
   onDeleteZone: (id: string) => void;
   onNavigateZone: (id: string) => void;
-  onGoBack: () => void;
   onOpenMenu: () => void;
+  onOpenWorkspaceMenu?: () => void;
 }
 
 export const ZoneManager: FC<ZoneManagerProps> = ({ 
-  zones, locations, onAddZone, onUpdateZone, onDeleteZone, onNavigateZone, onGoBack, onOpenMenu 
+  gardenName, zones, locations, onAddZone, onUpdateZone, onDeleteZone, onNavigateZone, onOpenMenu, onOpenWorkspaceMenu 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
@@ -37,17 +39,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <header className="mb-6 flex items-center justify-between pt-6">
-        <div className="flex items-center gap-3">
-          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-            &larr;
-          </button>
-          <Title className="!mb-0">Zone Manager</Title>
-        </div>
-        <MenuButton onClick={onOpenMenu}>
-          ☰
-        </MenuButton>
-      </header>
+      <PageHeader title="Zone Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Zones</Subtitle>
       <Card>

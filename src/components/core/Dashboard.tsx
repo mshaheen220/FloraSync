@@ -21,9 +21,10 @@ interface DashboardProps {
   onOpenMenu: () => void;
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
+  onOpenWorkspaceMenu?: () => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -235,7 +236,14 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
             ) : (
               <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
             )}
-            <Title className="!mb-0">{gardenProfile?.name || 'FloraSync'}</Title>
+            <button 
+              onClick={onOpenWorkspaceMenu}
+              disabled={!onOpenWorkspaceMenu}
+              className={`flex items-center gap-1 text-left ${onOpenWorkspaceMenu ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : 'cursor-default'}`}
+            >
+              <Title className="!mb-0">{gardenProfile?.name || 'FloraSync'}</Title>
+              {onOpenWorkspaceMenu && <span className="text-emerald-700 dark:text-emerald-400 text-lg -mt-1 ml-1">▼</span>}
+            </button>
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Your garden at a glance.</p>
         </div>

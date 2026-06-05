@@ -21,12 +21,20 @@ export interface User {
   role?: string;
   name: string;
   imageUrl?: string;
+  accesses?: { id: string, name: string, role: string }[];
 }
 
 export interface GardenProfile {
   id: string;
   name: string;
   imageUrl?: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  role: string;
 }
 
 export const App: FC = () => {
@@ -36,6 +44,7 @@ export const App: FC = () => {
   const [zones, setZones] = useState<Zone[]>([]);
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [initialLoadSuccess, setInitialLoadSuccess] = useState<boolean | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('florasync_token'));
   
@@ -51,6 +60,7 @@ export const App: FC = () => {
   const [activeZone, setActiveZone] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
 
   const skipNextSync = useRef(false);
@@ -93,6 +103,7 @@ export const App: FC = () => {
       setGardenProfile(null);
       setInitialLoadSuccess(null);
       setSyncStatus('synced');
+      setWorkspaces([]);
       return;
     }
 
@@ -159,6 +170,13 @@ export const App: FC = () => {
         setIsDbLoaded(true);
         setInitialLoadSuccess(true);
         setSyncStatus('synced');
+
+        // Fetch accessible workspaces for the switcher
+        fetch(`${apiBase}/api/workspaces`, { headers: { 'Authorization': `Bearer ${token}` } })
+          .then(res => res.json())
+          .then(wData => {
+            if (wData.success) setWorkspaces(wData.workspaces);
+          }).catch(err => console.error('Failed to load workspaces:', err));
       })
       .catch(err => {
         console.error('[Frontend] Database connection failed completely. Trace:', err);
@@ -240,6 +258,35 @@ export const App: FC = () => {
       setCurrentView('dashboard');
     }
   }, []);
+
+  const handleSwitchGarden = (gardenId: string) => {
+    if (!token) return;
+    setIsDbLoaded(false); // Triggers the loading screen transition
+    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+    fetch(`${apiBase}/api/state?gardenId=${gardenId}`, { 
+      cache: 'no-store',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        skipNextSync.current = true;
+        if (data.user) setCurrentUser(prev => prev ? { ...prev, workspaceRole: data.user.workspaceRole } : data.user);
+        setGardenProfile(data.garden || null);
+        setInstances(data.instances || []);
+        setArchetypes(data.archetypes || []);
+        setZones(data.zones || []);
+        setLocations(data.locations || []);
+        setIsDbLoaded(true);
+        setSyncStatus('synced');
+      })
+      .catch(err => {
+        console.error('Failed to switch garden', err);
+        setIsDbLoaded(true);
+        setSyncStatus('error');
+      });
+  };
 
   useEffect(() => {
     if (!window.history.state?.internal) {
@@ -614,6 +661,8 @@ export const App: FC = () => {
     }
   };
 
+  const handleOpenWorkspaceMenu = workspaces.length > 1 ? () => setIsWorkspaceMenuOpen(true) : undefined;
+
   const renderView = () => {
     if (!currentUser || !token) {
       return <LoginScreen onLogin={handleLogin} />;
@@ -680,23 +729,23 @@ export const App: FC = () => {
     }
 
     if (currentView === 'zones') {
-      return <ZoneManager zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
+      return <ZoneManager gardenName={gardenProfile?.name || 'FloraSync'} zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'inventory') {
-      return <InventoryManager instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
+      return <InventoryManager gardenName={gardenProfile?.name || 'FloraSync'} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
+      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
     }
 
     if (currentView === 'locations') {
-      return <LocationManager locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} />;
+      return <LocationManager gardenName={gardenProfile?.name || 'FloraSync'} locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'archetypes') {
-      return <ArchetypeManager archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} />;
+      return <ArchetypeManager gardenName={gardenProfile?.name || 'FloraSync'} archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     return (
@@ -715,6 +764,7 @@ export const App: FC = () => {
         onOpenMenu={() => setIsMenuOpen(true)} 
         onNavigateInventory={() => navigateTo('/inventory')} 
         onNavigateZone={handleNavigateZone} 
+        onOpenWorkspaceMenu={handleOpenWorkspaceMenu}
       />
     );
   };
@@ -736,6 +786,41 @@ export const App: FC = () => {
         onClose={() => setIsMenuOpen(false)} 
         onNavigate={handleMenuNavigate} 
       />
+      {isWorkspaceMenuOpen && workspaces && workspaces.length > 1 && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsWorkspaceMenuOpen(false)}
+        >
+          <div 
+            className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-2xl animate-in slide-in-from-bottom-8 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Switch Garden</h3>
+              <button 
+                onClick={() => setIsWorkspaceMenuOpen(false)} 
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold leading-none p-2 -mr-2"
+              >✕</button>
+            </div>
+            <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
+              {workspaces.map(ws => (
+                <button 
+                  key={ws.id}
+                  onClick={() => { setIsWorkspaceMenuOpen(false); if (ws.id !== gardenProfile?.id) handleSwitchGarden(ws.id); }}
+                  className={`flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2 ${ws.id === gardenProfile?.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800'}`}
+                >
+                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-xl">🏡</div>)}
+                  <div className="flex-1">
+                    <div className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight mb-0.5">{ws.name}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{ws.role}</div>
+                  </div>
+                  {ws.id === gardenProfile?.id && <span className="text-emerald-500 text-xl font-bold">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       {renderView()}
     </>
   );

@@ -107,7 +107,52 @@ app.post('/api/login', (req, res) => {
     const validPassword = bcrypt.compareSync(password, user.password_hash);
     if (!validPassword) return res.status(401).json({ error: 'Invalid credentials.' });
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, gardenId: user.garden_id }, JWT_SECRET, { expiresIn: '30d' });
+    let bestGardenId = user.garden_id;
+    try {
+      let bestGarden;
+      if (user.role === 'god-admin') {
+        bestGarden = db.prepare(`
+          SELECT g.id as garden_id
+          FROM gardens g
+          LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
+          ORDER BY
+            CASE COALESCE(gm.role, 'admin')
+              WHEN 'owner' THEN 1
+              WHEN 'admin' THEN 2
+              WHEN 'helper' THEN 3
+              WHEN 'viewer' THEN 4
+              ELSE 5
+            END,
+            g.name ASC
+          LIMIT 1
+        `).get(user.id);
+      } else {
+        bestGarden = db.prepare(`
+          SELECT gm.garden_id
+          FROM garden_members gm
+          JOIN gardens g ON gm.garden_id = g.id
+          WHERE gm.user_id = ?
+          ORDER BY
+            CASE gm.role
+              WHEN 'owner' THEN 1
+              WHEN 'helper' THEN 2
+              WHEN 'viewer' THEN 3
+              ELSE 4
+            END,
+            g.name ASC
+          LIMIT 1
+        `).get(user.id);
+      }
+      
+      if (bestGarden && bestGarden.garden_id) {
+        bestGardenId = bestGarden.garden_id;
+        db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(bestGardenId, user.id);
+      }
+    } catch (e) {
+      console.error('Error determining default garden:', e);
+    }
+
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, gardenId: bestGardenId }, JWT_SECRET, { expiresIn: '30d' });
     
     res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name, imageUrl: user.image_url } });
   } catch (err) {
@@ -142,10 +187,11 @@ app.post('/api/users', authenticateToken, (req, res) => {
     }
 
     db.prepare('INSERT INTO users (id, username, password_hash, role, name, garden_id) VALUES (?, ?, ?, ?, ?, ?)').run(userId, username.toLowerCase(), passwordHash, role, name, targetGardenId);
+    db.prepare('INSERT INTO garden_members (user_id, garden_id, role) VALUES (?, ?, ?)').run(userId, targetGardenId, 'owner');
 
     res.json({ 
       success: true, 
-      user: { id: userId, username: username.toLowerCase(), role, name, gardenName: createdGardenName },
+      user: { id: userId, username: username.toLowerCase(), role, name, accesses: [{ id: targetGardenId, name: createdGardenName, role: 'owner' }] },
       newGarden: !gardenId ? { id: targetGardenId, name: createdGardenName } : null
     });
   } catch (err) {
@@ -178,6 +224,33 @@ app.put('/api/gardens/:id', authenticateToken, (req, res) => {
   }
 });
 
+// Endpoint to get all gardens the user has access to
+app.get('/api/workspaces', authenticateToken, (req, res) => {
+  try {
+    let workspaces;
+    if (req.user.role === 'god-admin') {
+      workspaces = db.prepare(`
+        SELECT g.id, g.name, g.image_url as imageUrl, COALESCE(gm.role, 'admin') as role 
+        FROM gardens g
+        LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
+        ORDER BY g.name ASC
+      `).all(req.user.id);
+    } else {
+      workspaces = db.prepare(`
+        SELECT g.id, g.name, g.image_url as imageUrl, gm.role 
+        FROM garden_members gm
+        JOIN gardens g ON gm.garden_id = g.id
+        WHERE gm.user_id = ?
+        ORDER BY g.name ASC
+      `).all(req.user.id);
+    }
+    res.json({ success: true, workspaces });
+  } catch (err) {
+    console.error('Error fetching workspaces:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 // Admin Endpoint to Get All Users
 app.get('/api/users', authenticateToken, (req, res) => {
   if (req.user.role !== 'god-admin') {
@@ -185,10 +258,18 @@ app.get('/api/users', authenticateToken, (req, res) => {
   }
   try {
     const users = db.prepare(`
-      SELECT u.id, u.username, u.role, u.name, u.image_url as imageUrl, g.name as gardenName 
-      FROM users u 
-      LEFT JOIN gardens g ON u.garden_id = g.id
+      SELECT u.id, u.username, u.role, u.name, u.image_url as imageUrl,
+      (
+        SELECT json_group_array(json_object('id', g.id, 'name', g.name, 'role', gm.role))
+        FROM garden_members gm
+        JOIN gardens g ON gm.garden_id = g.id
+        WHERE gm.user_id = u.id
+      ) as accesses
+      FROM users u
     `).all();
+    users.forEach(u => {
+      try { u.accesses = JSON.parse(u.accesses); } catch (e) { u.accesses = []; }
+    });
     res.json({ success: true, users });
   } catch (err) {
     console.error('Error fetching users:', err);
@@ -211,6 +292,7 @@ app.delete('/api/users/:id', authenticateToken, (req, res) => {
     try { db.prepare('DELETE FROM user_gardens_legacy_backup WHERE user_id = ?').run(req.params.id); } catch (e) {}
     try { db.prepare('DELETE FROM user_gardens WHERE user_id = ?').run(req.params.id); } catch (e) {}
     
+    db.prepare('DELETE FROM garden_members WHERE user_id = ?').run(req.params.id);
     db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
     
     // If they were the last user in that garden, delete the garden too to save space
@@ -221,6 +303,71 @@ app.delete('/api/users/:id', authenticateToken, (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error('Error deleting user:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Admin Endpoint to Get User Garden Access
+app.get('/api/users/:id/gardens', authenticateToken, (req, res) => {
+  if (req.user.role !== 'god-admin') {
+    return res.status(403).json({ error: 'Only admins can view user gardens.' });
+  }
+  try {
+    const access = db.prepare(`
+      SELECT gm.garden_id as gardenId, g.name as gardenName, gm.role 
+      FROM garden_members gm
+      JOIN gardens g ON gm.garden_id = g.id
+      WHERE gm.user_id = ?
+    `).all(req.params.id);
+    res.json({ success: true, access });
+  } catch (err) {
+    console.error('Error fetching user garden access:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Admin Endpoint to Grant Garden Access
+app.post('/api/users/:id/gardens', authenticateToken, (req, res) => {
+  if (req.user.role !== 'god-admin') {
+    return res.status(403).json({ error: 'Only admins can grant garden access.' });
+  }
+  const { gardenId, role } = req.body;
+  if (!gardenId || !role) {
+    return res.status(400).json({ error: 'Garden ID and role are required.' });
+  }
+
+  try {
+    db.prepare(`
+      INSERT INTO garden_members (user_id, garden_id, role) 
+      VALUES (?, ?, ?) 
+      ON CONFLICT(user_id, garden_id) 
+      DO UPDATE SET role = excluded.role
+    `).run(req.params.id, gardenId, role);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error granting garden access:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Admin Endpoint to Revoke Garden Access
+app.delete('/api/users/:id/gardens/:gardenId', authenticateToken, (req, res) => {
+  if (req.user.role !== 'god-admin') {
+    return res.status(403).json({ error: 'Only admins can revoke garden access.' });
+  }
+  
+  try {
+    db.prepare('DELETE FROM garden_members WHERE user_id = ? AND garden_id = ?').run(req.params.id, req.params.gardenId);
+    
+    const user = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.params.id);
+    if (user && user.garden_id === req.params.gardenId) {
+      const otherGarden = db.prepare('SELECT garden_id FROM garden_members WHERE user_id = ? LIMIT 1').get(req.params.id);
+      db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(otherGarden ? otherGarden.garden_id : null, req.params.id);
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error revoking garden access:', err);
     res.status(500).json({ error: 'Internal server error.' });
   }
 });
@@ -297,10 +444,23 @@ app.put('/api/garden/profile', authenticateToken, (req, res) => {
 
 app.get('/api/state', authenticateToken, (req, res) => {
   try {
+    let requestedGardenId = req.query.gardenId;
+    let access;
+    
+    if (requestedGardenId) {
+      access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, requestedGardenId);
+      if (!access && req.user.role !== 'god-admin') return res.status(403).json({ error: 'Access denied to this garden.' });
+      if (!access && req.user.role === 'god-admin') access = { role: 'admin' };
+      db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(requestedGardenId, req.user.id);
+    } else {
+      requestedGardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+      access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, requestedGardenId);
+      if (!access && req.user.role === 'god-admin') access = { role: 'admin' };
+    }
+
     const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id FROM users WHERE id = ?').get(req.user.id);
-    const gardenId = userRow?.garden_id || req.user.gardenId;
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
-    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones FROM gardens WHERE id = ?').get(gardenId);
+    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones FROM gardens WHERE id = ?').get(requestedGardenId);
 
     const safeParse = (str, fallback) => {
       if (!str || str === 'undefined') return fallback;
@@ -313,7 +473,8 @@ app.get('/api/state', authenticateToken, (req, res) => {
         username: userRow.username, 
         role: userRow.role, 
         name: userRow.name || userRow.username, 
-        imageUrl: userRow.image_url || '' 
+        imageUrl: userRow.image_url || '',
+        workspaceRole: access?.role || 'viewer' 
       } : null,
       garden: garden ? {
         id: garden.id,
@@ -334,6 +495,13 @@ app.get('/api/state', authenticateToken, (req, res) => {
 app.post('/api/state', authenticateToken, (req, res) => {
   try {
     const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    
+    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+    
+    if (effectiveRole === 'viewer') {
+      return res.status(403).json({ error: 'Viewers cannot modify the garden state.' });
+    }
     
     db.prepare('UPDATE gardens SET instances = ?, locations = ?, zones = ? WHERE id = ?')
       .run(JSON.stringify(req.body.instances || []), JSON.stringify(req.body.locations || []), JSON.stringify(req.body.zones || []), gardenId);
