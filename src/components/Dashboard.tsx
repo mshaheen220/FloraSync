@@ -2,8 +2,12 @@ import { useMemo, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../types';
 import { Container, Title, Card, Subtitle, Button, FAB, StatusBadge, MenuButton } from '../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
+import { GardenProfile } from '../App';
+
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface DashboardProps {
+  gardenProfile?: GardenProfile | null;
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
   locations: Location[];
@@ -19,7 +23,7 @@ interface DashboardProps {
   onNavigateZone: (zoneId: string) => void;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -220,8 +224,12 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
       <header className="mb-6 pt-6 flex justify-between items-center">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
-            <Title className="!mb-0">FloraSync</Title>
+            {gardenProfile?.imageUrl ? (
+              <img src={gardenProfile.imageUrl} alt="Garden Logo" className="w-8 h-8 rounded-lg object-cover" />
+            ) : (
+              <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
+            )}
+            <Title className="!mb-0">{gardenProfile?.name || 'FloraSync'}</Title>
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Your garden at a glance.</p>
         </div>
@@ -297,7 +305,7 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
           <Subtitle>🌟 {dailySpotlight.title}</Subtitle>
           <Card onClick={() => onNavigate(dailySpotlight.instance.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 flex items-center gap-4 !p-4">
             {dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl ? (
-              <img src={dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl} alt={dailySpotlight.archetype.commonName} className="w-20 h-20 rounded-xl object-cover border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800 flex-shrink-0" />
+              <img src={dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl} alt={dailySpotlight.archetype.commonName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-20 h-20 rounded-xl object-cover border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800 flex-shrink-0" />
             ) : (
               <div className="w-20 h-20 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-3xl flex-shrink-0">🌿</div>
             )}
@@ -343,11 +351,14 @@ export const Dashboard: FC<DashboardProps> = ({ instances, archetypes, locations
         <section className="mb-8 animate-in fade-in duration-500 delay-300">
           <Subtitle>Urgent Location Care</Subtitle>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {overdueLocations.map(loc => (
-            <Button key={loc.id} $variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">
-                💦 Water all on {loc.name}
-              </Button>
-            ))}
+            {overdueLocations.map(loc => {
+              const zone = zones.find(z => z.id === loc.zoneId);
+              return (
+                <Button key={loc.id} $variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">
+                  💦 Water all on {zone ? `${zone.name} • ` : ''}{loc.name}
+                </Button>
+              );
+            })}
           </div>
         </section>
       )}

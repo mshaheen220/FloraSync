@@ -3,6 +3,8 @@ import { PlantInstance, JournalEntry } from '../../types';
 import { Card, Button, Input, Subtitle } from '../styles/StyledElements';
 import { User } from '../App';
 
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
+
 // TODO: Add ability to add journal entries to a zone or loc. it would simply save to each plant's individual journal but would be a nice shortcut for users who want to make a general note about a zone or location that applies to all plants within it. Maybe add a "Apply to all plants in this zone/location" checkbox when creating the entry that only shows if there are multiple plants in the same zone/location?
 interface PlantJournalProps {
   instance: PlantInstance;
@@ -204,7 +206,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Photo (Optional)</label>
               <div className="flex items-center gap-3">
                 {journalForm.imageUrl && (
-                  <img src={journalForm.imageUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
+                <img src={journalForm.imageUrl} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
                 )}
                 <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
                   📸 {journalForm.imageUrl ? 'Change Photo' : 'Add Photo'}
@@ -277,7 +279,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               {entry.note && <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{entry.note}</p>}
               {entry.imageUrl && (
                 <div className="mt-2">
-                  <img src={entry.imageUrl} alt={entry.title || 'Journal photo'} className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2" />
+                  <img src={entry.imageUrl} alt={entry.title || 'Journal photo'} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2" />
                   <button onClick={() => handleSetThumbnail(entry.imageUrl!)} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
                     {instance.imageUrl === entry.imageUrl ? '★ Current Cover Photo' : 'Set as Cover Photo'}
                   </button>

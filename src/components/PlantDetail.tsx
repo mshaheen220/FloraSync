@@ -5,6 +5,8 @@ import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
 import { User } from '../App';
 
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
+
 interface PlantDetailProps {
   qrId: string;
   initialAction: string | null;
@@ -350,7 +352,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
 
       <Card className="flex flex-col items-center pb-10 mb-6 relative overflow-hidden !px-0 !pt-0">
         {instance.imageUrl || archetype?.imageUrl ? (
-          <img src={instance.imageUrl || archetype?.imageUrl} alt={archetype?.commonName} className="w-full h-56 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
+          <img src={instance.imageUrl || archetype?.imageUrl} alt={archetype?.commonName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-56 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
         ) : (
           <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-8"></div>
         )}

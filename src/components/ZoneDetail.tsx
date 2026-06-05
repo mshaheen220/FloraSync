@@ -4,6 +4,8 @@ import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../style
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { PageHeader } from './PageHeader';
 
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
+
 interface ZoneDetailProps {
   zoneId: string;
   zone?: Zone;
@@ -118,7 +120,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
 
       <Card className="flex flex-col items-center pb-8 mb-6 relative overflow-hidden !px-0 !pt-0">
         {zone.imageUrl ? (
-          <img src={zone.imageUrl} alt={zone.name} className="w-full h-48 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
+          <img src={zone.imageUrl} alt={zone.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-48 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
         ) : (
           <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-6"></div>
         )}

@@ -1,6 +1,8 @@
-import { FC, FormEvent } from 'react';
+import { FC, FormEvent, ChangeEvent } from 'react';
 import { PlantArchetype } from '../../types';
 import { Card, Button, Input } from '../styles/StyledElements';
+
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface ArchetypeCardProps {
   arch: PlantArchetype;
@@ -29,6 +31,15 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
   onSave,
   onDelete
 }) => {
+  const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setEditData({...editData, imageUrl: reader.result as string});
+      reader.readAsDataURL(file);
+    }
+  };
+
   if (isEditing) {
     return (
       <Card className="border-emerald-500 dark:border-emerald-500 shadow-md">
@@ -119,8 +130,19 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
             <textarea value={editData.whatToFeed || ''} onChange={e => setEditData({...editData, whatToFeed: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={2} />
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Image URL / Path</label>
-            <Input value={editData.imageUrl || ''} onChange={e => setEditData({...editData, imageUrl: e.target.value})} className="!mb-0 py-2" placeholder="/images/vegetables/plant.jpg" />
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Plant Photo (Optional)</label>
+            <div className="flex items-center gap-3">
+              {editData.imageUrl && (
+                <img src={editData.imageUrl} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
+              )}
+              <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
+                📸 {editData.imageUrl ? 'Change Photo' : 'Upload Photo'}
+                <input type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
+              </label>
+              {editData.imageUrl && (
+                <button type="button" onClick={() => setEditData({...editData, imageUrl: ''})} className="text-red-500 text-sm font-semibold">Remove</button>
+              )}
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pruning Tips</label>
@@ -169,7 +191,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
       {isViewing && (
         <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 text-sm space-y-3">
           {arch.imageUrl && (
-            <img src={arch.imageUrl} alt={arch.commonName} className="w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800" />
+            <img src={arch.imageUrl} alt={arch.commonName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800" />
           )}
           {arch.scientificName && arch.scientificName !== 'Unknown' && <div><strong className="block text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-0.5">Scientific Name</strong> <span className="italic block text-slate-700 dark:text-slate-300">{arch.scientificName}</span></div>}
           {(arch.category || arch.growthHabit || arch.lifecycle) && (

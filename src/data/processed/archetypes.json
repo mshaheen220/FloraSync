@@ -1,0 +1,38 @@
+[
+  {
+    "id": "clematis",
+    "commonName": "Clematis",
+    "scientificName": "Clematis 'Jackmanii'",
+    "category": "Flower",
+    "lifecycle": "Perennial",
+    "sunRequirement": "Full Sun to Partial Shade",
+    "waterIntervalDays": 4,
+    "feedingIntervalDays": 30,
+    "whatToFeed": "Balanced organic flower fertilizer or a low-nitrogen mix paired with a tomato-style feed to encourage heavy spring and summer blooming cycles.",
+    "pruningTips": "Depends heavily on the specific pruning group. For standard Group 3 summer bloomers, cut all canes down hard to about 12 inches above the ground in late winter or early spring to stimulate vigorous, flowering new growth.",
+    "flavorProfile": "Not edible. Mildly toxic to humans and household pets.",
+    "companionPlants": [
+      "Roses",
+      "Daylilies",
+      "Hostas",
+      "Coneflowers"
+    ],
+    "combativePlants": [
+      "Shade trees that block lower vine light",
+      "Aggressive shallow-rooted groundcovers"
+    ],
+    "growthHabit": "Climbing Vine",
+    "daysToHarvest": 75,
+    "imageUrl": "/images/flowers/Clematis.jpg",
+    "whenToPlant": "Zone 6/7: Plant container starts outdoors in spring (mid-to-late April) or early autumn (September) when the soil is cool and workable.",
+    "whenToHarvest": "Cut fully opened flower stems on a diagonal for stunning, long-lasting summer indoor arrangements.",
+    "usesForLargeHarvests": "Training up garden obelisks or classic wooden trellises, covering open fences, or creating high-impact vertical floral backdrops.",
+    "hardinessZones": [
+      4,
+      9
+    ],
+    "hardinessNote": "Extremely hardy perennial vine; the key to success is keeping its top growth in the bright sun while keeping its root system shaded and cool.",
+    "plantingInstructions": "Dig a hole 2 inches deeper than the container nursery soil level. Plant the crown slightly below the soil line to stimulate secondary shoots from the base. Mulch heavily or place a flat stone over the root zone immediately to keep the soil surface cool.",
+    "growthRequirements": "Demands deep, rich, fertile, and highly moist clay-loam or loam soils with exceptional drainage and a neutral pH of 6.5 to 7.0. Requires structural support like wire mesh, twine, or a trellis framework to climb. Prefers roots in the shade, tops in the sun."
+  }
+]

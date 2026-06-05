@@ -20,6 +20,12 @@ export interface User {
   imageUrl?: string;
 }
 
+export interface GardenProfile {
+  id: string;
+  name: string;
+  imageUrl?: string;
+}
+
 export const App: FC = () => {
   const [instances, setInstances] = useState<PlantInstance[]>([]);
   const [archetypes, setArchetypes] = useState<PlantArchetype[]>([]);
@@ -34,6 +40,7 @@ export const App: FC = () => {
     const saved = localStorage.getItem('florasync_user');
     return saved ? JSON.parse(saved) : null;
   });
+  const [gardenProfile, setGardenProfile] = useState<GardenProfile | null>(null);
 
   const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
@@ -80,6 +87,7 @@ export const App: FC = () => {
       setLocations([]);
       setZones([]);
       setIsDbLoaded(false);
+      setGardenProfile(null);
       setInitialLoadSuccess(null);
       setSyncStatus('synced');
       return;
@@ -121,6 +129,7 @@ export const App: FC = () => {
           });
         }
 
+        setGardenProfile(data.garden || null);
         setInstances(data.instances || []);
         setArchetypes(data.archetypes || []);
         
@@ -288,6 +297,21 @@ export const App: FC = () => {
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: updatedUser.name, imageUrl: updatedUser.imageUrl })
       }).catch(err => console.error('Failed to sync profile update:', err));
+    }
+  };
+
+  const handleUpdateGarden = (name: string, imageUrl: string) => {
+    if (!gardenProfile) return;
+    const updated = { ...gardenProfile, name, imageUrl };
+    setGardenProfile(updated);
+    if (token) {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+      fetch(`${apiBase}/api/garden/profile`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name, imageUrl })
+      }).catch(err => console.error('Failed to sync garden profile update:', err));
     }
   };
 
@@ -653,7 +677,7 @@ export const App: FC = () => {
     }
 
     if (['settings', 'zones', 'locations', 'inventory'].includes(currentView)) {
-      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} onLogout={handleLogout} token={token} />;
+      return <LocationManager mode={currentView as any} archetypes={archetypes} locations={locations} zones={zones} instances={instances} theme={theme} onThemeChange={setTheme} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} onNavigate={handleNavigate} onRegister={handleRegister} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
     }
 
     if (currentView === 'archetypes') {
@@ -662,6 +686,7 @@ export const App: FC = () => {
 
     return (
       <Dashboard 
+        gardenProfile={gardenProfile}
         instances={instances} 
         archetypes={archetypes} 
         locations={locations} 

@@ -58,7 +58,8 @@ db.exec(`
     name TEXT,
     instances TEXT,
     locations TEXT,
-    zones TEXT
+    zones TEXT,
+    image_url TEXT
   );
 `);
 
@@ -68,6 +69,9 @@ try {
 } catch (err) {}
 try {
   db.exec('ALTER TABLE users ADD COLUMN image_url TEXT;');
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE gardens ADD COLUMN image_url TEXT;');
 } catch (err) {}
 
 // Auto-create shared dictionary row if missing
@@ -277,12 +281,26 @@ app.put('/api/users/:id/password', authenticateToken, (req, res) => {
   }
 });
 
+// Endpoint for users to update their shared garden's profile info
+app.put('/api/garden/profile', authenticateToken, (req, res) => {
+  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const { name, imageUrl } = req.body;
+  if (!gardenId) return res.status(400).json({ error: 'No garden assigned.' });
+  try {
+    db.prepare('UPDATE gardens SET name = ?, image_url = ? WHERE id = ?').run(name || 'My Garden', imageUrl || '', gardenId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error updating garden profile:', err);
+    res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
 app.get('/api/state', authenticateToken, (req, res) => {
   try {
     const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id FROM users WHERE id = ?').get(req.user.id);
     const gardenId = userRow?.garden_id || req.user.gardenId;
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
-    const garden = db.prepare('SELECT instances, locations, zones FROM gardens WHERE id = ?').get(gardenId);
+    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones FROM gardens WHERE id = ?').get(gardenId);
 
     const safeParse = (str, fallback) => {
       if (!str || str === 'undefined') return fallback;
@@ -296,6 +314,11 @@ app.get('/api/state', authenticateToken, (req, res) => {
         role: userRow.role, 
         name: userRow.name || userRow.username, 
         imageUrl: userRow.image_url || '' 
+      } : null,
+      garden: garden ? {
+        id: garden.id,
+        name: garden.name,
+        imageUrl: garden.image_url || ''
       } : null,
       archetypes: safeParse(dict?.archetypes, []), 
       instances: safeParse(garden?.instances, []), 
@@ -431,22 +454,36 @@ app.post('/api/import', authenticateToken, (req, res) => {
   }
 
   try {
-    // 1. Write the data to the imports directory using the type as the filename
-    if (!fs.existsSync(IMPORTS_DIR)) {
-      fs.mkdirSync(IMPORTS_DIR, { recursive: true });
-    }
-    
-    const filePath = path.join(IMPORTS_DIR, `${type}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-
-    // 2. Execute the existing seed script
-    exec('node scripts/node/import-seed.js', { cwd: ROOT_DIR }, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Import error: ${error.message}`);
-        return res.status(500).json({ success: false, error: error.message });
+    if (type === 'archetypes') {
+      const dictRow = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
+      let currentList = [];
+      try { currentList = JSON.parse(dictRow?.archetypes || '[]'); } catch (e) {}
+      
+      const existingIds = new Set(currentList.map(item => item.id));
+      for (const item of data) {
+        if (item.id && !existingIds.has(item.id)) {
+          currentList.push(item);
+          existingIds.add(item.id);
+        }
       }
-      res.json({ success: true, message: stdout });
-    });
+      db.prepare('UPDATE shared_dictionary SET archetypes = ? WHERE id = 1').run(JSON.stringify(currentList));
+    } else {
+      const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+      const gardenRow = db.prepare(`SELECT ${type} FROM gardens WHERE id = ?`).get(gardenId);
+      let currentList = [];
+      try { currentList = JSON.parse(gardenRow?.[type] || '[]'); } catch (e) {}
+
+      const existingIds = new Set(currentList.map(item => item.id));
+      for (const item of data) {
+        if (item.id && !existingIds.has(item.id)) {
+          currentList.push(item);
+          existingIds.add(item.id);
+        }
+      }
+      db.prepare(`UPDATE gardens SET ${type} = ? WHERE id = ?`).run(JSON.stringify(currentList), gardenId);
+    }
+
+    res.json({ success: true });
   } catch (err) {
     console.error('Import failed:', err);
     res.status(500).json({ success: false, error: 'Server error during import.' });

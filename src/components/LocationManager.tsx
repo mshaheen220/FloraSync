@@ -1,11 +1,13 @@
 import { useState, useEffect, FC, FormEvent, useMemo } from 'react';
 import { Location, Zone, PlantInstance, PlantArchetype } from '../../types';
 import { Container, Title, Card, Button, Input, Toast, Subtitle, MenuButton } from '../styles/StyledElements';
-import { Theme, User } from '../App';
+import { Theme, User, GardenProfile } from '../App';
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { ZoneCard } from './ZoneCard';
 import { LocationCard } from './LocationCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
+
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface LocationManagerProps {
   mode: 'settings' | 'zones' | 'locations' | 'inventory';
@@ -29,11 +31,13 @@ interface LocationManagerProps {
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
   currentUser?: User;
   onUpdateUser?: (updates: Partial<User>) => void;
+  gardenProfile?: GardenProfile | null;
+  onUpdateGarden?: (name: string, imageUrl: string) => void;
   onLogout?: () => void;
   token?: string | null;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister, currentUser, onUpdateUser, onLogout, token }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, locations, zones, instances, theme, onThemeChange, onAddZone, onUpdateZone, onDeleteZone, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone, onNavigate, onRegister, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [newName, setNewName] = useState('');
@@ -63,6 +67,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
   const [usersList, setUsersList] = useState<User[]>([]);
   const [gardensList, setGardensList] = useState<{id: string, name: string}[]>([]);
   const [selectedGardenId, setSelectedGardenId] = useState('');
+  const [expandedSettings, setExpandedSettings] = useState<string[]>(['garden', 'account']);
   
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -72,6 +77,14 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
 
   const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+  const toggleSetting = (section: string) => {
+    setExpandedSettings(prev => 
+      prev.includes(section)
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    );
+  };
 
   // Fetch existing print files when the settings view loads
   useEffect(() => {
@@ -499,14 +512,58 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
 
       {mode === 'settings' && (
         <>
+          {gardenProfile && onUpdateGarden && (
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+              <button onClick={() => toggleSetting('garden')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Garden Profile</Subtitle>
+                <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('garden') ? 'rotate-180' : ''}`}>▼</span>
+              </button>
+              {expandedSettings.includes('garden') && (
+                <Card className="mb-4">
+                <div className="flex items-center gap-4 mb-2">
+                  <div className="relative">
+                    {gardenProfile.imageUrl ? (
+                        <img src={gardenProfile.imageUrl} alt="Garden" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500" />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-3xl font-bold text-emerald-700 dark:text-emerald-400 border-2 border-emerald-500">
+                        🏡
+                      </div>
+                    )}
+                    <label className="absolute bottom-[-8px] right-[-8px] bg-emerald-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-emerald-600 transition-colors shadow-md text-xs leading-none">
+                      📷
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => onUpdateGarden(gardenProfile.name || 'My Garden', reader.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }} />
+                    </label>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Garden Name</label>
+                    <Input value={gardenProfile.name || ''} onChange={e => onUpdateGarden(e.target.value, gardenProfile.imageUrl || '')} className="!mb-0" />
+                  </div>
+                </div>
+              </Card>
+              )}
+            </div>
+          )}
+
           {currentUser && onUpdateUser && onLogout && (
             <>
-              <Subtitle>Account Info</Subtitle>
-              <Card className="mb-8">
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+                <button onClick={() => toggleSetting('account')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                  <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Account Info</Subtitle>
+                  <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('account') ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {expandedSettings.includes('account') && (
+                  <Card className="mb-4">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="relative">
                     {currentUser.imageUrl ? (
-                      <img src={currentUser.imageUrl} alt="Profile" className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500" />
+                        <img src={currentUser.imageUrl} alt="Profile" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500" />
                     ) : (
                       <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-2xl font-bold text-emerald-700 dark:text-emerald-400 border-2 border-emerald-500">
                         {currentUser.name.charAt(0).toUpperCase()}
@@ -559,11 +616,17 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                   Log Out
                 </Button>
               </Card>
+                )}
+              </div>
 
               {currentUser.role === 'god-admin' && (
-                <>
-                  <Subtitle>User Administration</Subtitle>
-                  <Card className="mb-8 border-emerald-500 dark:border-emerald-500">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+                  <button onClick={() => toggleSetting('users')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                    <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">User Administration</Subtitle>
+                    <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('users') ? 'rotate-180' : ''}`}>▼</span>
+                  </button>
+                  {expandedSettings.includes('users') && (
+                    <Card className="mb-4 border-emerald-500 dark:border-emerald-500">
                     <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Provision new garden accounts for your friends. They will have their own private gardens but share your global Plant Dictionary.</p>
                     <form onSubmit={handleCreateUser} className="flex flex-col gap-3">
                       <div className="flex gap-3">
@@ -618,164 +681,186 @@ export const LocationManager: FC<LocationManagerProps> = ({ mode, archetypes, lo
                       </div>
                     )}
                   </Card>
-                </>
+                  )}
+                </div>
               )}
             </>
           )}
 
-          <Subtitle>Appearance</Subtitle>
-          <Card className="flex gap-2 !p-2 mb-8">
-            {(['light', 'dark', 'system'] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => onThemeChange(t)}
-                className={`flex-1 py-2.5 rounded-xl text-sm font-bold capitalize transition-colors ${
-                  theme === t 
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' 
-                    : 'bg-transparent text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
-          </Card>
-
-      <Subtitle>Print Center</Subtitle>
-      <Card className="mb-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setPrintMode('db')} 
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'db' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
-            >
-              Database Export
-            </button>
-            <button 
-              onClick={() => setPrintMode('blank')} 
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'blank' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
-            >
-              Blank Tags
-            </button>
-          </div>
-          
-          {printMode === 'db' ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Generate printable sheets for every active Plant, Location, and Zone currently in your system. Output files will be saved to <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">src/data/code-prints/</code> on the server.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                <select value={blankCategory} onChange={e => setBlankCategory(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
-                  <option value="plant">Plants</option>
-                  <option value="location">Locations</option>
-                  <option value="zone">Zones</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Prefix</label>
-                  <Input value={blankPrefix} onChange={e => setBlankPrefix(e.target.value)} className="!mb-0 py-2" />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Start ID</label>
-                  <Input value={blankStartId} onChange={e => setBlankStartId(e.target.value)} className="!mb-0 py-2" />
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <Button onClick={handleGenerateQRs} disabled={isGenerating} className="mt-2 flex justify-center items-center gap-2">
-            {isGenerating ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Generating...</>
-            ) : (
-              '🖨️ Generate Sheets'
-            )}
-          </Button>
-
-          {generatedFiles.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-              <Subtitle className="!text-sm mb-2">Ready to Print</Subtitle>
-              <div className="flex flex-col gap-2">
-                {generatedFiles.map((file, i) => (
-                  <div 
-                    key={i} 
-                    className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
-                  >
-                    <div className="flex flex-col truncate mr-4">
-                      <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 truncate">
-                        {formatPrintName(file.name)}
-                      </span>
-                      <span className="text-[10px] font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mt-0.5">
-                        {new Date(file.time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <a 
-                    href={`${apiBase}/api/prints/${file.name}?token=${token}`} 
-                        download 
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1"
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+                <button onClick={() => toggleSetting('appearance')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                  <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Appearance</Subtitle>
+                  <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('appearance') ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {expandedSettings.includes('appearance') && (
+                  <Card className="flex gap-2 !p-2 mb-4">
+                    {(['light', 'dark', 'system'] as const).map(t => (
+                      <button
+                        key={t}
+                        onClick={() => onThemeChange(t)}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-bold capitalize transition-colors ${
+                          theme === t 
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' 
+                            : 'bg-transparent text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50'
+                        }`}
                       >
-                        ⬇️
-                      </a>
-                      <button onClick={() => handleDeletePrint(file.name)} className="text-xl text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
-                        🗑️
+                        {t}
                       </button>
-                    </div>
-                  </div>
-                ))}
+                    ))}
+                  </Card>
+                )}
               </div>
-            </div>
-          )}
-        </div>
-      </Card>
 
-      <Subtitle>Data Import</Subtitle>
-      <Card className="mb-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Import Type</label>
-            <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              ❓ <span className="underline decoration-dotted underline-offset-2">Schema Help</span>
-            </button>
-          </div>
-          <select value={importType} onChange={e => setImportType(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
-            <option value="archetypes">Plant Dictionary (Archetypes)</option>
-            <option value="zones">Zones</option>
-            <option value="locations">Locations</option>
-          </select>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+                <button onClick={() => toggleSetting('print')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                  <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Print Center</Subtitle>
+                  <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('print') ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {expandedSettings.includes('print') && (
+                  <Card className="mb-4">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setPrintMode('db')} 
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'db' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
+                        >
+                          Database Export
+                        </button>
+                        <button 
+                          onClick={() => setPrintMode('blank')} 
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'blank' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}
+                        >
+                          Blank Tags
+                        </button>
+                      </div>
+                      
+                      {printMode === 'db' ? (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Generate printable sheets for every active Plant, Location, and Zone currently in your system. Output files will be saved to <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">src/data/code-prints/</code> on the server.
+                        </p>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          <div>
+                            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Category</label>
+                            <select value={blankCategory} onChange={e => setBlankCategory(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+                              <option value="plant">Plants</option>
+                              <option value="location">Locations</option>
+                              <option value="zone">Zones</option>
+                            </select>
+                          </div>
+                          <div className="flex gap-3">
+                            <div className="flex-1">
+                              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Prefix</label>
+                              <Input value={blankPrefix} onChange={e => setBlankPrefix(e.target.value)} className="!mb-0 py-2" />
+                            </div>
+                            <div className="flex-1">
+                              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Start ID</label>
+                              <Input value={blankStartId} onChange={e => setBlankStartId(e.target.value)} className="!mb-0 py-2" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <Button onClick={handleGenerateQRs} disabled={isGenerating} className="mt-2 flex justify-center items-center gap-2">
+                        {isGenerating ? (
+                          <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Generating...</>
+                        ) : (
+                          '🖨️ Generate Sheets'
+                        )}
+                      </Button>
+            
+                      {generatedFiles.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                          <Subtitle className="!text-sm mb-2">Ready to Print</Subtitle>
+                          <div className="flex flex-col gap-2">
+                            {generatedFiles.map((file, i) => (
+                              <div 
+                                key={i} 
+                                className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
+                              >
+                                <div className="flex flex-col truncate mr-4">
+                                  <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+                                    {formatPrintName(file.name)}
+                                  </span>
+                                  <span className="text-[10px] font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mt-0.5">
+                                    {new Date(file.time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <a 
+                                href={`${apiBase}/api/prints/${file.name}?token=${token}`} 
+                                    download 
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1"
+                                  >
+                                    ⬇️
+                                  </a>
+                                  <button onClick={() => handleDeletePrint(file.name)} className="text-xl text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
+                                    🗑️
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                )}
+              </div>
 
-          {showImportHelp && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs animate-in fade-in duration-300">
-              <p className="text-slate-500 dark:text-slate-400 mb-2">Paste a valid JSON array. The <code className="text-xs">id</code> must be unique. Example for <strong className="text-slate-700 dark:text-slate-200">{importType}</strong>:</p>
-              <pre className="bg-slate-200 dark:bg-slate-900 p-2 rounded text-slate-600 dark:text-slate-300 overflow-x-auto text-[10px]">
-                <code>{getExampleSchema()}</code>
-              </pre>
-            </div>
-          )}
-
-          <textarea 
-            value={importJson} 
-            onChange={e => setImportJson(e.target.value)} 
-            className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm font-mono" 
-            rows={8} 
-            placeholder={`Paste JSON array for ${importType} here...`} 
-          />
-          
-          <Button 
-            onClick={handleImportJson} 
-            disabled={!importJson.trim()}
-            className="flex justify-center items-center gap-2"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            Import Data
-          </Button>
-        </div>
-      </Card>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
+                <button onClick={() => toggleSetting('import')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+                  <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Data Import</Subtitle>
+                  <span className={`text-slate-400 transition-transform duration-200 ${expandedSettings.includes('import') ? 'rotate-180' : ''}`}>▼</span>
+                </button>
+                {expandedSettings.includes('import') && (
+                  <Card className="mb-4">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Import Type</label>
+                        <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          ❓ <span className="underline decoration-dotted underline-offset-2">Schema Help</span>
+                        </button>
+                      </div>
+                      <select value={importType} onChange={e => setImportType(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+                        <option value="archetypes">Plant Dictionary (Archetypes)</option>
+                        <option value="zones">Zones</option>
+                        <option value="locations">Locations</option>
+                      </select>
+            
+                      {showImportHelp && (
+                        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs animate-in fade-in duration-300">
+                          <p className="text-slate-500 dark:text-slate-400 mb-2">Paste a valid JSON array. The <code className="text-xs">id</code> must be unique. Example for <strong className="text-slate-700 dark:text-slate-200">{importType}</strong>:</p>
+                          <pre className="bg-slate-200 dark:bg-slate-900 p-2 rounded text-slate-600 dark:text-slate-300 overflow-x-auto text-[10px]">
+                            <code>{getExampleSchema()}</code>
+                          </pre>
+                        </div>
+                      )}
+            
+                      <textarea 
+                        value={importJson} 
+                        onChange={e => setImportJson(e.target.value)} 
+                        className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm font-mono" 
+                        rows={8} 
+                        placeholder={`Paste JSON array for ${importType} here...`} 
+                      />
+                      
+                      <Button 
+                        onClick={handleImportJson} 
+                        disabled={!importJson.trim()}
+                        className="flex justify-center items-center gap-2"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                        </svg>
+                        Import Data
+                      </Button>
+                    </div>
+                  </Card>
+                )}
+              </div>
         </>
       )}
 
