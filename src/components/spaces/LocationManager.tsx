@@ -13,10 +13,9 @@ interface LocationManagerProps {
   onGoBack: () => void;
   onOpenMenu: () => void;
   onNavigateLocation: (id: string) => void;
-  onNavigateZone: (id: string) => void;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ locations, zones, instances, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation, onNavigateZone }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ locations, zones, instances, onAdd, onUpdate, onDelete, onGoBack, onOpenMenu, onNavigateLocation }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
   const [selectedZoneId, setSelectedZoneId] = useState('');

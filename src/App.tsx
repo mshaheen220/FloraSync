@@ -692,7 +692,7 @@ export const App: FC = () => {
     }
 
     if (currentView === 'locations') {
-      return <LocationManager locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} />;
+      return <LocationManager locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} />;
     }
 
     if (currentView === 'archetypes') {
