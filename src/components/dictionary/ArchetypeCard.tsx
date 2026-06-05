@@ -137,7 +137,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
               )}
               <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
                 📸 {editData.imageUrl ? 'Change Photo' : 'Upload Photo'}
-                <input type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
+                <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
               </label>
               {editData.imageUrl && (
                 <button type="button" onClick={() => setEditData({...editData, imageUrl: ''})} className="text-red-500 text-sm font-semibold">Remove</button>

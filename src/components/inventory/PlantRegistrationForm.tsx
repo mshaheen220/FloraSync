@@ -132,7 +132,7 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
               {customImage && <img src={customImage} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />}
               <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
                 📸 {customImage ? 'Retake Photo' : 'Take Photo'}
-                <input type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
+                <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
               </label>
             </div>
           </div>
