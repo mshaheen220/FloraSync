@@ -12,6 +12,7 @@ import { LocationDetail } from './components/spaces/LocationDetail';
 import { ZoneDetail } from './components/spaces/ZoneDetail';
 import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
 import { LoginScreen } from './components/core/LoginScreen';
+import { HelpCenter } from './components/core/HelpCenter';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -55,7 +56,7 @@ export const App: FC = () => {
   });
   const [gardenProfile, setGardenProfile] = useState<GardenProfile | null>(null);
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory' | 'help'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -249,7 +250,7 @@ export const App: FC = () => {
       setActiveZone(decodeURIComponent(id));
       setInitialAction(action || null);
       setCurrentView('zoneDetail');
-    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner'].includes(type)) {
+    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
@@ -747,6 +748,10 @@ export const App: FC = () => {
 
     if (currentView === 'archetypes') {
       return <ArchetypeManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+    }
+
+    if (currentView === 'help') {
+      return <HelpCenter gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     return (

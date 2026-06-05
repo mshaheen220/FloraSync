@@ -1,6 +1,6 @@
 import { FC } from 'react';
 
-export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory';
+export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help';
 
 interface NavigationMenuProps {
   isOpen: boolean;
@@ -40,6 +40,9 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
           </button>
           <button onClick={() => onNavigate('settings')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">⚙️</span> General Settings
+          </button>
+          <button onClick={() => onNavigate('help')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+            <span className="text-2xl">❓</span> Help & FAQs
           </button>
         </div>
       </div>
