@@ -741,7 +741,7 @@ export const App: FC = () => {
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} instances={instances} archetypes={archetypes} locations={locations} zones={zones} />;
+      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
     }
 
     if (currentView === 'locations') {

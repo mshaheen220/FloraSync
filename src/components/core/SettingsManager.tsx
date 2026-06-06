@@ -1,7 +1,6 @@
 import { useState, FC } from 'react';
 import { Container, Toast, Subtitle } from '../../styles/StyledElements';
 import { Theme, User, GardenProfile } from '../../App';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { DataImport } from '../core/settings/DataImport';
 import { AppearanceSettings } from '../core/settings/AppearanceSettings';
 import { GardenProfileSettings } from '../core/settings/GardenProfileSettings';
@@ -30,14 +29,10 @@ interface SettingsManagerProps {
   onUpdateGarden?: (name: string, imageUrl: string) => void;
   onLogout?: () => void;
   token?: string | null;
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  locations: Location[];
-  zones: Zone[];
 }
 
 export const SettingsManager: FC<SettingsManagerProps> = ({ 
-  theme, onThemeChange, onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token, instances, archetypes, locations, zones 
+  theme, onThemeChange, onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedSettings, setExpandedSettings] = useState<string[]>([]);
