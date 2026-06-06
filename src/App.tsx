@@ -859,7 +859,16 @@ export const App: FC = () => {
       )}
       {renderView()}
       {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
-        <FAB onClick={() => navigateTo('/scanner')}>
+        <FAB 
+          onClick={() => navigateTo('/scanner')}
+          style={{
+            position: 'fixed',
+            WebkitTransform: 'translateZ(0)',
+            transform: 'translateZ(0)',
+            transitionProperty: 'background-color, transform, opacity, box-shadow',
+            willChange: 'transform'
+          }}
+        >
           📷
         </FAB>
       )}

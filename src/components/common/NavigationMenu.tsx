@@ -29,7 +29,7 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 mt-2">
           <button onClick={() => onNavigate('dashboard')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-            <span className="text-2xl">🌿</span> Dashboard
+            <span className="text-2xl"><img src="/images/icons/dashboard.png" alt="Dashboard" className="w-5 h-5 mb-1  object-contain" /></span> Dashboard
           </button>
           <button 
             onClick={() => setIsGardenExpanded(!isGardenExpanded)}
