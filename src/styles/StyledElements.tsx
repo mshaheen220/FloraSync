@@ -64,5 +64,5 @@ export const FAB = styled.button.attrs({
 })``;
 
 export const MenuButton = styled.button.attrs({
-  className: 'text-xl p-2 px-3 text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center',
+  className: 'w-[42px] h-[42px] text-slate-500 dark:text-slate-400 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex items-center justify-center',
 })``;
