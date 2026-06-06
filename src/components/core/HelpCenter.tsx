@@ -85,7 +85,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           <li><strong className="text-slate-800 dark:text-slate-100">Approaching Harvest:</strong> A smart carousel that magically appears when any plant is within 14 days of being ready to pick.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">The Nursery:</strong> Highlights vulnerable seedlings and fresh transplants that were planted within the last two weeks.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Urgent Location Care:</strong> If multiple plants in the exact same location (e.g., "Left Bed") are thirsty, a shortcut button appears to water that entire area at once.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Daily Spotlight:</strong> A rotating card featuring botanical trivia, companion planting rules, pruning reminders, or culinary ideas for a random plant currently in your inventory.</li>
+          <li><strong className="text-slate-800 dark:text-slate-100">Random Spotlight:</strong> A dynamically rotating card featuring insights about the plants currently in your inventory. Tap the <strong>Shuffle (🔀)</strong> button to cycle through them! The engine gives a 65% priority to custom Fun Facts and Jokes (look for icons like 💡, 😂, 🤔, ☠️, ❗, 🤷, ❤️, 🪲), while the remaining 35% of the time it will serve up practical generated garden tips (🌟) like companion planting rules, pruning reminders, or culinary ideas.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Garden Pulse:</strong> A running feed of recent activity across your garden.</li>
         </ul>
       </HelpSection>
