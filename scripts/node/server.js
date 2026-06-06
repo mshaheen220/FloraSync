@@ -506,8 +506,8 @@ app.post('/api/state', authenticateToken, (req, res) => {
     db.prepare('UPDATE gardens SET instances = ?, locations = ?, zones = ? WHERE id = ?')
       .run(JSON.stringify(req.body.instances || []), JSON.stringify(req.body.locations || []), JSON.stringify(req.body.zones || []), gardenId);
 
-    // 2. Only god-admin can update the shared global dictionary
-    if (req.user.role === 'god-admin' && req.body.archetypes) {
+    // 2. Only god-admin and owners can update the shared global dictionary
+    if ((req.user.role === 'god-admin' || effectiveRole === 'owner') && req.body.archetypes) {
       db.prepare('UPDATE shared_dictionary SET archetypes = ? WHERE id = 1')
         .run(JSON.stringify(req.body.archetypes));
     }
@@ -617,9 +617,13 @@ app.delete('/api/prints/:filename', authenticateToken, (req, res) => {
 
 // API to import a JSON array by leveraging the import-seed.js script
 app.post('/api/import', authenticateToken, (req, res) => {
-  // Restrict massive bulk imports to god-admins only to protect the database
-  if (req.user.role !== 'god-admin') {
-    return res.status(403).json({ success: false, error: 'Only admins can import data.' });
+  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+  const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+
+  // Restrict massive bulk imports to god-admins and owners to protect the database
+  if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
+    return res.status(403).json({ success: false, error: 'Only admins and owners can import data.' });
   }
 
   const { type, data } = req.body;
@@ -643,7 +647,6 @@ app.post('/api/import', authenticateToken, (req, res) => {
       }
       db.prepare('UPDATE shared_dictionary SET archetypes = ? WHERE id = 1').run(JSON.stringify(currentList));
     } else {
-      const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
       const gardenRow = db.prepare(`SELECT ${type} FROM gardens WHERE id = ?`).get(gardenId);
       let currentList = [];
       try { currentList = JSON.parse(gardenRow?.[type] || '[]'); } catch (e) {}

@@ -32,7 +32,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
     index: Math.floor(Math.random() * 1000000),
-    prompt: Math.floor(Math.random() * 8)
+    prompt: Math.floor(Math.random() * 10)
   }));
   const [isGardenImageExpanded, setIsGardenImageExpanded] = useState(false);
 
@@ -153,6 +153,12 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
     } else if (promptType === 7 && archetype.lifecycle && archetype.lifecycle !== 'Unknown') {
       title = "Lifecycle Planning";
       message = `Since ${archetype.commonName} is a ${archetype.lifecycle.toLowerCase()} plant, keep that in mind when planning your beds for next season.`;
+    } else if (promptType === 8 && archetype.flavorProfile && /(spicy|hot|heat|peppery|pungent)/i.test(archetype.flavorProfile)) {
+      title = "Bringing the Heat 🌶️";
+      message = `Ready for a kick? Your ${archetype.commonName} is known for its spicy profile: ${archetype.flavorProfile}`;
+    } else if (promptType === 9 && archetype.flavorProfile && /(sweet|sugary|fruit|juicy)/i.test(archetype.flavorProfile)) {
+      title = "Sweet Treat 🍓";
+      message = `Craving something sweet? Keep an eye on your ${archetype.commonName}—it's known for its sweet profile: ${archetype.flavorProfile}`;
     }
 
     return { instance, archetype, title, message };

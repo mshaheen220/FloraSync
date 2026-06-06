@@ -99,6 +99,14 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         </ul>
       </HelpSection>
 
+      <HelpSection title="The Global Plant Dictionary" icon="📖" isExpanded={expandedSections.includes('dictionary')} onToggle={() => toggleSection('dictionary')}>
+        <p>The Plant Dictionary acts as the master reference for your entire FloraSync system. It contains the baseline rules for every plant, such as watering intervals, sunlight requirements, and harvest times.</p>
+        <ul className="list-disc pl-5 space-y-2 mt-2">
+          <li><strong className="text-slate-800 dark:text-slate-100">Shared by Everyone:</strong> The dictionary is global and shared across all gardens and workspaces on your server. When you create a physical plant instance in your garden, it inherits its rules from this shared master dictionary.</li>
+          <li><strong className="text-slate-800 dark:text-slate-100">Restricted Editing:</strong> To keep this master reference clean and accurate, only users with the <strong>Owner</strong> or <strong>God-Admin</strong> role can add new plants or edit existing entries. Helpers and Viewers can view the dictionary and plant from it, but cannot alter the global rules.</li>
+        </ul>
+      </HelpSection>
+
       <HelpSection title="Privacy & Your Data" icon="🔒" isExpanded={expandedSections.includes('privacy')} onToggle={() => toggleSection('privacy')}>
         <p>FloraSync is a local, privacy-first command center. It <strong>does not use the internet</strong> to 'research' plants or pull from public databases.</p>
         <p>The Plant Dictionary is built entirely from your own private data. When you add a plant and define its rules (like watering intervals and sunlight), you are teaching your local server exactly how you want your garden managed. Your data never leaves this network.</p>

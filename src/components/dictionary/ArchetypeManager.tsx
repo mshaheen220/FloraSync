@@ -136,10 +136,10 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
       </p>
 
-      {!isAdding && currentUser?.role === 'god-admin' && (
+      {!isAdding && (currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && (
         <Button onClick={() => setIsAdding(true)} className="mb-6">+ Add New Plant</Button>
       )}
-      {isAdding && currentUser?.role === 'god-admin' && (
+      {isAdding && (currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && (
         <div className="mb-8">
           <Subtitle>Add New Plant</Subtitle>
           <ArchetypeCard
@@ -191,7 +191,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
 
                     return (
                       <ArchetypeCard
-                        canEdit={currentUser?.role === 'god-admin'}
+                        canEdit={currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner'}
                         key={arch.id}
                         arch={arch}
                         inUseCount={inUseCount}

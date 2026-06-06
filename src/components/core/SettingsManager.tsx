@@ -78,9 +78,11 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
         <AppearanceSettings theme={theme} onThemeChange={onThemeChange} />
       </SettingsSection>
 
-      <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>
-        <DataImport token={token} showToast={showToast} />
-      </SettingsSection>
+      {(currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && (
+        <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>
+          <DataImport token={token} showToast={showToast} />
+        </SettingsSection>
+      )}
 
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
