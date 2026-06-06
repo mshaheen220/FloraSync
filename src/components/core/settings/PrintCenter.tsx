@@ -28,8 +28,8 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
   const [printActions, setPrintActions] = useState<string[]>(['none']);
   const [dbPrintCategories, setDbPrintCategories] = useState<string[]>(['plant', 'location', 'zone']);
   const [blankCategories, setBlankCategories] = useState<string[]>(['plant']);
-  const [blankPrefix, setBlankPrefix] = useState('qr');
-  const [blankStartId, setBlankStartId] = useState('001');
+  const [blankPrefix, setBlankPrefix] = useState(() => `${Math.random().toString(36).substring(2, 5).toUpperCase()}`);
+  const [blankStartId, setBlankStartId] = useState(() => Math.floor(Math.random() * 1000).toString().padStart(3, '0'));
 
   const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
@@ -274,21 +274,21 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'plant']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'plant'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  🌱 Plants
+                  <img src="/images/icons/qr/plant.png" alt="Plants" className="w-5 h-5 mb-1 object-contain" /> Plants
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('location')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'location']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'location'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  📍 Locations
+                  <img src="/images/icons/qr/location.png" alt="Locations" className="w-5 h-5 mb-1 object-contain" /> Locations
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('zone')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'zone']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'zone'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  🗺️ Zones
+                  <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
               </div>
             </div>
@@ -301,21 +301,21 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'plant']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'plant'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  🌱 Plants
+                  <img src="/images/icons/qr/plant.png" alt="Plants" className="w-5 h-5 mb-1 object-contain" /> Plants
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('location')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'location']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'location'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  📍 Locations
+                  <img src="/images/icons/qr/location.png" alt="Locations" className="w-5 h-5 mb-1 object-contain" /> Locations
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('zone')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'zone']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'zone'));
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                  🗺️ Zones
+                  <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
               </div>
             </div>
