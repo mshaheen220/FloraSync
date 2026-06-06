@@ -25,6 +25,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
   
   const [printMode, setPrintMode] = useState<'db' | 'blank'>('db');
   const [template, setTemplate] = useState<'stake-10x6' | 'square-1in' | 'label-6x3'>('label-6x3');
+  const [printActions, setPrintActions] = useState<string[]>(['none']);
   const [dbPrintCategories, setDbPrintCategories] = useState<string[]>(['plant', 'location', 'zone']);
   const [blankCategories, setBlankCategories] = useState<string[]>(['plant']);
   const [blankPrefix, setBlankPrefix] = useState('qr');
@@ -56,40 +57,69 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
   const handleOpenPrintPreview = () => {
     const generatedItems: PrintItem[] = [];
 
+    if (printActions.length === 0) {
+      showToast('❌ Please select at least one action.');
+      return;
+    }
+
     if (printMode === 'db') {
-      // Generate items directly from local React state
-      if (dbPrintCategories.includes('plant')) {
-        instances.forEach(inst => {
-          const arch = archetypes.find(a => a.id === inst.archetypeId);
-          generatedItems.push({ id: inst.qrId, type: 'plant', title: arch?.commonName || 'Unknown Plant', subtitle: arch?.scientificName || '' });
-        });
-      }
-      if (dbPrintCategories.includes('location')) {
-        locations.forEach(loc => {
-          const zone = zones.find(z => z.id === loc.zoneId);
-          generatedItems.push({ id: loc.id, type: 'location', title: loc.name, subtitle: zone?.name || '' });
-        });
-      }
-      if (dbPrintCategories.includes('zone')) {
-        zones.forEach(zone => {
-          generatedItems.push({ id: zone.id, type: 'zone', title: zone.name, subtitle: 'Macro Area' });
-        });
-      }
+      printActions.forEach(action => {
+        if (dbPrintCategories.includes('plant')) {
+          instances.forEach(inst => {
+            const arch = archetypes.find(a => a.id === inst.archetypeId);
+            generatedItems.push({ 
+              id: inst.qrId, 
+              type: 'plant', 
+              action: action !== 'none' ? action as any : undefined,
+              title: action === 'water' ? `Water ${arch?.commonName || 'Plant'}` : action === 'feed' ? `Feed ${arch?.commonName || 'Plant'}` : (arch?.commonName || 'Unknown Plant'), 
+              subtitle: arch?.scientificName || '' 
+            });
+          });
+        }
+        if (dbPrintCategories.includes('location')) {
+          locations.forEach(loc => {
+            const zone = zones.find(z => z.id === loc.zoneId);
+            generatedItems.push({ 
+              id: loc.id, 
+              type: 'location', 
+              action: action !== 'none' ? action as any : undefined,
+              title: action === 'water' ? `Water ${loc.name}` : action === 'feed' ? `Feed ${loc.name}` : loc.name, 
+              subtitle: zone?.name || '' 
+            });
+          });
+        }
+        if (dbPrintCategories.includes('zone')) {
+          zones.forEach(zone => {
+            generatedItems.push({ 
+              id: zone.id, 
+              type: 'zone', 
+              action: action !== 'none' ? action as any : undefined,
+              title: action === 'water' ? `Water ${zone.name}` : action === 'feed' ? `Feed ${zone.name}` : zone.name, 
+              subtitle: 'Macro Area' 
+            });
+          });
+        }
+      });
     } else {
       // Generate sequence of blank tags
       const start = parseInt(blankStartId, 10);
       const padding = blankStartId.length;
+      let count = 0;
       // Default to 48 tags (typical sheet size)
-      blankCategories.forEach(category => {
-        for (let i = 0; i < 48; i++) {
-          const idNum = (start + i).toString().padStart(padding, '0');
-          generatedItems.push({
-            id: `${blankPrefix}-${idNum}`,
-            type: category as any,
-            title: '',
-            subtitle: ''
-          });
-        }
+      printActions.forEach(action => {
+        blankCategories.forEach(category => {
+          for (let i = 0; i < 48; i++) {
+            const idNum = (start + count).toString().padStart(padding, '0');
+            generatedItems.push({
+              id: `${blankPrefix}-${idNum}`,
+              type: category as any,
+              action: action !== 'none' ? action as any : undefined,
+              title: '',
+              subtitle: ''
+            });
+            count++;
+          }
+        });
       });
     }
 
@@ -206,6 +236,33 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
               <option value="stake-10x6">10cm x 6cm Garden Stakes</option>
               <option value="square-1in">1-inch Square Labels</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tag Actions</label>
+            <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                <input type="checkbox" checked={printActions.includes('none')} onChange={(e) => {
+                  if (e.target.checked) setPrintActions(prev => [...prev, 'none']);
+                  else setPrintActions(prev => prev.filter(a => a !== 'none'));
+                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                ℹ️ Standard Info
+              </label>
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                <input type="checkbox" checked={printActions.includes('water')} onChange={(e) => {
+                  if (e.target.checked) setPrintActions(prev => [...prev, 'water']);
+                  else setPrintActions(prev => prev.filter(a => a !== 'water'));
+                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                💧 Water
+              </label>
+              <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                <input type="checkbox" checked={printActions.includes('feed')} onChange={(e) => {
+                  if (e.target.checked) setPrintActions(prev => [...prev, 'feed']);
+                  else setPrintActions(prev => prev.filter(a => a !== 'feed'));
+                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                🍽️ Feed
+              </label>
+            </div>
           </div>
 
           {printMode === 'db' ? (

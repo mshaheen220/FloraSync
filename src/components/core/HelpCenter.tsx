@@ -118,6 +118,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         <p>Use the floating camera button on the Dashboard to scan the physical QR tags in your garden.</p>
         <p>You can generate QR codes for <strong>all items</strong> in your garden: individual plants, specific locations, and entire zones. Scanning a tag instantly brings up the details for that specific item. From there, you can log individual care or take bulk actions—like watering an entire zone with a single tap!</p>
         <p>If you scan an unassigned blank tag, the app will instantly launch a "Just-In-Time" registration form so you can tell the system what you just planted or created.</p>
+        <p><strong>Action Tags:</strong> You can print special action tags for Water (💧) or Feed (🍽️). Scanning one of these instantly logs the care action for that specific plant or entire zone—no buttons required!</p>
       </HelpSection>
 
       {isAdminOrOwner && (
@@ -126,7 +127,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout (like 10x6cm garden stakes or 1-inch squares) and preview the sheets before sending them to your printer.</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
             <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
-            <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form!</li>
+            <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form! (You can also apply Actions to blank tags for instant care logging).</li>
           </ul>
         </HelpSection>
       )}
