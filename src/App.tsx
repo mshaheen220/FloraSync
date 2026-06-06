@@ -13,6 +13,8 @@ import { ZoneDetail } from './components/spaces/ZoneDetail';
 import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
 import { LoginScreen } from './components/core/LoginScreen';
 import { HelpCenter } from './components/core/HelpCenter';
+import { PrintCenter } from './components/core/settings/PrintCenter';
+import { FAB } from './styles/StyledElements';
 
 export type Theme = 'light' | 'dark' | 'system';
 
@@ -56,7 +58,7 @@ export const App: FC = () => {
   });
   const [gardenProfile, setGardenProfile] = useState<GardenProfile | null>(null);
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory' | 'help'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory' | 'help' | 'print'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -250,7 +252,7 @@ export const App: FC = () => {
       setActiveZone(decodeURIComponent(id));
       setInitialAction(action || null);
       setCurrentView('zoneDetail');
-    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help'].includes(type)) {
+    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
@@ -722,7 +724,7 @@ export const App: FC = () => {
       const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
       
       return (
-        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
+        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onUpdateZone={handleUpdateZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
       );
     }
 
@@ -739,7 +741,7 @@ export const App: FC = () => {
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
+      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} instances={instances} archetypes={archetypes} locations={locations} zones={zones} />;
     }
 
     if (currentView === 'locations') {
@@ -752,6 +754,13 @@ export const App: FC = () => {
 
     if (currentView === 'help') {
       return <HelpCenter gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+    }
+
+    if (currentView === 'print') {
+      const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
+      if (isAdminOrOwner) {
+        return <PrintCenter gardenProfile={gardenProfile} instances={instances} archetypes={archetypes} locations={locations} zones={zones} token={token} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      }
     }
 
     return (
@@ -767,7 +776,6 @@ export const App: FC = () => {
         onBatchFeedAll={handleBatchFeedAll}
         onBatchWaterZone={handleBatchWaterZone}
         onNavigate={handleNavigate} 
-        onOpenScanner={() => navigateTo('/scanner')} 
         onOpenMenu={() => setIsMenuOpen(true)} 
         onNavigateInventory={() => navigateTo('/inventory')} 
         onNavigateZone={handleNavigateZone} 
@@ -792,6 +800,7 @@ export const App: FC = () => {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 
         onNavigate={handleMenuNavigate} 
+        currentUser={currentUser}
       />
       {isWorkspaceMenuOpen && workspaces && workspaces.length > 1 && (
         <div 
@@ -829,6 +838,11 @@ export const App: FC = () => {
         </div>
       )}
       {renderView()}
+      {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
+        <FAB onClick={() => navigateTo('/scanner')}>
+          📷
+        </FAB>
+      )}
     </>
   );
 };

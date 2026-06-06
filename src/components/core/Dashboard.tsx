@@ -1,6 +1,6 @@
 import { useMemo, useState, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
-import { Container, Title, Card, Subtitle, Button, FAB, StatusBadge, MenuButton } from '../../styles/StyledElements';
+import { Container, Title, Card, Subtitle, Button, StatusBadge, MenuButton } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { GardenProfile, User } from '../../App';
 
@@ -17,7 +17,6 @@ interface DashboardProps {
   onBatchFeedAll: () => void;
   onBatchWaterZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
-  onOpenScanner: () => void;
   onOpenMenu: () => void;
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
@@ -25,7 +24,7 @@ interface DashboardProps {
   currentUser: User;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenScanner, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu, currentUser }) => {
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu, currentUser }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -114,9 +113,6 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
     const zone = zones.find(z => z.id === maxZoneId);
     return zone ? { name: zone.name, id: zone.id } : { name: 'None', id: null };
   }, [activeInstances, locations, zones]);
-
-  const greenhouseZone = useMemo(() => zones.find(z => z.name.toLowerCase().includes('greenhouse')), [zones]);
-  const coveredBedZone = useMemo(() => zones.find(z => z.name.toLowerCase().includes('covered raised bed') || z.name.toLowerCase().includes('covered bed') || z.name.toLowerCase().includes('raised bed')), [zones]);
 
   const dailySpotlight = useMemo(() => {
     if (activeInstances.length === 0) return null;
@@ -258,21 +254,19 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
           <Subtitle>Quick Actions</Subtitle>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             <Card onClick={() => { onBatchWaterAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <span className="text-2xl mb-1">💦</span>
+              💦
               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
             </Card>
             <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <span className="text-2xl mb-1">🪴</span>
+              <img src="/images/icons/qr/plant.png" alt="All Plants" className="w-7 h-7 mb-1 opacity-70 object-contain" />
               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
             </Card>
-            <Card onClick={() => greenhouseZone ? onBatchWaterZone(greenhouseZone.id) : alert('Greenhouse zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <span className="text-2xl mb-1">🏠</span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>House</span>
-            </Card>
-            <Card onClick={() => coveredBedZone ? onBatchWaterZone(coveredBedZone.id) : alert('Covered Raised Bed zone not found!')} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <span className="text-2xl mb-1">🛏️</span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>Bed</span>
-            </Card>
+            {zones.filter(z => z.isPinned).map(zone => (
+              <Card key={zone.id} onClick={() => onBatchWaterZone(zone.id)} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+                <img src="/images/icons/qr/zone.png" alt="Zone" className="w-7 h-7 mb-1 opacity-70  object-contain" />
+                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3">Water<br/>{zone.name}</span>
+              </Card>
+            ))}
           </div>
         </section>
       )}
@@ -307,7 +301,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
             onClick={() => mostPopulatedZone.id && onNavigateZone(mostPopulatedZone.id)}
           >
             <div className="flex items-center gap-4">
-              <span className="text-3xl">🌍</span>
+          <span className="text-3xl">🗺️</span>
               <div className="text-left">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
                 <span className="text-lg font-bold text-emerald-800 dark:text-emerald-200">{mostPopulatedZone.name}</span>
@@ -426,10 +420,6 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
           </div>
         </section>
       )}
-
-      <FAB onClick={onOpenScanner}>
-        📷
-      </FAB>
 
       {isGardenImageExpanded && gardenProfile?.imageUrl && (
         <div 

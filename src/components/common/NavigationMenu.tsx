@@ -1,14 +1,19 @@
-import { FC } from 'react';
+import { FC, useState } from 'react';
+import { User } from '../../App';
 
-export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help';
+export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help' | 'print';
 
 interface NavigationMenuProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (route: MenuRoute) => void;
+  currentUser?: User | null;
 }
 
-export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNavigate }) => {
+export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNavigate, currentUser }) => {
+  const [isGardenExpanded, setIsGardenExpanded] = useState(false);
+  const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
+
   if (!isOpen) return null;
 
   return (
@@ -26,18 +31,41 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
           <button onClick={() => onNavigate('dashboard')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">🌿</span> Dashboard
           </button>
-          <button onClick={() => onNavigate('inventory')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-            <span className="text-2xl">📦</span> Inventory Manager
+          <button 
+            onClick={() => setIsGardenExpanded(!isGardenExpanded)}
+            className={`flex items-center justify-between w-full p-4 rounded-xl text-left font-semibold transition-colors active:scale-95 ${isGardenExpanded ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800'}`}
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-2xl">🪴</span> The Garden
+            </div>
+            <span className={`text-slate-400 text-xs transition-transform duration-200 ${isGardenExpanded ? 'rotate-180' : ''}`}>▼</span>
           </button>
+
+          {isGardenExpanded && (
+            <div className="flex flex-col gap-1 pl-2 ml-7 mt-1 mb-2 border-l-2 border-slate-200 dark:border-slate-800 animate-in slide-in-from-top-2 fade-in duration-200">
+              <button onClick={() => onNavigate('inventory')} className="flex items-center gap-3 w-full p-3 rounded-xl text-left font-semibold text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+                <span className="text-xl">📦</span> Inventory Manager
+              </button>
+              <button onClick={() => onNavigate('zones')} className="flex items-center gap-3 w-full p-3 rounded-xl text-left font-semibold text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+                <span className="text-xl">🗺️</span> Zone Manager
+              </button>
+              <button onClick={() => onNavigate('locations')} className="flex items-center gap-3 w-full p-3 rounded-xl text-left font-semibold text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+                <span className="text-xl">📍</span> Location Manager
+              </button>
+            </div>
+          )}
           <button onClick={() => onNavigate('archetypes')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">📖</span> Plant Dictionary
           </button>
-          <button onClick={() => onNavigate('zones')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-            <span className="text-2xl">🌍</span> Zone Manager
-          </button>
-          <button onClick={() => onNavigate('locations')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-            <span className="text-2xl">📍</span> Location Manager
-          </button>
+
+          {isAdminOrOwner && (
+            <button onClick={() => onNavigate('print')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
+              <span className="text-2xl">🖨️</span> Print Center
+            </button>
+          )}
+          <div className="mt-4 mb-1 px-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+            System
+          </div>
           <button onClick={() => onNavigate('settings')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
             <span className="text-2xl">⚙️</span> General Settings
           </button>

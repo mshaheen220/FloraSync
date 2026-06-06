@@ -1,0 +1,143 @@
+import { FC, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { QRCodeSVG } from 'qrcode.react';
+
+export interface PrintItem {
+  id: string;
+  type: 'plant' | 'location' | 'zone';
+  title: string;
+  subtitle: string;
+}
+
+interface PrintLayoutProps {
+  items: PrintItem[];
+  template: 'stake-10x6' | 'square-1in' | 'label-6x3';
+  onClose: () => void;
+}
+
+const ICONS = {
+  plant: '/images/icons/qr/plant.png',
+  location: '/images/icons/qr/location.png',
+  zone: '/images/icons/qr/zone.png'
+};
+
+const TYPE_COLORS = {
+  plant: '#15803d',
+  location: '#cc0000',
+  zone: '#1d4ed8'
+};
+
+export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) => {
+  
+  // Inject a global print stylesheet when this component mounts to hide the main app body
+  // and strip away the browser's default printing margins!
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        @page { margin: 0.25in; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
+        #root { display: none !important; }
+        #print-portal { position: relative !important; overflow: visible !important; height: auto !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
+
+  return createPortal(
+    <div id="print-portal" className="fixed inset-0 z-[9999] bg-white text-black overflow-y-auto">
+      
+      {/* Non-printing Control Header */}
+      <div className="print:hidden sticky top-0 left-0 right-0 bg-slate-800 text-white p-4 flex justify-between items-center shadow-xl z-50">
+        <div className="flex flex-col">
+          <h2 className="font-bold text-lg">Print Preview ({items.length} items)</h2>
+          <span className="text-xs text-slate-400">Set your printer margins to "None" or "Minimum" for best results.</span>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors">
+            Cancel
+          </button>
+          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg">
+            🖨️ Print Now
+          </button>
+        </div>
+      </div>
+
+      {/* The Printable Canvas */}
+      <div className="p-8 print:p-0 flex flex-wrap content-start items-start">
+        {items.map((item, index) => {
+          const url = `/${item.type}/${item.id}`;
+          
+          if (template === 'stake-10x6') {
+            return (
+              <div key={index} style={{ width: '10cm', height: '6cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.25cm', display: 'flex', alignItems: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+                <div style={{ width: '5.5cm', height: '5.5cm', flexShrink: 0, padding: '0.25cm', boxSizing: 'border-box' }}>
+                  <QRCodeSVG 
+                    value={url} size={128} style={{ width: '100%', height: '100%' }} level="H"
+                    imageSettings={{ src: ICONS[item.type], height: 28, width: 28, excavate: true }}
+                  />
+                </div>
+                <div style={{ flex: 1, paddingLeft: '0.4cm', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h1 style={{ fontSize: '16pt', fontWeight: 'bold', margin: '0 0 4px 0', lineHeight: 1.1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {item.title}
+                  </h1>
+                  <h2 style={{ fontSize: '10pt', color: '#555', margin: 0, fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {item.subtitle}
+                  </h2>
+                  {item.title && (
+                    <span style={{ fontSize: '8pt', color: TYPE_COLORS[item.type], marginTop: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                      {item.type}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (template === 'label-6x3') {
+            return (
+              <div key={index} style={{ width: '6cm', height: '3cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.15cm', display: 'flex', alignItems: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+                <div style={{ width: '2.5cm', height: '2.5cm', flexShrink: 0, padding: '0.15cm', boxSizing: 'border-box' }}>
+                  <QRCodeSVG 
+                    value={url} size={128} style={{ width: '100%', height: '100%' }} level="H"
+                    imageSettings={{ src: ICONS[item.type], height: 24, width: 24, excavate: true }}
+                  />
+                </div>
+                <div style={{ flex: 1, paddingLeft: '0.2cm', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h1 style={{ fontSize: '10pt', fontWeight: 'bold', margin: '0 0 2px 0', lineHeight: 1.1, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {item.title}
+                  </h1>
+                  <h2 style={{ fontSize: '7pt', color: '#555', margin: 0, fontStyle: 'italic', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {item.subtitle}
+                  </h2>
+                  {item.title && (
+                    <span style={{ fontSize: '5pt', color: TYPE_COLORS[item.type], marginTop: '4px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                      {item.type}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          }
+          
+          if (template === 'square-1in') {
+            return (
+              <div key={index} style={{ width: '1in', height: '1in', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.05in', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+                <QRCodeSVG 
+                  value={url} size={128} style={{ width: '0.7in', height: '0.7in' }} level="H"
+                  imageSettings={{ src: ICONS[item.type], height: 28, width: 28, excavate: true }}
+                />
+                <span style={{ fontSize: '5pt', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', textAlign: 'center', fontWeight: 'bold' }}>
+                  {item.title}
+                </span>
+              </div>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+    </div>
+  , document.body);
+};

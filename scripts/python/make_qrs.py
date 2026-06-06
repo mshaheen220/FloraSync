@@ -17,7 +17,7 @@ DATA_DIR = os.path.join(ROOT_DIR, "src", "data")
 # ==========================================
 # 1. GRID & TEMPLATE CONFIGURATION (In Inches)
 # Optimized for manual cutting on vinyl sticker sheets
-# (Also compatible with Standard Avery 1" Square e.g., 22805 / 4321)
+# (Also compatible with Standard 1" Square)
 # ==========================================
 PAGE_WIDTH = 8.5
 PAGE_HEIGHT = 11.0

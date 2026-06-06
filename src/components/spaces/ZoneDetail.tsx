@@ -15,6 +15,7 @@ interface ZoneDetailProps {
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
   onRegisterZone: (id: string, name: string) => void;
+  onUpdateZone: (id: string, updates: Partial<Zone>) => void;
   onBatchWaterZone: (zoneId: string) => void;
   onBatchFeedZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
@@ -25,7 +26,7 @@ interface ZoneDetailProps {
 }
 
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
-  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction, currentUser 
+  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onUpdateZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction, currentUser 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
@@ -145,9 +146,21 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           )}
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} across {locations.length} locations.</p>
           {currentUser?.workspaceRole !== 'viewer' && (
-            <div className="w-full flex gap-3 px-2">
-              <Button onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
-              <Button $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+            <div className="w-full flex flex-col gap-3 px-2">
+              <div className="flex gap-3">
+                <Button className="flex-1" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
+                <Button className="flex-1" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+              </div>
+              <Button 
+                $variant="secondary" 
+                className={`w-full transition-colors flex justify-center items-center gap-2 ${zone.isPinned ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => {
+                  onUpdateZone(zone.id, { isPinned: !zone.isPinned });
+                  showToast(zone.isPinned ? '📌 Unpinned from Dashboard' : '📌 Pinned to Dashboard');
+                }}
+              >
+                {zone.isPinned ? '📌 Pinned to Dashboard' : '📌 Pin to Dashboard'}
+              </Button>
             </div>
           )}
         </div>
