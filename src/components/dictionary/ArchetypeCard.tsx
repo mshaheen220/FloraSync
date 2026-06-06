@@ -20,6 +20,7 @@ interface ArchetypeCardProps {
 }
 
 const FACT_ICONS = [
+  { value: '🪲', label: '🪲 Bugs' },
   { value: '☠️', label: '☠️ Dangerous' },
   { value: '🍹', label: '🍹 Drink' },
   { value: '🍲', label: '🍲 Food' },
