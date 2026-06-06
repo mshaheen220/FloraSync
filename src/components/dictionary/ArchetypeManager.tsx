@@ -29,7 +29,8 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
     waterIntervalDays: 4,
     feedingIntervalDays: 14,
     sunRequirement: 'Full Sun',
-    lifecycle: 'Unknown'
+    lifecycle: 'Unknown',
+    funFacts: []
   });
 
   const groupedData = useMemo(() => {
@@ -111,12 +112,13 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
       plantingInstructions: newData.plantingInstructions || 'Unknown',
       growthRequirements: newData.growthRequirements || 'Unknown',
       lifecycle: newData.lifecycle || 'Unknown',
+      funFacts: newData.funFacts || [],
       ...newData
     };
 
     onAdd(newArchetype);
     setIsAdding(false);
-    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun', lifecycle: 'Unknown' });
+    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun', lifecycle: 'Unknown', funFacts: [] });
     showToast('✅ New plant added successfully!');
   };
 

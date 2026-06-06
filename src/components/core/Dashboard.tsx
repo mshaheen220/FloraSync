@@ -5,8 +5,7 @@ import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { GardenProfile, User } from '../../App';
 import { GardenPulse } from './GardenPulse';
 import { HealthWatchlist } from './HealthWatchlist';
-
-const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
+import { RandomSpotlight } from './RandomSpotlight';
 
 interface DashboardProps {
   gardenProfile?: GardenProfile | null;
@@ -29,11 +28,6 @@ interface DashboardProps {
 
 export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu, currentUser }) => {
   
-  // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
-  const [randomSeed] = useState(() => ({
-    index: Math.floor(Math.random() * 1000000),
-    prompt: Math.floor(Math.random() * 10)
-  }));
   const [isGardenImageExpanded, setIsGardenImageExpanded] = useState(false);
 
   // Filter out any plants that have already completed their lifecycle
@@ -116,53 +110,6 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
     const zone = zones.find(z => z.id === maxZoneId);
     return zone ? { name: zone.name, id: zone.id } : { name: 'None', id: null };
   }, [activeInstances, locations, zones]);
-
-  const dailySpotlight = useMemo(() => {
-    if (activeInstances.length === 0) return null;
-    const index = randomSeed.index % activeInstances.length;
-    const instance = activeInstances[index];
-    const archetype = archetypes.find(a => a.id === instance.archetypeId);
-
-    if (!archetype) return null;
-
-    const promptType = randomSeed.prompt;
-    let message = `How is the ${archetype.commonName} doing? Take a moment to inspect its leaves for pests or signs of stress.`;
-    let title = "Plant Check-in";
-
-    if (promptType === 0 && archetype.usesForLargeHarvests && archetype.usesForLargeHarvests !== 'Unknown') {
-      title = "Culinary Inspiration";
-      message = `When's the last time you tried ${archetype.commonName} in your dinner dish? ${archetype.usesForLargeHarvests}`;
-    } else if (promptType === 1 && archetype.pruningTips && archetype.pruningTips !== 'Unknown') {
-      title = "Pruning Reminder";
-      message = `Don't forget to prune your ${archetype.commonName}! ${archetype.pruningTips}`;
-    } else if (promptType === 2 && archetype.flavorProfile && archetype.flavorProfile !== 'Unknown') {
-      title = "Flavor Profile";
-      message = `Craving something ${archetype.flavorProfile.toLowerCase()}? Check on your ${archetype.commonName}!`;
-    } else if (promptType === 3 && archetype.companionPlants && archetype.companionPlants.length > 0) {
-      title = "Garden Friends";
-      message = `Did you know ${archetype.commonName} thrives when planted near ${archetype.companionPlants.join(', ')}?`;
-    } else if (promptType === 4 && archetype.combativePlants && archetype.combativePlants.length > 0) {
-      title = "Planting Warning";
-      message = `Keep an eye on the neighborhood! ${archetype.commonName} doesn't like growing near ${archetype.combativePlants.join(', ')}.`;
-    } else if (promptType === 5 && archetype.sunRequirement && archetype.sunRequirement !== 'Unknown') {
-      title = "Sunlight Check";
-      message = `Is your ${archetype.commonName} getting the right amount of light? It prefers ${archetype.sunRequirement.toLowerCase()}.`;
-    } else if (promptType === 6 && archetype.scientificName && archetype.scientificName !== 'Unknown') {
-      title = "Botanical Trivia";
-      message = `Impress your friends! The scientific name for ${archetype.commonName} is ${archetype.scientificName}.`;
-    } else if (promptType === 7 && archetype.lifecycle && archetype.lifecycle !== 'Unknown') {
-      title = "Lifecycle Planning";
-      message = `Since ${archetype.commonName} is a ${archetype.lifecycle.toLowerCase()} plant, keep that in mind when planning your beds for next season.`;
-    } else if (promptType === 8 && archetype.flavorProfile && /(spicy|hot|heat|peppery|pungent)/i.test(archetype.flavorProfile)) {
-      title = "Bringing the Heat 🌶️";
-      message = `Ready for a kick? Your ${archetype.commonName} is known for its spicy profile: ${archetype.flavorProfile}`;
-    } else if (promptType === 9 && archetype.flavorProfile && /(sweet|sugary|fruit|juicy)/i.test(archetype.flavorProfile)) {
-      title = "Sweet Treat 🍓";
-      message = `Craving something sweet? Keep an eye on your ${archetype.commonName}—it's known for its sweet profile: ${archetype.flavorProfile}`;
-    }
-
-    return { instance, archetype, title, message };
-  }, [activeInstances, archetypes, randomSeed]);
 
   const approachingHarvest = useMemo(() => {
     const todayDate = new Date();
@@ -320,22 +267,7 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         </div>
       </section>
 
-      {dailySpotlight && (
-        <section className="mb-8 animate-in fade-in duration-500 delay-[125ms]">
-          <Subtitle>🌟 {dailySpotlight.title}</Subtitle>
-          <Card onClick={() => onNavigate(dailySpotlight.instance.qrId)} className="cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 flex items-center gap-4 !p-4">
-            {dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl ? (
-              <img src={dailySpotlight.instance.imageUrl || dailySpotlight.archetype.imageUrl} alt={dailySpotlight.archetype.commonName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-20 h-20 rounded-xl object-cover border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800 flex-shrink-0" />
-            ) : (
-              <div className="w-20 h-20 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-3xl flex-shrink-0">🌿</div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight mb-1 truncate">{dailySpotlight.archetype.commonName}</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-3">{dailySpotlight.message}</p>
-            </div>
-          </Card>
-        </section>
-      )}
+      <RandomSpotlight activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />
 
       {approachingHarvest.length > 0 && (
         <section className="mb-8 animate-in fade-in duration-500 delay-150">

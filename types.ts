@@ -1,3 +1,11 @@
+export interface FunFact {
+  title?: string;
+  fact: string;
+  attributedTo?: string;
+  imageUrl?: string;
+  icon?: string;
+}
+
 export interface PlantArchetype {
   id: string;
   commonName: string;
@@ -22,6 +30,7 @@ export interface PlantArchetype {
   plantingInstructions: string;
   growthRequirements: string;
   lifecycle: string;
+  funFacts?: FunFact[];
 }
 
 export interface JournalEntry {

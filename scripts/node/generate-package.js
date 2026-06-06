@@ -52,7 +52,16 @@ async function askGeminiForPlantData(commonName) {
     "hardinessZones": [4, 5, 6], // array of integers
     "hardinessNote": "...",
     "plantingInstructions": "...",
-    "growthRequirements": "..."
+    "growthRequirements": "...",
+    "funFacts": [
+      {
+        "title": "...", // optional string (e.g. "Historical Use")
+        "fact": "...", // string (the trivia or fact)
+        "attributedTo": "...", // optional string (e.g. "Mark Twain")
+        "imageUrl": "...", // optional string (a specific image for this fact, leave empty if none)
+        "icon": "..." // optional string, pick one emoji from this list that best fits the fact: 💡, 😂, 🤔, ☠️, ❗, 🤷, ❤️
+      }
+    ] // array of 2-3 objects containing interesting botanical trivia, historical uses, or quirky fun facts about this plant.
   }
   Return ONLY raw JSON. No markdown formatting, no backticks, no explanations.`;
 
@@ -243,7 +252,8 @@ async function generatePackage() {
       hardinessZones: aiData.hardinessZones || [],
       hardinessNote: aiData.hardinessNote || "",
       plantingInstructions: aiData.plantingInstructions || "Sow directly.",
-      growthRequirements: aiData.growthRequirements || "Well-draining soil."
+      growthRequirements: aiData.growthRequirements || "Well-draining soil.",
+      funFacts: aiData.funFacts || []
     });
   }
 
