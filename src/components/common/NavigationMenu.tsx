@@ -47,10 +47,10 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
                 <span className="text-xl">📦</span> Inventory Manager
               </button>
               <button onClick={() => onNavigate('zones')} className="flex items-center gap-3 w-full p-3 rounded-xl text-left font-semibold text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-                <span className="text-xl">🗺️</span> Zone Manager
+                <span className="text-xl"><img src="/images/icons/qr/zone.png" alt="Zone" className="w-5 h-5 mb-1 opacity-70  object-contain" /></span> Zone Manager
               </button>
               <button onClick={() => onNavigate('locations')} className="flex items-center gap-3 w-full p-3 rounded-xl text-left font-semibold text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-slate-800 transition-colors active:scale-95">
-                <span className="text-xl">📍</span> Location Manager
+                <span className="text-xl"><img src="/images/icons/qr/location.png" alt="Location" className="w-5 h-5 mb-1 opacity-70  object-contain" /></span> Location Manager
               </button>
             </div>
           )}

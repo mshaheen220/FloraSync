@@ -24,7 +24,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
   const [printItems, setPrintItems] = useState<PrintItem[]>([]);
   
   const [printMode, setPrintMode] = useState<'db' | 'blank'>('db');
-  const [template, setTemplate] = useState<'stake-10x6' | 'square-1in' | 'label-6x3'>('stake-10x6');
+  const [template, setTemplate] = useState<'stake-10x6' | 'square-1in' | 'label-6x3'>('label-6x3');
   const [dbPrintCategories, setDbPrintCategories] = useState<string[]>(['plant', 'location', 'zone']);
   const [blankCategories, setBlankCategories] = useState<string[]>(['plant']);
   const [blankPrefix, setBlankPrefix] = useState('qr');
@@ -202,8 +202,8 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Label Layout</label>
             <select value={template} onChange={e => setTemplate(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
-              <option value="stake-10x6">10cm x 6cm Garden Stakes</option>
               <option value="label-6x3">6cm x 3cm Small Labels</option>
+              <option value="stake-10x6">10cm x 6cm Garden Stakes</option>
               <option value="square-1in">1-inch Square Labels</option>
             </select>
           </div>
