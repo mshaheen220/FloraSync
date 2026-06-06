@@ -59,9 +59,14 @@ export const RandomSpotlight: FC<RandomSpotlightProps> = ({ activeInstances, arc
       return allFunFacts[randomSeed.factIndex % allFunFacts.length];
     }
 
-    const selectedArchId = uniqueArchetypeIds[randomSeed.plantIndex % uniqueArchetypeIds.length];
+    // For standard generated tips, prefer plants that are actively monitored
+    const trackedInstances = activeInstances.filter(i => !i.untracked);
+    const localPool = trackedInstances.length > 0 ? trackedInstances : activeInstances;
+    const localArchetypeIds = Array.from(new Set(localPool.map(i => i.archetypeId)));
+
+    const selectedArchId = localArchetypeIds[randomSeed.plantIndex % localArchetypeIds.length];
     
-    const instance = activeInstances.find(i => i.archetypeId === selectedArchId)!;
+    const instance = localPool.find(i => i.archetypeId === selectedArchId)!;
     const archetype = archetypes.find(a => a.id === selectedArchId);
 
     if (!archetype) return null;
