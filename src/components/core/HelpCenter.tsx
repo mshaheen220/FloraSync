@@ -48,7 +48,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     );
   };
 
-  const isAdminOrOwner = currentUser?.role === 'admin' || currentUser?.workspaceRole === 'owner';
+  const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
@@ -122,11 +122,11 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
 
       {isAdminOrOwner && (
         <HelpSection title="Print Center & QR Tags" icon="🖨️" isExpanded={expandedSections.includes('print')} onToggle={() => toggleSection('print')}>
-          <p>As a garden Owner, you can generate and download perfectly formatted sheets of QR codes directly from the app.</p>
-          <p>Open the General Settings and scroll down to the <strong>Print Center</strong>.</p>
+          <p>As a garden Owner, you can generate perfectly formatted, printable sheets of QR codes directly from the app.</p>
+          <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout (like 10x6cm garden stakes or 1-inch squares) and preview the sheets before sending them to your printer.</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
-            <li><strong>Database Export:</strong> Prints tags with specific names for every plant, location, or zone currently in your system.</li>
-            <li><strong>Blank Tags:</strong> Prints unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form!</li>
+            <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
+            <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form!</li>
           </ul>
         </HelpSection>
       )}

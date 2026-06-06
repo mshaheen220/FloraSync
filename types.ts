@@ -56,6 +56,7 @@ export interface Location {
   id: string;
   name: string;
   zoneId: string;
+  isPinned?: boolean;
 }
 
 export interface Zone {
@@ -64,4 +65,5 @@ export interface Zone {
   description?: string;
   imageUrl?: string;
   evaporationModifier?: number;
+  isPinned?: boolean;
 }

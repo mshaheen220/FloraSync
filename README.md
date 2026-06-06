@@ -11,7 +11,7 @@ The application is powered by a React frontend and a robust Node.js/SQLite local
 - **Frontend Core:** React 19 (TypeScript) + Vite
 - **Backend API:** Node.js, Express, `better-sqlite3`
 - **Styling Architecture:** Tailwind CSS (Utility Layouts) + Styled Components (Prop-driven structural states)
-- **Physical Bridge:** Python-based automated Avery label QR Code generator (`qrcode`, `Pillow`)
+- **Physical Bridge:** Python-based automated label QR Code generator (`qrcode`, `Pillow`)
 - **Design System:** Mobile-first responsive grids, dark/light mode OS syncing, optimized for single-hand phone interaction.
 
 ---

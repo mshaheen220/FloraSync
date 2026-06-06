@@ -1,21 +1,42 @@
 import { useState, useEffect, FC } from 'react';
-import { Card, Button, Input, Subtitle } from '../../../styles/StyledElements';
+import { Card, Button, Input, Subtitle, Container, Toast } from '../../../styles/StyledElements';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
+import { PrintLayout, PrintItem } from './PrintLayout';
+import { PageHeader } from '../../common/PageHeader';
+import { GardenProfile } from '../../../App';
 
 interface PrintCenterProps {
   token?: string | null;
-  showToast: (msg: string) => void;
+  instances: PlantInstance[];
+  archetypes: PlantArchetype[];
+  locations: Location[];
+  zones: Zone[];
+  gardenProfile?: GardenProfile | null;
+  onOpenMenu: () => void;
+  onOpenWorkspaceMenu?: () => void;
 }
 
-export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
+export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes, locations, zones, gardenProfile, onOpenMenu, onOpenWorkspaceMenu }) => {
+  const [toastMessage, setToastMessage] = useState('');
   const [generatedFiles, setGeneratedFiles] = useState<{name: string, time: number}[]>([]);
+  
+  const [showPreview, setShowPreview] = useState(false);
+  const [printItems, setPrintItems] = useState<PrintItem[]>([]);
+  
   const [printMode, setPrintMode] = useState<'db' | 'blank'>('db');
-  const [blankCategory, setBlankCategory] = useState<'plant' | 'location' | 'zone'>('plant');
+  const [template, setTemplate] = useState<'stake-10x6' | 'square-1in' | 'label-6x3'>('stake-10x6');
+  const [dbPrintCategories, setDbPrintCategories] = useState<string[]>(['plant', 'location', 'zone']);
+  const [blankCategories, setBlankCategories] = useState<string[]>(['plant']);
   const [blankPrefix, setBlankPrefix] = useState('qr');
   const [blankStartId, setBlankStartId] = useState('001');
 
   const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
 
   useEffect(() => {
     if (token) {
@@ -32,41 +53,53 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
     }
   }, [apiBase, token]);
 
-  const handleGenerateQRs = async () => {
-    setIsGenerating(true);
-    setGeneratedFiles([]);
-    try {
-      const res = await fetch(`${apiBase}/api/generate-qrs`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          mode: printMode,
-          category: blankCategory,
-          prefix: blankPrefix,
-          startId: blankStartId
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        fetch(`${apiBase}/api/prints`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }).then(r => r.json()).then(d => {
-          if (d.files) setGeneratedFiles(d.files);
+  const handleOpenPrintPreview = () => {
+    const generatedItems: PrintItem[] = [];
+
+    if (printMode === 'db') {
+      // Generate items directly from local React state
+      if (dbPrintCategories.includes('plant')) {
+        instances.forEach(inst => {
+          const arch = archetypes.find(a => a.id === inst.archetypeId);
+          generatedItems.push({ id: inst.qrId, type: 'plant', title: arch?.commonName || 'Unknown Plant', subtitle: arch?.scientificName || '' });
         });
-        showToast('🖨️ QR Sheets generated successfully!');
-      } else {
-        const errorLines = data.error?.split('\n').filter((l: string) => l.trim() !== '') || [];
-        const shortError = errorLines.length > 0 ? errorLines[errorLines.length - 1] : 'Error generating QRs';
-        showToast(`❌ ${shortError}`);
       }
-    } catch (e) {
-      showToast('❌ Failed to connect to server.');
-    } finally {
-      setIsGenerating(false);
+      if (dbPrintCategories.includes('location')) {
+        locations.forEach(loc => {
+          const zone = zones.find(z => z.id === loc.zoneId);
+          generatedItems.push({ id: loc.id, type: 'location', title: loc.name, subtitle: zone?.name || '' });
+        });
+      }
+      if (dbPrintCategories.includes('zone')) {
+        zones.forEach(zone => {
+          generatedItems.push({ id: zone.id, type: 'zone', title: zone.name, subtitle: 'Macro Area' });
+        });
+      }
+    } else {
+      // Generate sequence of blank tags
+      const start = parseInt(blankStartId, 10);
+      const padding = blankStartId.length;
+      // Default to 48 tags (typical sheet size)
+      blankCategories.forEach(category => {
+        for (let i = 0; i < 48; i++) {
+          const idNum = (start + i).toString().padStart(padding, '0');
+          generatedItems.push({
+            id: `${blankPrefix}-${idNum}`,
+            type: category as any,
+            title: '',
+            subtitle: ''
+          });
+        }
+      });
     }
+
+    if (generatedItems.length === 0) {
+      showToast('❌ No items found to print.');
+      return;
+    }
+
+    setPrintItems(generatedItems);
+    setShowPreview(true);
   };
 
   const handleDeletePrint = async (filename: string) => {
@@ -149,7 +182,12 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
   };
 
   return (
-    <Card className="mb-4">
+    <Container className="animate-in slide-in-from-bottom-4 duration-300">
+      <PageHeader title="Print Center" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <Card className="mb-4">
+      {showPreview && (
+        <PrintLayout items={printItems} template={template} onClose={() => setShowPreview(false)} />
+      )}
       <div className="flex flex-col gap-4">
         <div className="flex gap-2">
           <button onClick={() => setPrintMode('db')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'db' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
@@ -160,20 +198,73 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
           </button>
         </div>
         
-        {printMode === 'db' ? (
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            Generate printable sheets for every active Plant, Location, and Zone currently in your system. Output files will be saved to <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">src/data/code-prints/[garden-id]/</code> on the server.
-          </p>
-        ) : (
-          <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Label Layout</label>
+            <select value={template} onChange={e => setTemplate(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+              <option value="stake-10x6">10cm x 6cm Garden Stakes</option>
+              <option value="label-6x3">6cm x 3cm Small Labels</option>
+              <option value="square-1in">1-inch Square Labels</option>
+            </select>
+          </div>
+
+          {printMode === 'db' ? (
             <div>
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Category</label>
-              <select value={blankCategory} onChange={e => setBlankCategory(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
-                <option value="plant">Plants</option>
-                <option value="location">Locations</option>
-                <option value="zone">Zones</option>
-              </select>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
+              <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={dbPrintCategories.includes('plant')} onChange={(e) => {
+                    if (e.target.checked) setDbPrintCategories(prev => [...prev, 'plant']);
+                    else setDbPrintCategories(prev => prev.filter(c => c !== 'plant'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  🌱 Plants
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={dbPrintCategories.includes('location')} onChange={(e) => {
+                    if (e.target.checked) setDbPrintCategories(prev => [...prev, 'location']);
+                    else setDbPrintCategories(prev => prev.filter(c => c !== 'location'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  📍 Locations
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={dbPrintCategories.includes('zone')} onChange={(e) => {
+                    if (e.target.checked) setDbPrintCategories(prev => [...prev, 'zone']);
+                    else setDbPrintCategories(prev => prev.filter(c => c !== 'zone'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  🗺️ Zones
+                </label>
+              </div>
             </div>
+          ) : (
+            <div>
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
+              <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={blankCategories.includes('plant')} onChange={(e) => {
+                    if (e.target.checked) setBlankCategories(prev => [...prev, 'plant']);
+                    else setBlankCategories(prev => prev.filter(c => c !== 'plant'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  🌱 Plants
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={blankCategories.includes('location')} onChange={(e) => {
+                    if (e.target.checked) setBlankCategories(prev => [...prev, 'location']);
+                    else setBlankCategories(prev => prev.filter(c => c !== 'location'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  📍 Locations
+                </label>
+                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
+                  <input type="checkbox" checked={blankCategories.includes('zone')} onChange={(e) => {
+                    if (e.target.checked) setBlankCategories(prev => [...prev, 'zone']);
+                    else setBlankCategories(prev => prev.filter(c => c !== 'zone'));
+                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  🗺️ Zones
+                </label>
+              </div>
+            </div>
+          )}
+
+          {printMode === 'blank' && (
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Prefix</label>
@@ -184,15 +275,11 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
                 <Input value={blankStartId} onChange={e => setBlankStartId(e.target.value)} className="!mb-0 py-2" />
               </div>
             </div>
-          </div>
-        )}
-        
-        <Button onClick={handleGenerateQRs} disabled={isGenerating} className="mt-2 flex justify-center items-center gap-2">
-          {isGenerating ? (
-            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Generating...</>
-          ) : (
-            '🖨️ Generate Sheets'
           )}
+        </div>
+        
+        <Button onClick={handleOpenPrintPreview} className="mt-2 flex justify-center items-center gap-2">
+          🖨️ Open Print Preview
         </Button>
 
         {generatedFiles.length > 0 && (
@@ -222,7 +309,9 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, showToast }) => {
             </div>
           </div>
         )}
-      </div>
-    </Card>
+        </div>
+      </Card>
+      <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
+    </Container>
   );
 };
