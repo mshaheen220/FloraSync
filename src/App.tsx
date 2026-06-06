@@ -687,7 +687,12 @@ export const App: FC = () => {
     }
 
     if (!isDbLoaded) {
-      return <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-emerald-800 dark:text-emerald-400 font-medium">Syncing with Greenhouse...</div>;
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center text-emerald-800 dark:text-emerald-400 font-medium">
+          <img src='./images/icons/loader.apng.png' alt="FloraSync Loading Spinner" className="w-16 h-16 mb-4" />
+          Syncing with Greenhouse...
+        </div>
+      );
     }
 
     if (initialLoadSuccess === false) {
