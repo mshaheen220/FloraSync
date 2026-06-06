@@ -44,10 +44,10 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
     const style = document.createElement('style');
     style.innerHTML = `
       @media print {
-        @page { margin: 0.25in; }
-        html, body { height: auto !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        @page { margin: 0.25in; size: letter; }
+        html, body { width: 8.5in !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         #root { display: none !important; }
-        #print-portal { position: static !important; overflow: visible !important; height: auto !important; display: block !important; }
+        #print-portal { position: static !important; width: 8.5in !important; overflow: visible !important; height: auto !important; display: block !important; }
         .print-item { page-break-inside: avoid !important; break-inside: avoid !important; -webkit-column-break-inside: avoid !important; }
       }
     `;
