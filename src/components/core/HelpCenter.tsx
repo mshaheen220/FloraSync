@@ -3,7 +3,7 @@ import { Container, Card, Subtitle } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../App';
 
-const HelpSection: FC<{ title: string; icon: string; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
+const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
   <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
     <button onClick={onToggle} className="w-full flex items-center justify-between text-left group py-3 mb-2 active:scale-[0.98] transition-transform">
       <div className="flex items-center gap-3">
@@ -76,15 +76,26 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         )}
       </Card>
 
-      <HelpSection title="Understanding the Dashboard" icon="🌿" isExpanded={expandedSections.includes('dashboard')} onToggle={() => toggleSection('dashboard')}>
+      <HelpSection title="Understanding the Dashboard" icon={<img src="/images/icons/dashboard.png" alt="Dashboard" className="w-6 h-6 object-contain" />} isExpanded={expandedSections.includes('dashboard')} onToggle={() => toggleSection('dashboard')}>
         <p>The Dashboard is your dynamic command center. Instead of a standard static list, it acts as a sorting engine that floats the most urgent tasks and relevant insights to the top of your screen!</p>
         <ul className="list-disc pl-5 space-y-2 mt-2">
-          <li><strong className="text-slate-800 dark:text-slate-100">Garden Vitality & Quick Actions:</strong> Monitor your overall hydration and nutrition percentages, and use the quick action buttons to instantly water or feed your entire garden or specific macro-zones.</li>
+          <li><strong className="text-slate-800 dark:text-slate-100">Garden Vitality & Quick Actions:</strong> Monitor your overall hydration and nutrition percentages. You can instantly water or feed your entire garden, or customize the dashboard by <strong>Pinning (📌)</strong> specific Zones to create your own Quick Action buttons.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Needs Watering & Hungry Plants:</strong> Plants only drop into these queues when they are actually overdue. This is calculated dynamically using their specific dictionary intervals and the evaporation modifier of the zone they live in.</li>
+          <li><strong className="text-slate-800 dark:text-slate-100">Health Watchlist:</strong> Instantly flags any plant whose most recent journal entry reported a pest or disease issue, keeping it front-and-center until you log a healthy update.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Approaching Harvest:</strong> A smart carousel that magically appears when any plant is within 14 days of being ready to pick.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">The Nursery:</strong> Highlights vulnerable seedlings and fresh transplants that were planted within the last two weeks.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Urgent Location Care:</strong> If multiple plants in the exact same location (e.g., "Left Bed") are thirsty, a shortcut button appears to water that entire area at once.</li>
           <li><strong className="text-slate-800 dark:text-slate-100">Daily Spotlight:</strong> A rotating card featuring botanical trivia, companion planting rules, pruning reminders, or culinary ideas for a random plant currently in your inventory.</li>
+          <li><strong className="text-slate-800 dark:text-slate-100">Garden Pulse:</strong> A running feed of recent activity across your garden.</li>
+        </ul>
+      </HelpSection>
+
+      <HelpSection title="The Plant Journal & Harvests" icon="📓" isExpanded={expandedSections.includes('journal')} onToggle={() => toggleSection('journal')}>
+        <p>Clicking on any plant in your inventory opens its detail view, where you'll find its <strong>Plant Journal</strong> at the bottom. This is where your garden's history comes alive.</p>
+        <ul className="list-disc pl-5 space-y-2 mt-2">
+          <li><strong>Rich Media:</strong> Add photos to track growth, and click "Set as Cover Photo" to override the dictionary image with a picture of your actual living plant!</li>
+          <li><strong>Harvest Tracking:</strong> Select "Harvest" as the Activity Type and log the exact weight or quantity you picked (e.g., "12 oz" or "3 Tomatoes").</li>
+          <li><strong>Smart Bulk Logging:</strong> When you use a bulk Quick Action (like watering an entire Zone), FloraSync automatically generates a detailed journal entry for every single plant in that area, marking exactly who did it and where the action originated!</li>
         </ul>
       </HelpSection>
 
@@ -115,7 +126,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
       </HelpSection>
 
       <HelpSection title="Scanning Tags" icon="📷" isExpanded={expandedSections.includes('scanning')} onToggle={() => toggleSection('scanning')}>
-        <p>Use the floating camera button on the Dashboard to scan the physical QR tags in your garden.</p>
+        <p>Use the floating camera button in the bottom corner of the app to scan the physical QR tags in your garden.</p>
         <p>You can generate QR codes for <strong>all items</strong> in your garden: individual plants, specific locations, and entire zones. Scanning a tag instantly brings up the details for that specific item. From there, you can log individual care or take bulk actions—like watering an entire zone with a single tap!</p>
         <p>If you scan an unassigned blank tag, the app will instantly launch a "Just-In-Time" registration form so you can tell the system what you just planted or created.</p>
         <p><strong>Action Tags:</strong> You can print special action tags for Water (💧) or Feed (🍽️). Scanning one of these instantly logs the care action for that specific plant or entire zone—no buttons required!</p>

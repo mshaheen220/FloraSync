@@ -42,15 +42,18 @@ export const UserCard: FC<UserCardProps> = ({
             )}
           </div>
         </div>
-        {user.id !== currentUser.id ? (
-          <div className="flex gap-1">
-            <button type="button" onClick={() => onManageAccess(user.id)} title="Manage Access" className={`p-1.5 text-base rounded-lg transition-colors active:scale-90 ${isManagingAccess ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`}>🛡️</button>
-            <button type="button" onClick={() => onResetPassword(user.id, user.username)} title="Reset Password" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">🔑</button>
-            <button type="button" onClick={() => onDeleteUser(user.id, user.username)} title="Delete User" className="p-1.5 text-base rounded-lg transition-colors text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 active:scale-90">🗑️</button>
-          </div>
-        ) : (
-          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-2">You</span>
-        )}
+        <div className="flex items-center gap-1">
+          {user.id === currentUser.id && (
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-2 mr-1">You</span>
+          )}
+          <button type="button" onClick={() => onManageAccess(user.id)} title="Manage Access" className={`p-1.5 text-base rounded-lg transition-colors active:scale-90 ${isManagingAccess ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`}>🛡️</button>
+          {user.id !== currentUser.id && (
+            <>
+              <button type="button" onClick={() => onResetPassword(user.id, user.username)} title="Reset Password" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">🔑</button>
+              <button type="button" onClick={() => onDeleteUser(user.id, user.username)} title="Delete User" className="p-1.5 text-base rounded-lg transition-colors text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 active:scale-90">🗑️</button>
+            </>
+          )}
+        </div>
       </div>
       
       {isManagingAccess && (
