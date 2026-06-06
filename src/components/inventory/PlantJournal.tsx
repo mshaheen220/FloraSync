@@ -256,7 +256,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               </div>
               {entry.title && <h4 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-1">{entry.title}</h4>}
               
-              {(entry.activityType && entry.activityType !== 'Observation' || entry.harvestAmount || entry.height || entry.fullness || entry.colorAppearance || entry.healthIssues || entry.growthStage) && (
+              {(entry.activityType && entry.activityType !== 'Observation' || entry.harvestAmount || entry.height || entry.fullness || entry.colorAppearance || entry.healthIssues || entry.growthStage || entry.batchScope) && (
                 <div className="flex flex-wrap gap-2 mb-3 mt-1">
                   {entry.activityType && entry.activityType !== 'Observation' && (
                     <span className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-bold">
@@ -274,6 +274,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   {entry.colorAppearance && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">🎨 {entry.colorAppearance}</span>}
                   {entry.healthIssues && entry.healthIssues !== 'None' && <span className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs px-2 py-1 rounded-md border border-red-200 dark:border-red-800">⚠️ {entry.healthIssues}</span>}
                   {entry.healthIssues === 'None' && <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">✨ Healthy</span>}
+                  {entry.batchScope && <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs px-2 py-1 rounded-md border border-indigo-200 dark:border-indigo-800 font-semibold">📍 via {entry.batchScope}</span>}
                 </div>
               )}
 

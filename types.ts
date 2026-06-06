@@ -37,6 +37,9 @@ export interface JournalEntry {
   growthStage?: string;
   activityType?: string;
   harvestAmount?: string;
+  authorName?: string;
+  authorImageUrl?: string;
+  batchScope?: string;
 }
 
 export interface PlantInstance {

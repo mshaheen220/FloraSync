@@ -379,6 +379,8 @@ export const App: FC = () => {
 
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
+    const loc = locations.find(l => l.id === locationId);
+    const batchScope = loc ? `the ${loc.name} location` : undefined;
     setInstances(prev => prev.map(inst => 
       inst.locationId === locationId ? { 
         ...inst, 
@@ -388,14 +390,17 @@ export const App: FC = () => {
           timestamp: now,
           activityType: 'Watered',
           authorName: currentUser?.name || '',
-          authorImageUrl: currentUser?.imageUrl || ''
+          authorImageUrl: currentUser?.imageUrl || '',
+          batchScope
         } as any, ...(inst.journal || [])]
       } : inst
     ));
-  }, [currentUser]);
+  }, [locations, currentUser]);
 
   const handleBatchFeed = useCallback((locationId: string) => {
     const now = new Date().toISOString();
+    const loc = locations.find(l => l.id === locationId);
+    const batchScope = loc ? `the ${loc.name} location` : undefined;
     setInstances(prev => prev.map(inst => 
       inst.locationId === locationId ? { 
         ...inst, 
@@ -405,14 +410,17 @@ export const App: FC = () => {
           timestamp: now,
           activityType: 'Fed',
           authorName: currentUser?.name || '',
-          authorImageUrl: currentUser?.imageUrl || ''
+          authorImageUrl: currentUser?.imageUrl || '',
+          batchScope
         } as any, ...(inst.journal || [])]
       } : inst
     ));
-  }, [currentUser]);
+  }, [locations, currentUser]);
 
   const handleBatchWaterZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
+    const zone = zones.find(z => z.id === zoneId);
+    const batchScope = zone ? `the ${zone.name} zone` : undefined;
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
     setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
       ...inst, 
@@ -422,13 +430,16 @@ export const App: FC = () => {
         timestamp: now,
         activityType: 'Watered',
         authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorImageUrl: currentUser?.imageUrl || '',
+        batchScope
       } as any, ...(inst.journal || [])]
     } : inst));
-  }, [locations, currentUser]);
+  }, [locations, zones, currentUser]);
 
   const handleBatchFeedZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
+    const zone = zones.find(z => z.id === zoneId);
+    const batchScope = zone ? `the ${zone.name} zone` : undefined;
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
     setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
       ...inst, 
@@ -438,10 +449,11 @@ export const App: FC = () => {
         timestamp: now,
         activityType: 'Fed',
         authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorImageUrl: currentUser?.imageUrl || '',
+        batchScope
       } as any, ...(inst.journal || [])]
     } : inst));
-  }, [locations, currentUser]);
+  }, [locations, zones, currentUser]);
 
   const handleBatchWaterAll = useCallback(() => {
     const now = new Date().toISOString();
@@ -453,7 +465,8 @@ export const App: FC = () => {
         timestamp: now,
         activityType: 'Watered',
         authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorImageUrl: currentUser?.imageUrl || '',
+        batchScope: 'the entire garden'
       } as any, ...(inst.journal || [])]
     })));
   }, [currentUser]);
@@ -468,7 +481,8 @@ export const App: FC = () => {
         timestamp: now,
         activityType: 'Fed',
         authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorImageUrl: currentUser?.imageUrl || '',
+        batchScope: 'the entire garden'
       } as any, ...(inst.journal || [])]
     })));
   }, [currentUser]);
@@ -779,6 +793,7 @@ export const App: FC = () => {
         onOpenMenu={() => setIsMenuOpen(true)} 
         onNavigateInventory={() => navigateTo('/inventory')} 
         onNavigateZone={handleNavigateZone} 
+        onNavigateLocation={handleNavigateLocation}
         onOpenWorkspaceMenu={handleOpenWorkspaceMenu}
       />
     );

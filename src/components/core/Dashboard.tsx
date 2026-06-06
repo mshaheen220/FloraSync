@@ -3,6 +3,8 @@ import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container, Title, Card, Subtitle, Button, StatusBadge, MenuButton } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { GardenProfile, User } from '../../App';
+import { GardenPulse } from './GardenPulse';
+import { HealthWatchlist } from './HealthWatchlist';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -20,11 +22,12 @@ interface DashboardProps {
   onOpenMenu: () => void;
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
+  onNavigateLocation: (locId: string) => void;
   onOpenWorkspaceMenu?: () => void;
   currentUser: User;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onOpenWorkspaceMenu, currentUser }) => {
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu, currentUser }) => {
   
   // Lock in a random selection for the duration of this view so it doesn't flicker on state updates
   const [randomSeed] = useState(() => ({
@@ -358,6 +361,8 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         </section>
       )}
 
+      <HealthWatchlist instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />
+
       {overdueLocations.length > 0 && currentUser?.workspaceRole !== 'viewer' && (
         <section className="mb-8 animate-in fade-in duration-500 delay-300">
           <Subtitle>Urgent Location Care</Subtitle>
@@ -420,6 +425,8 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
           </div>
         </section>
       )}
+
+      <GardenPulse instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />
 
       {isGardenImageExpanded && gardenProfile?.imageUrl && (
         <div 
