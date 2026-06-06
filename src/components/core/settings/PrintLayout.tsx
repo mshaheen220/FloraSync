@@ -66,7 +66,7 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors">
-            Cancel
+            ❌
           </button>
           <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg">
             🖨️
