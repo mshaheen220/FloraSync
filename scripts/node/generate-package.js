@@ -56,12 +56,11 @@ async function askGeminiForPlantData(commonName) {
     "funFacts": [
       {
         "title": "...", // optional string (e.g. "Historical Use")
-        "fact": "...", // string (the trivia or fact)
+        "fact": "...", // string (the trivia or fact. MUST be short: around 20 words, 130 characters max)
         "attributedTo": "...", // optional string (e.g. "Mark Twain")
-        "imageUrl": "...", // optional string (a specific image for this fact, leave empty if none)
-        "icon": "..." // optional string, pick one emoji from this list that best fits the fact: 💡, 😂, 🤔, ☠️, ❗, 🤷, ❤️
+        "icon": "..." // optional string, pick one emoji from this list that best fits the fact: 🪲, ☠️, 🍹, 🍲, 💡, ❗, 😂, ❤️, 💰, 🐈, 🧬, 🤔, 🤷
       }
-    ] // array of 2-3 objects containing interesting botanical trivia, historical uses, or quirky fun facts about this plant.
+    ] // array of 2-3 objects containing interesting, short botanical trivia, historical uses, or quirky fun facts about this plant (strictly under 130 characters each).
   }
   Return ONLY raw JSON. No markdown formatting, no backticks, no explanations.`;
 
