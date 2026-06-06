@@ -20,16 +20,18 @@ interface ArchetypeCardProps {
 }
 
 const FACT_ICONS = [
-  { value: '💡', label: '💡 Fun Fact' },
-  { value: '😂', label: '😂 Joke' },
-  { value: '🤔', label: '🤔 Weird Fact' },
   { value: '☠️', label: '☠️ Dangerous' },
-  { value: '❗', label: '❗ Important' },
-  { value: '🤷', label: '🤷 Why Not?' },
-  { value: '🍲', label: '🍲 Food' },
   { value: '🍹', label: '🍹 Drink' },
-  { value: '🐈', label: '🐈 Pets' },
+  { value: '🍲', label: '🍲 Food' },
+  { value: '💡', label: '💡 Fun Fact' },
+  { value: '❗', label: '❗ Important' },
+  { value: '😂', label: '😂 Joke' },
   { value: '❤️', label: '❤️ Love This' },
+  { value: '💰', label: '💰 Money' },
+  { value: '🐈', label: '🐈 Pets' },
+  {value: '🧬', label: '🧬 Science' },
+  { value: '🤔', label: '🤔 Weird Fact' },
+  { value: '🤷', label: '🤷 Why Not?' },
 ];
 
 export const ArchetypeCard: FC<ArchetypeCardProps> = ({
