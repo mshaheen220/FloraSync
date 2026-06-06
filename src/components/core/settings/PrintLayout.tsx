@@ -69,7 +69,7 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
             Cancel
           </button>
           <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg">
-            🖨️ Print Now
+            🖨️
           </button>
         </div>
       </div>
