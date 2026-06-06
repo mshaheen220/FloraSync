@@ -258,12 +258,12 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
             </Card>
             <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <img src="/images/icons/qr/plant.png" alt="All Plants" className="w-7 h-7 mb-1 opacity-70 object-contain" />
+              <img src="/images/icons/qr/plant.png" alt="All Plants" className="w-7 h-7 mb-1 object-contain" />
               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
             </Card>
             {zones.filter(z => z.isPinned).map(zone => (
               <Card key={zone.id} onClick={() => onBatchWaterZone(zone.id)} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-                <img src="/images/icons/qr/zone.png" alt="Zone" className="w-7 h-7 mb-1 opacity-70  object-contain" />
+                <img src="/images/icons/qr/zone.png" alt="Zone" className="w-7 h-7 mb-1 object-contain" />
                 <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3">Water<br/>{zone.name}</span>
               </Card>
             ))}

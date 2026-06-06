@@ -47,7 +47,8 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
         @page { margin: 0.25in; }
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white !important; }
         #root { display: none !important; }
-        #print-portal { position: relative !important; overflow: visible !important; height: auto !important; }
+        #print-portal { position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important; overflow: visible !important; height: auto !important; display: block !important; }
+        .print-item { page-break-inside: avoid !important; break-inside: avoid !important; }
       }
     `;
     document.head.appendChild(style);
@@ -74,14 +75,14 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
       </div>
 
       {/* The Printable Canvas */}
-      <div className="p-8 print:p-0 flex flex-wrap content-start items-start">
+      <div className="p-8 print:p-0 clearfix">
         {items.map((item, index) => {
           const url = item.action ? `/${item.type}/${item.id}/${item.action}` : `/${item.type}/${item.id}`;
           const iconSrc = item.action ? ICONS[item.action] : ICONS[item.type];
           
           if (template === 'stake-10x6') {
             return (
-              <div key={index} style={{ width: '10cm', height: '6cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.25cm', display: 'flex', alignItems: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+              <div key={index} className="print-item" style={{ width: '10cm', height: '6cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.25cm', display: 'flex', alignItems: 'center', float: 'left', pageBreakInside: 'avoid', breakInside: 'avoid', backgroundColor: '#fff' }}>
                 <div style={{ width: '5.5cm', height: '5.5cm', flexShrink: 0, padding: '0.25cm', boxSizing: 'border-box' }}>
                   <QRCodeSVG 
                     value={url} size={128} style={{ width: '100%', height: '100%' }} level="H"
@@ -111,7 +112,7 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
 
           if (template === 'label-6x3') {
             return (
-              <div key={index} style={{ width: '6cm', height: '3cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.15cm', display: 'flex', alignItems: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+              <div key={index} className="print-item" style={{ width: '6cm', height: '3cm', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.15cm', display: 'flex', alignItems: 'center', float: 'left', pageBreakInside: 'avoid', breakInside: 'avoid', backgroundColor: '#fff' }}>
                 <div style={{ width: '2.5cm', height: '2.5cm', flexShrink: 0, padding: '0.15cm', boxSizing: 'border-box' }}>
                   <QRCodeSVG 
                     value={url} size={128} style={{ width: '100%', height: '100%' }} level="H"
@@ -141,7 +142,7 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
           
           if (template === 'square-1in') {
             return (
-              <div key={index} style={{ width: '1in', height: '1in', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.05in', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', pageBreakInside: 'avoid', backgroundColor: '#fff' }}>
+              <div key={index} className="print-item" style={{ width: '1in', height: '1in', boxSizing: 'border-box', border: '1px dashed #ccc', padding: '0.05in', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', float: 'left', pageBreakInside: 'avoid', breakInside: 'avoid', backgroundColor: '#fff' }}>
                 <QRCodeSVG 
                   value={url} size={128} style={{ width: '0.7in', height: '0.7in' }} level="H"
                   imageSettings={{ src: iconSrc, height: 28, width: 28, excavate: true }}
