@@ -4,6 +4,7 @@ import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, Me
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
 import { User } from '../../App';
+import { ActionControlStrip } from '../common/ActionControlStrip';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -386,31 +387,18 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             <Button $variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
           </div>
 
-          {(currentUser?.workspaceRole !== 'viewer' || currentUser?.role === 'god-admin') && (
-            <div className="w-full flex flex-col gap-2 mt-6 px-1">
-              {currentUser?.workspaceRole !== 'viewer' && (
-                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">📌 Pin to Dash</span>
-                  <div className="flex gap-1.5">
-                    <button onClick={() => handlePinToggle('water')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('water') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>💦 Water</button>
-                    <button onClick={() => handlePinToggle('feed')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('feed') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>🪴 Feed</button>
-                    <button onClick={() => handlePinToggle('navigate')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('navigate') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>👁️ Nav</button>
-                  </div>
-                </div>
-              )}
-              
-              {(currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && onQueuePrint && (
-                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">🖨️ Print Queue</span>
-                  <div className="flex gap-1.5">
-                    <button onClick={() => { const q = printQueue?.some(q => q.targetId === qrId && q.action === 'none'); onQueuePrint(qrId, 'plant', archetype?.commonName || 'Plant', archetype?.scientificName || '', 'none'); showToast(q ? '❌ Removed Info Tag from Queue' : '🛒 Added Info Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === qrId && q.action === 'none') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>ℹ️ Info</button>
-                    <button onClick={() => { const q = printQueue?.some(q => q.targetId === qrId && q.action === 'water'); onQueuePrint(qrId, 'plant', `Water ${archetype?.commonName || 'Plant'}`, archetype?.scientificName || '', 'water'); showToast(q ? '❌ Removed Water Tag from Queue' : '🛒 Added Water Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === qrId && q.action === 'water') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>💦 Water</button>
-                    <button onClick={() => { const q = printQueue?.some(q => q.targetId === qrId && q.action === 'feed'); onQueuePrint(qrId, 'plant', `Feed ${archetype?.commonName || 'Plant'}`, archetype?.scientificName || '', 'feed'); showToast(q ? '❌ Removed Feed Tag from Queue' : '🛒 Added Feed Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === qrId && q.action === 'feed') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>🪴 Feed</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                  <ActionControlStrip 
+          currentUser={currentUser}
+          userPins={userPins}
+          onPinToggle={handlePinToggle}
+          onQueuePrint={onQueuePrint}
+          printQueue={printQueue}
+          targetId={qrId}
+          targetType="plant"
+          targetTitle={archetype?.commonName || 'Plant'}
+          targetSubtitle={archetype?.scientificName || ''}
+          showToast={showToast}
+        />
         </div>
       </Card>
 
