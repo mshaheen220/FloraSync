@@ -200,7 +200,14 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
                         onEditStart={() => { setEditingId(arch.id); setEditData(arch); setViewingId(null); }}
                         onEditCancel={() => setEditingId(null)}
                         onSave={(e) => handleSave(e, arch.id)}
-                        onDelete={() => { if (inUseCount === 0 && window.confirm('Delete this plant archetype?')) { onDeleteArchetype(arch.id); showToast('🗑️ Archetype removed'); } }}
+                        onDelete={() => { 
+                          if (inUseCount > 0) {
+                            showToast(`⚠️ Cannot delete this plant because ${inUseCount} instances are still growing!`);
+                          } else if (window.confirm('Delete this plant archetype?')) { 
+                            onDeleteArchetype(arch.id); 
+                            showToast('🗑️ Archetype removed'); 
+                          } 
+                        }}
                       />
                     );
                   })}

@@ -61,7 +61,14 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
               editZoneData={editZoneData} setEditZoneData={setEditZoneData}
               onEditStart={() => { setEditingZoneId(zone.id); setEditZoneData(zone); }} onEditCancel={() => setEditingZoneId(null)}
               onSave={(e) => { e.preventDefault(); onUpdateZone(zone.id, editZoneData); setEditingZoneId(null); showToast('📍 Zone updated!'); }}
-              onDelete={() => { if (locationsInZone === 0 && window.confirm('Delete this zone?')) { onDeleteZone(zone.id); showToast('🗑️ Zone removed'); } }}
+              onDelete={() => { 
+                if (locationsInZone > 0) {
+                  showToast('⚠️ Cannot delete a Zone that still contains locations!');
+                } else if (window.confirm('Delete this zone?')) { 
+                  onDeleteZone(zone.id); 
+                  showToast('🗑️ Zone removed'); 
+                } 
+              }}
               onNavigateZone={() => onNavigateZone(zone.id)}
             />
           );

@@ -345,7 +345,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2 pt-0.5">
-          <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-100 dark:border-slate-700">
+          <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-transparent rounded-full shadow-sm">
             ✏️
           </button>
           <MenuButton onClick={onOpenMenu}>

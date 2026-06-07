@@ -122,7 +122,14 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
                         onEditStart={() => { setEditingId(loc.id); setEditData(loc); }}
                         onEditCancel={() => setEditingId(null)}
                         onSave={(e) => { e.preventDefault(); onUpdateLocation(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
-                        onDelete={() => { if (plantsInLocation === 0 && window.confirm('Delete this location?')) { onDeleteLocation(loc.id); showToast('🗑️ Location removed'); } }}
+                        onDelete={() => { 
+                          if (plantsInLocation > 0) {
+                            showToast('⚠️ Cannot delete a Location that still contains plants!');
+                          } else if (window.confirm('Delete this location?')) { 
+                            onDeleteLocation(loc.id); 
+                            showToast('🗑️ Location removed'); 
+                          } 
+                        }}
                         onNavigateLocation={() => onNavigateLocation(loc.id)}
                       />
                     );
