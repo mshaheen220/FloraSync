@@ -4,6 +4,7 @@ import { Container, Input, Toast, Subtitle, Button } from '../../styles/StyledEl
 import { ArchetypeCard } from './ArchetypeCard';
 import { PageHeader } from '../common/PageHeader';
 import { useGarden } from '../../contexts/GardenContext';
+import { hasPermission } from '../../utils/permissions';
 
 interface ArchetypeManagerProps {
   onOpenMenu: () => void;
@@ -132,10 +133,10 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
       </p>
 
-      {!isAdding && (currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && (
+      {!isAdding && hasPermission(currentUser, 'manage_dictionary') && (
         <Button onClick={() => setIsAdding(true)} className="mb-6">+ Add New Plant</Button>
       )}
-      {isAdding && (currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && (
+      {isAdding && hasPermission(currentUser, 'manage_dictionary') && (
         <div className="mb-8">
           <Subtitle>Add New Plant</Subtitle>
           <ArchetypeCard
@@ -187,7 +188,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
 
                     return (
                       <ArchetypeCard
-                        canEdit={currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner'}
+                        canEdit={hasPermission(currentUser, 'manage_dictionary')}
                         key={arch.id}
                         arch={arch}
                         inUseCount={inUseCount}

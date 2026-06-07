@@ -4,6 +4,7 @@ import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
+import { hasPermission } from '../../utils/permissions';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -91,7 +92,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   };
 
   if (!zone) {
-    if (currentUser?.workspaceRole === 'viewer') {
+    if (!hasPermission(currentUser, 'perform_actions')) {
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
           <Card className="text-center py-10 shadow-lg border-emerald-500">

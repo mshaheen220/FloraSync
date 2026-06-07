@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { useGarden } from '../../contexts/GardenContext';
+import { hasPermission } from '../../utils/permissions';
 
 interface ActionControlStripProps {
   userPins: string[];
@@ -22,11 +23,11 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
 }) => {
   const { currentUser, printQueue, onQueuePrint } = useGarden();
   
-  if (currentUser?.workspaceRole === 'viewer' && currentUser?.role !== 'god-admin') {
+  if (!hasPermission(currentUser, 'perform_actions') && !hasPermission(currentUser, 'view_print_queue')) {
     return null;
   }
 
-  const isOwnerOrAdmin = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
+  const isOwnerOrAdmin = hasPermission(currentUser, 'view_print_queue');
 
   const handleQueueAction = (action: 'none' | 'water' | 'feed') => {
     const isQueued = printQueue?.some(q => q.targetId === targetId && q.action === action);
@@ -55,7 +56,7 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
 
   return (
     <div className="w-full flex flex-col gap-2 mt-6 px-1">
-      {currentUser?.workspaceRole !== 'viewer' && onPinToggle && (
+      {hasPermission(currentUser, 'perform_actions') && onPinToggle && (
         <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
           <div className="flex items-start gap-1.5 ml-1 mr-2">
             <span className="text-[10px] leading-tight mt-[1px]">📌</span>

@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { Location, Zone } from '../../../../types';
 import { Subtitle, Button } from '../../../styles/StyledElements';
 import { User } from '../../../App';
+import { hasPermission } from '../../../utils/permissions';
 
 interface UrgentLocationCareProps {
   overdueLocations: Location[];
@@ -11,7 +12,7 @@ interface UrgentLocationCareProps {
 }
 
 export const UrgentLocationCare: FC<UrgentLocationCareProps> = ({ overdueLocations, zones, currentUser, onBatchWater }) => {
-  if (overdueLocations.length === 0 || currentUser?.workspaceRole === 'viewer') return null;
+  if (overdueLocations.length === 0 || !hasPermission(currentUser, 'perform_actions')) return null;
 
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-300">

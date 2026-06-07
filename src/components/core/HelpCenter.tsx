@@ -2,6 +2,7 @@ import { useState, useEffect, FC } from 'react';
 import { Container, Card, Subtitle } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
+import { hasPermission } from '../../utils/permissions';
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
   <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
@@ -49,7 +50,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     );
   };
 
-  const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
+  const isAdminOrOwner = hasPermission(currentUser, 'manage_dictionary');
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">

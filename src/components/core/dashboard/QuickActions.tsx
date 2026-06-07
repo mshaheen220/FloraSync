@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { Subtitle, Card } from '../../../styles/StyledElements';
 import { Zone, Location, PlantInstance, PlantArchetype } from '../../../../types';
 import { User } from '../../../App';
+import { hasPermission } from '../../../utils/permissions';
 
 interface QuickActionsProps {
   zones: Zone[];
@@ -28,7 +29,7 @@ export const QuickActions: FC<QuickActionsProps> = ({
   onBatchWaterLocation, onBatchFeedLocation, onWater, onFeed, 
   onNavigateZone, onNavigateLocation, onNavigate 
 }) => {
-  if (currentUser?.workspaceRole === 'viewer') return null;
+  if (!hasPermission(currentUser, 'perform_actions')) return null;
 
   const pinnedItems: { id: string, name: string, icon: string, onClick: () => void }[] = [];
   const currentUserId = currentUser?.id || '';

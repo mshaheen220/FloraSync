@@ -1,5 +1,6 @@
 import { FC, useState } from 'react';
 import { User } from '../../App';
+import { hasPermission } from '../../utils/permissions';
 
 export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help' | 'print';
 
@@ -12,7 +13,7 @@ interface NavigationMenuProps {
 
 export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNavigate, currentUser }) => {
   const [isGardenExpanded, setIsGardenExpanded] = useState(false);
-  const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
+  const isAdminOrOwner = hasPermission(currentUser, 'view_print_queue');
 
   if (!isOpen) return null;
 

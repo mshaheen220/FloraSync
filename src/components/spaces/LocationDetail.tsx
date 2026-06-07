@@ -2,6 +2,7 @@ import { useEffect, useState, FC } from 'react';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
+import { hasPermission } from '../../utils/permissions';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 
@@ -58,7 +59,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   };
 
   if (!location) {
-    if (currentUser?.workspaceRole === 'viewer') {
+    if (!hasPermission(currentUser, 'perform_actions')) {
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
           <Card className="text-center py-10 shadow-lg border-emerald-500">

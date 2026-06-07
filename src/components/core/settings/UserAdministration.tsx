@@ -2,6 +2,7 @@ import { useState, useEffect, FC, FormEvent } from 'react';
 import { Card, Button, Input, Subtitle } from '../../../styles/StyledElements';
 import { User } from '../../../App';
 import { UserCard } from './UserCard';
+import { hasPermission } from '../../../utils/permissions';
 
 interface UserAdministrationProps {
   currentUser: User;
@@ -27,7 +28,7 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
   useEffect(() => {
-    if (currentUser?.role === 'god-admin' && token) {
+    if (hasPermission(currentUser, 'manage_system_users') && token) {
       fetch(`${apiBase}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => {
