@@ -70,7 +70,6 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
               onSave={(e) => { e.preventDefault(); onUpdateZone(zone.id, editZoneData); setEditingZoneId(null); showToast('📍 Zone updated!'); }}
               onDelete={() => { if (locationsInZone === 0 && window.confirm('Delete this zone?')) { onDeleteZone(zone.id); showToast('🗑️ Zone removed'); } }}
               onNavigateZone={() => onNavigateZone(zone.id)}
-              onTogglePin={() => onUpdateZone(zone.id, { isPinned: !zone.isPinned })}
             />
           );
         })}

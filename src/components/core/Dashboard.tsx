@@ -1,11 +1,18 @@
-import { useMemo, useState, FC } from 'react';
+import { useMemo, FC } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
-import { Container, Title, Card, Subtitle, Button, StatusBadge, MenuButton } from '../../styles/StyledElements';
-import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
+import { Container } from '../../styles/StyledElements';
 import { GardenProfile, User } from '../../App';
-import { GardenPulse } from './GardenPulse';
-import { HealthWatchlist } from './HealthWatchlist';
-import { RandomSpotlight } from './RandomSpotlight';
+import { GardenPulse } from './dashboard/GardenPulse';
+import { HealthWatchlist } from './dashboard/HealthWatchlist';
+import { RandomSpotlight } from './dashboard/RandomSpotlight';
+import { DashboardHeader } from './dashboard/DashboardHeader';
+import { QuickActions } from './dashboard/QuickActions';
+import { GardenVitality } from './dashboard/GardenVitality';
+import { ApproachingHarvest } from './dashboard/ApproachingHarvest';
+import { Nursery } from './dashboard/Nursery';
+import { UrgentLocationCare } from './dashboard/UrgentLocationCare';
+import { NeedsWatering } from './dashboard/NeedsWatering';
+import { HungryPlants } from './dashboard/HungryPlants';
 
 interface DashboardProps {
   gardenProfile?: GardenProfile | null;
@@ -17,6 +24,11 @@ interface DashboardProps {
   onBatchWaterAll: () => void;
   onBatchFeedAll: () => void;
   onBatchWaterZone: (zoneId: string) => void;
+  onBatchFeedZone?: (zoneId: string) => void;
+  onBatchWaterLocation?: (locId: string) => void;
+  onBatchFeedLocation?: (locId: string) => void;
+  onWater?: (qrId: string) => void;
+  onFeed?: (qrId: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenMenu: () => void;
   onNavigateInventory: () => void;
@@ -26,9 +38,7 @@ interface DashboardProps {
   currentUser: User;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu, currentUser }) => {
-  
-  const [isGardenImageExpanded, setIsGardenImageExpanded] = useState(false);
+export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onBatchFeedZone, onBatchWaterLocation, onBatchFeedLocation, onWater, onFeed, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu, currentUser }) => {
 
   // Filter out any plants that have already completed their lifecycle
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
@@ -111,284 +121,80 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
     return zone ? { name: zone.name, id: zone.id } : { name: 'None', id: null };
   }, [activeInstances, locations, zones]);
 
-  const approachingHarvest = useMemo(() => {
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0);
-    const todayMs = todayDate.getTime();
-
-    const radar: any[] = [];
-    activeInstances.forEach(inst => {
-      const archetype = archetypes.find(a => a.id === inst.archetypeId);
-      const daysToHarvest = archetype?.daysToHarvest || 0;
-      if (daysToHarvest === 0 || !inst.datePlanted) return;
-
-      const plantDateObj = new Date(inst.datePlanted);
-      plantDateObj.setHours(0, 0, 0, 0);
-      const plantDateMs = plantDateObj.getTime();
-      
-      const harvestDateMs = plantDateMs + (daysToHarvest * 24 * 60 * 60 * 1000);
-      const daysUntil = Math.round((harvestDateMs - todayMs) / (1000 * 60 * 60 * 24));
-
-      // Show anything nearing harvest (within 14 days) or slightly past due (up to -14 days)
-      if (daysUntil <= 14 && daysUntil >= -14) {
-        radar.push({ ...inst, archetype, daysUntil });
-      }
-    });
-    return radar.sort((a, b) => a.daysUntil - b.daysUntil);
-  }, [activeInstances, archetypes]);
-
-  const nurseryPlants = useMemo(() => {
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0);
-    const todayMs = todayDate.getTime();
-
-    const nursery: any[] = [];
-    activeInstances.forEach(inst => {
-      const archetype = archetypes.find(a => a.id === inst.archetypeId);
-      if (!inst.datePlanted) return;
-
-      const plantDateObj = new Date(inst.datePlanted);
-      plantDateObj.setHours(0, 0, 0, 0);
-      const plantDateMs = plantDateObj.getTime();
-      
-      const daysSince = Math.round((todayMs - plantDateMs) / (1000 * 60 * 60 * 24));
-
-      // Only highlight seedlings and fresh transplants planted in the last 14 days
-      if (daysSince <= 14 && daysSince >= 0) {
-        nursery.push({ ...inst, archetype, daysSince });
-      }
-    });
-    return nursery.sort((a, b) => a.daysSince - b.daysSince); // Youngest first
-  }, [activeInstances, archetypes]);
-
-  const hungryPlants = useMemo(() => {
-    const today = new Date().getTime();
-    return trackedInstances.map(inst => {
-      const archetype = archetypes.find(a => a.id === inst.archetypeId);
-      const location = locations.find(l => l.id === inst.locationId);
-      const zone = zones.find(z => z.id === location?.zoneId);
-      const lastFedTime = new Date(inst.lastFed).getTime();
-      const intervalMs = (archetype?.feedingIntervalDays || 14) * 24 * 60 * 60 * 1000;
-      const ratio = Math.max(0, 1 - ((today - lastFedTime) / intervalMs));
-      return { ...inst, archetype, location, zone, isOverdue: ratio <= 0 };
-    }).filter(p => p.isOverdue);
-  }, [trackedInstances, archetypes, locations, zones]);
-
   return (
     <Container>
-      <header className="mb-6 pt-6 flex justify-between items-center">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            {gardenProfile?.imageUrl ? (
-              <img 
-                src={gardenProfile.imageUrl} 
-                alt="Garden Logo" 
-                className="w-8 h-8 rounded-lg object-cover cursor-pointer hover:opacity-80 transition-opacity shadow-sm"
-                onClick={() => setIsGardenImageExpanded(true)}
-              />
-            ) : (
-              <img src="/images/icons/florasync-logo-512.png" alt="FloraSync Logo" className="w-8 h-8" />
-            )}
-            <button 
-              onClick={onOpenWorkspaceMenu}
-              disabled={!onOpenWorkspaceMenu}
-              className={`flex items-center gap-1 text-left ${onOpenWorkspaceMenu ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : 'cursor-default'}`}
-            >
-              <Title className="!mb-0">{gardenProfile?.name || 'FloraSync'}</Title>
-              {onOpenWorkspaceMenu && <span className="text-emerald-700 dark:text-emerald-400 text-lg -mt-1 ml-1">▼</span>}
-            </button>
-          </div>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Your garden at a glance.</p>
-        </div>
-        <MenuButton onClick={onOpenMenu}>
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-          </svg>
-        </MenuButton>
-      </header>
+      <DashboardHeader 
+        gardenProfile={gardenProfile} 
+        onOpenMenu={onOpenMenu} 
+        onOpenWorkspaceMenu={onOpenWorkspaceMenu} 
+      />
 
-      {currentUser?.workspaceRole !== 'viewer' && (
-        <section className="mb-8 animate-in fade-in duration-500">
-          <Subtitle>Quick Actions</Subtitle>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            <Card onClick={() => { onBatchWaterAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              💦
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
-            </Card>
-            <Card onClick={() => { onBatchFeedAll(); }} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-              <img src="/images/icons/qr/plant.png" alt="All Plants" className="w-7 h-7 mb-1 object-contain" />
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
-            </Card>
-            {zones.filter(z => z.isPinned).map(zone => (
-              <Card key={zone.id} onClick={() => onBatchWaterZone(zone.id)} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-                <img src="/images/icons/qr/zone.png" alt="Zone" className="w-7 h-7 mb-1 object-contain" />
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3">Water<br/>{zone.name}</span>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
+      <QuickActions 
+        zones={zones} 
+        locations={locations}
+        instances={instances}
+        archetypes={archetypes}
+        currentUser={currentUser} 
+        onBatchWaterAll={onBatchWaterAll} 
+        onBatchFeedAll={onBatchFeedAll} 
+        onBatchWaterZone={onBatchWaterZone} 
+        onBatchFeedZone={onBatchFeedZone}
+        onBatchWaterLocation={onBatchWaterLocation || onBatchWater} 
+        onBatchFeedLocation={onBatchFeedLocation}
+        onWater={onWater}
+        onFeed={onFeed}
+        onNavigateZone={onNavigateZone}
+        onNavigateLocation={onNavigateLocation}
+        onNavigate={onNavigate}
+      />
 
-      <section className="mb-8 animate-in fade-in duration-500 delay-100">
-        <Subtitle>Garden Vitality</Subtitle>
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="!p-3 !mb-0 flex items-center justify-between text-center">
-            <div className="flex flex-col items-center flex-1">
-              <span className="text-2xl mb-1">💧</span>
-              <span className={`text-xl font-black ${averageHydration <= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>{averageHydration}%</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Water</span>
-            </div>
-            <div className="w-px h-12 bg-slate-200 dark:bg-slate-700/50"></div>
-            <div className="flex flex-col items-center flex-1">
-              <span className="text-2xl mb-1">🍽️</span>
-              <span className={`text-xl font-black ${averageNutrition <= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>{averageNutrition}%</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Feed</span>
-            </div>
-          </Card>
-          <Card 
-            className="!p-4 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors"
-            onClick={onNavigateInventory}
-          >
-            <span className="text-3xl mb-2">🌱</span>
-            <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{trackedInstances.length}</span>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Active Plants</span>
-            <span className="text-[9px] font-semibold text-slate-400/70 dark:text-slate-500 mt-1">{activeInstances.length} in inventory</span>
-          </Card>
-          <Card 
-            className={`!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between transition-colors ${mostPopulatedZone.id ? 'cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700' : ''}`}
-            onClick={() => mostPopulatedZone.id && onNavigateZone(mostPopulatedZone.id)}
-          >
-            <div className="flex items-center gap-4">
-          <span className="text-3xl">🗺️</span>
-              <div className="text-left">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
-                <span className="text-lg font-bold text-emerald-800 dark:text-emerald-200">{mostPopulatedZone.name}</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
+      <GardenVitality 
+        averageHydration={averageHydration} 
+        averageNutrition={averageNutrition} 
+        trackedCount={trackedInstances.length} 
+        activeCount={activeInstances.length} 
+        mostPopulatedZone={mostPopulatedZone} 
+        onNavigateInventory={onNavigateInventory} 
+        onNavigateZone={onNavigateZone} 
+      />
 
       <RandomSpotlight activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />
 
-      {approachingHarvest.length > 0 && (
-        <section className="mb-8 animate-in fade-in duration-500 delay-150">
-          <Subtitle>🍅 Approaching Harvest</Subtitle>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {approachingHarvest.map(item => (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-44 !p-3.5 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{item.archetype?.commonName}</h3>
-                <p className={`text-xs font-semibold mt-1 ${item.daysUntil <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                  {item.daysUntil <= 0 ? 'Ready to pick!' : `${item.daysUntil} days left`}
-                </p>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
+      <ApproachingHarvest 
+        activeInstances={activeInstances} 
+        archetypes={archetypes} 
+        onNavigate={onNavigate} 
+      />
 
-      {nurseryPlants.length > 0 && (
-        <section className="mb-8 animate-in fade-in duration-500 delay-200">
-          <Subtitle>🌱 The Nursery</Subtitle>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {nurseryPlants.map(item => (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-44 !p-3.5 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
-                <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{item.archetype?.commonName}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Planted {item.daysSince === 0 ? 'today' : `${item.daysSince} days ago`}</p>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
+      <Nursery 
+        activeInstances={activeInstances} 
+        archetypes={archetypes} 
+        onNavigate={onNavigate} 
+      />
 
       <HealthWatchlist instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />
 
-      {overdueLocations.length > 0 && currentUser?.workspaceRole !== 'viewer' && (
-        <section className="mb-8 animate-in fade-in duration-500 delay-300">
-          <Subtitle>Urgent Location Care</Subtitle>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {overdueLocations.map(loc => {
-              const zone = zones.find(z => z.id === loc.zoneId);
-              return (
-                <Button key={loc.id} $variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5">
-                  💦 Water all on {zone ? `${zone.name} • ` : ''}{loc.name}
-                </Button>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <UrgentLocationCare 
+        overdueLocations={overdueLocations} 
+        zones={zones} 
+        currentUser={currentUser} 
+        onBatchWater={onBatchWater} 
+      />
 
-      <section>
-        <Subtitle>💦 Needs Watering</Subtitle>
-        {overduePlants.length === 0 ? (
-          <Card className="text-center py-10">
-            <div className="text-4xl mb-3">✨</div>
-            <p className="text-slate-500 dark:text-slate-400 font-medium">All plants are perfectly hydrated!</p>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 mb-8">
-            {overduePlants.map(item => (
-              <PlantInstanceCard 
-                key={item.qrId} 
-                instance={item} 
-                archetype={item.archetype} 
-                locationName={item.location?.name} 
-                zoneName={item.zone?.name} 
-                zoneModifier={item.zone?.evaporationModifier}
-                compact
-                onClick={() => onNavigate(item.qrId)} 
-              />
-            ))}
-          </div>
-        )}
-      </section>
+      <NeedsWatering 
+        overduePlants={overduePlants} 
+        onNavigate={onNavigate} 
+      />
 
-      {hungryPlants.length > 0 && (
-        <section className="animate-in fade-in duration-500 delay-[400ms]">
-          <Subtitle>🍽️ Hungry Plants</Subtitle>
-          <div className="grid grid-cols-2 gap-3">
-            {hungryPlants.map(item => (
-              <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-amber-300 dark:hover:border-amber-700 !border-amber-200 dark:!border-amber-900/50 !bg-amber-50/30 dark:!bg-amber-900/10 !p-3 flex flex-col h-full">
-                <div className="flex flex-col gap-2 mb-2">
-                  <div>
-                    <h3 className="font-bold text-slate-800 dark:text-slate-100 text-base leading-tight line-clamp-1">{item.archetype?.commonName}</h3>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 uppercase tracking-wide font-semibold line-clamp-1">{item.zone?.name} • {item.location?.name}</p>
-                  </div>
-                  <StatusBadge $status="overdue" className="!text-[9px] !px-2 !py-0.5 self-start">Needs Feed</StatusBadge>
-                </div>
-                <div className="mt-auto pt-1">
-                  <p className="text-[10px] text-amber-700 dark:text-amber-400 font-medium italic line-clamp-2">Feed: {item.archetype?.whatToFeed || 'Balanced fertilizer'}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
+      <HungryPlants 
+        trackedInstances={trackedInstances} 
+        archetypes={archetypes} 
+        locations={locations} 
+        zones={zones} 
+        onNavigate={onNavigate} 
+      />
 
       <GardenPulse instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />
-
-      {isGardenImageExpanded && gardenProfile?.imageUrl && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4"
-          onClick={() => setIsGardenImageExpanded(false)}
-        >
-          <div className="relative flex flex-col items-end max-w-full max-h-full">
-            <button 
-              className="text-white text-3xl font-bold p-2 mb-2 active:scale-90 transition-transform hover:text-slate-300"
-              onClick={() => setIsGardenImageExpanded(false)}
-            >
-              ✕
-            </button>
-            <img 
-              src={gardenProfile.imageUrl} 
-              alt="Garden Logo Enlarged" 
-              className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl"
-              onClick={(e) => e.stopPropagation()} 
-            />
-          </div>
-        </div>
-      )}
     </Container>
   );
 };

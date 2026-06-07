@@ -14,6 +14,7 @@ interface LocationDetailProps {
   instances: PlantInstance[];
   archetypes: PlantArchetype[];
   onRegisterLocation: (id: string, name: string, zoneId: string) => void;
+  onUpdateLocation?: (id: string, updates: Partial<Location>) => void;
   onBatchWater: (locationId: string) => void;
   onBatchFeed: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
@@ -25,7 +26,7 @@ interface LocationDetailProps {
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, currentUser 
+  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, currentUser 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newLocName, setNewLocName] = useState('');
@@ -124,6 +125,38 @@ export const LocationDetail: FC<LocationDetailProps> = ({
           <div className="w-full flex gap-3 px-2">
             <Button onClick={() => { onBatchWater(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
             <Button $variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
+          </div>
+        )}
+        
+        {currentUser?.workspaceRole !== 'viewer' && onUpdateLocation && (
+          <div className="w-full flex flex-col gap-2 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4 px-2">
+            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">📌 Pin to Dashboard</p>
+            <div className="flex gap-2">
+              <Button 
+                $variant="secondary" 
+                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => {
+                  const actions = location.pinnedActions || [];
+                  onUpdateLocation(location.id, { pinnedActions: actions.includes('water') ? actions.filter(a => a !== 'water') : [...actions, 'water'] });
+                }}
+              >💦 Water</Button>
+              <Button 
+                $variant="secondary" 
+                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => {
+                  const actions = location.pinnedActions || [];
+                  onUpdateLocation(location.id, { pinnedActions: actions.includes('feed') ? actions.filter(a => a !== 'feed') : [...actions, 'feed'] });
+                }}
+              >🪴 Feed</Button>
+              <Button 
+                $variant="secondary" 
+                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => {
+                  const actions = location.pinnedActions || [];
+                  onUpdateLocation(location.id, { pinnedActions: actions.includes('navigate') ? actions.filter(a => a !== 'navigate') : [...actions, 'navigate'] });
+                }}
+              >👁️ Navigate</Button>
+            </div>
           </div>
         )}
       </Card>

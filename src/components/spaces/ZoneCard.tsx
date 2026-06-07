@@ -13,11 +13,10 @@ interface ZoneCardProps {
   onSave: (e: FormEvent) => void;
   onDelete: () => void;
   onNavigateZone: () => void;
-  onTogglePin: () => void;
   canEdit?: boolean;
 }
 
-export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone, onTogglePin, canEdit }) => {
+export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone, canEdit }) => {
   if (isEditing) {
     return (
       <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
@@ -62,7 +61,12 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
     <Card className="!p-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{zone.name}</h3>
+          <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight flex items-center gap-2">
+            {zone.name}
+            {((zone.pinnedActions && zone.pinnedActions.length > 0) || zone.isPinned) && (
+              <span className="text-xs" title="Has actions pinned to the Dashboard">📌</span>
+            )}
+          </h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{zone.id}</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">{locationsInZone} sub-locations</p>
         </div>
@@ -70,7 +74,6 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
           <button onClick={onNavigateZone} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Zone">👁️</button>
           {canEdit && (
             <>
-              <button onClick={onTogglePin} className={`p-2 rounded-lg transition-all active:scale-90 ${zone.isPinned ? 'opacity-100 drop-shadow-md' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}`} title={zone.isPinned ? "Unpin from Dashboard" : "Pin to Dashboard"}>📌</button>
               <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
               <button onClick={onDelete} disabled={locationsInZone > 0} className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
             </>

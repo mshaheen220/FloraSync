@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
-import { Card, Subtitle } from '../../styles/StyledElements';
+import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
+import { Card, Subtitle } from '../../../styles/StyledElements';
 
 interface GardenPulseProps {
   instances: PlantInstance[];

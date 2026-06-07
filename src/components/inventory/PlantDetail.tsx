@@ -373,6 +373,38 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             <Button onClick={handleManualWater}>💦 Water</Button>
             <Button $variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
           </div>
+
+          {currentUser?.workspaceRole !== 'viewer' && (
+            <div className="w-full flex flex-col gap-2 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4 px-2">
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">📌 Pin to Dashboard</p>
+              <div className="flex gap-2">
+                <Button 
+                  $variant="secondary" 
+                  className={`flex-1 !py-2 !text-xs transition-colors ${(instance.pinnedActions || []).includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                  onClick={() => {
+                    const actions = instance.pinnedActions || [];
+                    onUpdate(qrId, { pinnedActions: actions.includes('water') ? actions.filter(a => a !== 'water') : [...actions, 'water'] });
+                  }}
+                >💦 Water</Button>
+                <Button 
+                  $variant="secondary" 
+                  className={`flex-1 !py-2 !text-xs transition-colors ${(instance.pinnedActions || []).includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                  onClick={() => {
+                    const actions = instance.pinnedActions || [];
+                    onUpdate(qrId, { pinnedActions: actions.includes('feed') ? actions.filter(a => a !== 'feed') : [...actions, 'feed'] });
+                  }}
+                >🪴 Feed</Button>
+                <Button 
+                  $variant="secondary" 
+                  className={`flex-1 !py-2 !text-xs transition-colors ${(instance.pinnedActions || []).includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                  onClick={() => {
+                    const actions = instance.pinnedActions || [];
+                    onUpdate(qrId, { pinnedActions: actions.includes('navigate') ? actions.filter(a => a !== 'navigate') : [...actions, 'navigate'] });
+                  }}
+                >👁️ Navigate</Button>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 

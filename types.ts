@@ -62,6 +62,7 @@ export interface PlantInstance {
   untracked?: boolean; // Exclude from care queues (e.g. established shrubs)
   imageUrl?: string;   // Instance-specific custom thumbnail
   journal?: JournalEntry[];
+  pinnedActions?: string[];
 }
 
 export interface Location {
@@ -69,6 +70,7 @@ export interface Location {
   name: string;
   zoneId: string;
   isPinned?: boolean;
+  pinnedActions?: string[];
 }
 
 export interface Zone {
@@ -78,4 +80,5 @@ export interface Zone {
   imageUrl?: string;
   evaporationModifier?: number;
   isPinned?: boolean;
+  pinnedActions?: string[];
 }

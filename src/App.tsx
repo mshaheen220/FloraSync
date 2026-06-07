@@ -794,6 +794,11 @@ export const App: FC = () => {
         onBatchWaterAll={handleBatchWaterAll}
         onBatchFeedAll={handleBatchFeedAll}
         onBatchWaterZone={handleBatchWaterZone}
+        onBatchFeedZone={handleBatchFeedZone}
+        onBatchWaterLocation={handleBatchWater}
+        onBatchFeedLocation={handleBatchFeed}
+        onWater={handleWater}
+        onFeed={handleFeed}
         onNavigate={handleNavigate} 
         onOpenMenu={() => setIsMenuOpen(true)} 
         onNavigateInventory={() => navigateTo('/inventory')} 

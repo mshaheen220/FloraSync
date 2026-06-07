@@ -151,16 +151,35 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
                 <Button className="flex-1" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
                 <Button className="flex-1" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
               </div>
-              <Button 
-                $variant="secondary" 
-                className={`w-full transition-colors flex justify-center items-center gap-2 ${zone.isPinned ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => {
-                  onUpdateZone(zone.id, { isPinned: !zone.isPinned });
-                  showToast(zone.isPinned ? '📌 Unpinned from Dashboard' : '📌 Pinned to Dashboard');
-                }}
-              >
-                {zone.isPinned ? '📌 Pinned to Dashboard' : '📌 Pin to Dashboard'}
-              </Button>
+              <div className="w-full flex flex-col gap-2 mt-2 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">📌 Pin to Dashboard</p>
+                <div className="flex gap-2">
+                  <Button 
+                    $variant="secondary" 
+                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || (zone.isPinned ? ['water'] : [])).includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => {
+                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
+                      onUpdateZone(zone.id, { pinnedActions: actions.includes('water') ? actions.filter(a => a !== 'water') : [...actions, 'water'], isPinned: false });
+                    }}
+                  >💦 Water</Button>
+                  <Button 
+                    $variant="secondary" 
+                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || []).includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => {
+                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
+                      onUpdateZone(zone.id, { pinnedActions: actions.includes('feed') ? actions.filter(a => a !== 'feed') : [...actions, 'feed'], isPinned: false });
+                    }}
+                  >🪴 Feed</Button>
+                  <Button 
+                    $variant="secondary" 
+                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || []).includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => {
+                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
+                      onUpdateZone(zone.id, { pinnedActions: actions.includes('navigate') ? actions.filter(a => a !== 'navigate') : [...actions, 'navigate'], isPinned: false });
+                    }}
+                  >👁️ Navigate</Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
