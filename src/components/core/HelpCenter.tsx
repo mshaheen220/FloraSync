@@ -29,6 +29,7 @@ interface HelpCenterProps {
 
 export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, onOpenMenu, onOpenWorkspaceMenu }) => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [showPrintExamples, setShowPrintExamples] = useState(false);
   const [isWelcomeExpanded, setIsWelcomeExpanded] = useState(() => {
     const hasVisited = localStorage.getItem('florasync_help_welcome_seen');
     return !hasVisited;
@@ -137,17 +138,28 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         <p>Use the floating camera button in the bottom corner of the app to scan the physical QR tags in your garden.</p>
         <p>You can generate QR codes for <strong>all items</strong> in your garden: individual plants, specific locations, and entire zones. Scanning a tag instantly brings up the details for that specific item. From there, you can log individual care or take bulk actions—like watering an entire zone with a single tap!</p>
         <p>If you scan an unassigned blank tag, the app will instantly launch a "Just-In-Time" registration form so you can tell the system what you just planted or created.</p>
-        <p><strong>Action Tags:</strong> You can print special action tags for Water (💧) or Feed (🍽️). Scanning one of these instantly logs the care action for that specific plant or entire zone—no buttons required!</p>
+        <p><strong>Action Tags vs. Navigation Tags:</strong> A standard Navigation tag simply loads up the details of a plant or zone (requiring you to click once more to log care). However, you can print special Action tags for Water (💧) or Feed (🍽️). Scanning an Action tag instantly logs the care for that specific plant or an entire zone—no buttons required, saving you a tap!</p>
       </HelpSection>
 
       {isAdminOrOwner && (
         <HelpSection title="Print Center & QR Tags" icon="🖨️" isExpanded={expandedSections.includes('print')} onToggle={() => toggleSection('print')}>
           <p>As a garden Owner, you can generate perfectly formatted, printable sheets of QR codes directly from the app.</p>
-          <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout (like 10x6cm garden stakes or 1-inch squares) and preview the sheets before sending them to your printer.</p>
+          <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout and preview the sheets before sending them to your printer.</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
+            <li><strong>Different Styles & Layouts:</strong> We offer several print sizes to fit your needs. The popular <strong>6cm x 3cm Labels</strong> are perfectly sized to fit the standard white plastic garden stakes found at any dollar store or on Amazon!</li>
             <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
             <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form! (You can also apply Actions to blank tags for instant care logging).</li>
           </ul>
+          <div className="mt-4 p-3 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+            <p className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">DIY Weatherproofing Tip 🌧️</p>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400 leading-relaxed">To make your labels survive the elements, print them onto <strong>full-sheet vinyl sticker paper</strong>, then laminate the entire printed sheet. The laminating plastic will adhere to both sides. When you cut out your individual tags, simply peel the back lamination layer off to expose the vinyl's sticky back and apply it to your stakes!<br/><br/><span className="text-xs opacity-80 italic">*Note: Standard inkjet ink will eventually fade in the sun over time, but you can always quickly print a fresh batch when they do!</span></p>
+          </div>
+          <button
+            onClick={() => setShowPrintExamples(true)}
+            className="mt-4 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-800/60 text-emerald-800 dark:text-emerald-300 px-4 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all flex items-center gap-2"
+          >
+            📷 View Label Examples
+          </button>
         </HelpSection>
       )}
 
@@ -156,6 +168,71 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           <p>If you have a lot of existing garden data or want to share a customized plant dictionary with a friend, use the bulk Data Import tool.</p>
           <p>Navigate to General Settings and scroll to <strong>Data Import</strong>. Select your data type, paste a formatted JSON array, and click Import. FloraSync will automatically skip items with duplicate IDs to protect your existing garden.</p>
         </HelpSection>
+      )}
+
+      {showPrintExamples && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setShowPrintExamples(false)}
+        >
+          <div 
+            className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col gap-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Label Examples</h3>
+              <button onClick={() => setShowPrintExamples(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold p-2 -mr-2 leading-none">✕</button>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">6cm x 3cm Labels</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/6x3%20Plant.png" alt="Plant" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-xs font-bold text-slate-500">Standard Plant Tag</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/6x3%20Zone.png" alt="Zone" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-xs font-bold text-slate-500">Standard Zone Tag</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/6x3%20location.png" alt="Location" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-xs font-bold text-slate-500">Standard Location Tag</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex gap-2 w-full max-w-[240px]">
+                    <img src="/images/examples/qr/6x3%20water%20zone.png" alt="Water Action" className="w-1/2 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                    <img src="/images/examples/qr/6x3%20feed%20zone.png" alt="Feed Action" className="w-1/2 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  </div>
+                  <span className="text-xs font-bold text-slate-500">Water / Feed Action Tags</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">1-inch Square Labels</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/1x1%20plant.png" alt="Plant" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Plant</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/1x1%20location.png" alt="Location" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Location</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/1x1%20zone.png" alt="Zone" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Zone</span>
+                </div>
+                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <img src="/images/examples/qr/1x1%20feed%20location.png" alt="Action" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Action</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </Container>
