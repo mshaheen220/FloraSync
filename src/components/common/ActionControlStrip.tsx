@@ -56,7 +56,7 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
   };
 
   const getPrintClass = (action: 'none' | 'water' | 'feed') => {
-    return `px-2 py-1 rounded text-xs font-semibold transition-colors border ${isQueued(action) ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`;
+    return `px-2 py-1 rounded text-xs font-semibold transition-colors border ${isQueued(action) ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`;
   };
 
   return (
