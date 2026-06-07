@@ -156,7 +156,7 @@ app.post('/api/login', (req, res) => {
       console.error('Error determining default garden:', e);
     }
 
-    const token = jwt.sign({ id: user.id, username: user.username, role: user.role, gardenId: bestGardenId }, JWT_SECRET, { expiresIn: '30d' });
+    const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
     
     res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name, imageUrl: user.image_url } });
   } catch (err) {
@@ -434,7 +434,7 @@ app.put('/api/users/:id/password', authenticateToken, (req, res) => {
 
 // Endpoint for users to update their shared garden's profile info
 app.put('/api/garden/profile', authenticateToken, (req, res) => {
-  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   const { name, imageUrl } = req.body;
   if (!gardenId) return res.status(400).json({ error: 'No garden assigned.' });
   try {
@@ -499,7 +499,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
 
 app.post('/api/state', authenticateToken, (req, res) => {
   try {
-    const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
     
     const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
     const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
@@ -527,7 +527,7 @@ app.post('/api/state', authenticateToken, (req, res) => {
 // Endpoint to trigger Python QR Generator
 app.post('/api/generate-qrs', authenticateToken, (req, res) => {
   const { mode, category, prefix, startId } = req.body;
-  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   let command = '';
 
   // Smartly use a virtual environment if it exists, otherwise fallback to global python3
@@ -567,7 +567,7 @@ app.post('/api/generate-qrs', authenticateToken, (req, res) => {
 // API to list all generated QR sheets
 app.get('/api/prints', authenticateToken, (req, res) => {
   try {
-    const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
     const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
     if (!fs.existsSync(gardenPrintsDir)) {
       return res.json({ files: [] });
@@ -589,7 +589,7 @@ app.get('/api/prints/:filename', authenticateToken, (req, res) => {
   if (!filename || filename.includes('..') || filename.includes('/')) {
     return res.status(400).send('Invalid file');
   }
-  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
   const filePath = path.join(gardenPrintsDir, filename);
   if (fs.existsSync(filePath)) {
@@ -605,7 +605,7 @@ app.delete('/api/prints/:filename', authenticateToken, (req, res) => {
   if (!filename || filename.includes('..') || filename.includes('/')) {
     return res.status(400).json({ success: false, error: 'Invalid file' });
   }
-  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   const gardenPrintsDir = path.join(PRINTS_DIR, gardenId || 'default');
   const filePath = path.join(gardenPrintsDir, filename);
   if (fs.existsSync(filePath)) {
@@ -622,7 +622,7 @@ app.delete('/api/prints/:filename', authenticateToken, (req, res) => {
 
 // API to import a JSON array by leveraging the import-seed.js script
 app.post('/api/import', authenticateToken, (req, res) => {
-  const gardenId = req.user.gardenId || db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+  const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
   const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
   const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
 
