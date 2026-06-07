@@ -1,6 +1,6 @@
 import { useState, useEffect, FC } from 'react';
 import { Card, Button, Input, Subtitle, Container, Toast } from '../../../styles/StyledElements';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../../types';
 import { PrintLayout, PrintItem } from './PrintLayout';
 import { PageHeader } from '../../common/PageHeader';
 import { GardenProfile } from '../../../App';
@@ -11,25 +11,28 @@ interface PrintCenterProps {
   archetypes: PlantArchetype[];
   locations: Location[];
   zones: Zone[];
+  printQueue: PrintQueueItem[];
+  setPrintQueue: React.Dispatch<React.SetStateAction<PrintQueueItem[]>>;
   gardenProfile?: GardenProfile | null;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
 }
 
-export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes, locations, zones, gardenProfile, onOpenMenu, onOpenWorkspaceMenu }) => {
+export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes, locations, zones, printQueue, setPrintQueue, gardenProfile, onOpenMenu, onOpenWorkspaceMenu }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [generatedFiles, setGeneratedFiles] = useState<{name: string, time: number}[]>([]);
   
   const [showPreview, setShowPreview] = useState(false);
   const [printItems, setPrintItems] = useState<PrintItem[]>([]);
   
-  const [printMode, setPrintMode] = useState<'db' | 'blank'>('db');
+  const [printMode, setPrintMode] = useState<'queue' | 'db' | 'blank'>('queue');
   const [template, setTemplate] = useState<'stake-10x6' | 'square-1in' | 'label-6x3'>('label-6x3');
   const [printActions, setPrintActions] = useState<string[]>(['none']);
   const [dbPrintCategories, setDbPrintCategories] = useState<string[]>(['plant', 'location', 'zone']);
   const [blankCategories, setBlankCategories] = useState<string[]>(['plant']);
   const [blankPrefix, setBlankPrefix] = useState(() => `${Math.random().toString(36).substring(2, 5).toUpperCase()}`);
   const [blankStartId, setBlankStartId] = useState(() => Math.floor(Math.random() * 1000).toString().padStart(3, '0'));
+  const [smartFill, setSmartFill] = useState(false);
 
   const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
   const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
@@ -57,12 +60,46 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
   const handleOpenPrintPreview = () => {
     const generatedItems: PrintItem[] = [];
 
-    if (printActions.length === 0) {
+    if (printMode === 'queue') {
+      if (printQueue.length === 0) {
+        showToast('❌ Print queue is empty.');
+        return;
+      }
+      
+      printQueue.forEach(item => {
+        generatedItems.push({
+          id: item.targetId,
+          type: item.type,
+          action: item.action !== 'none' ? item.action as any : undefined,
+          title: item.title,
+          subtitle: item.subtitle
+        });
+      });
+
+      if (smartFill) {
+        const sheetSize = template === 'label-6x3' ? 24 : template === 'stake-10x6' ? 10 : 48;
+        const remainder = generatedItems.length % sheetSize;
+        if (remainder > 0) {
+          const blanksNeeded = sheetSize - remainder;
+          const start = parseInt(blankStartId, 10) || 1;
+          const padding = blankStartId.length || 3;
+          for (let i = 0; i < blanksNeeded; i++) {
+            const idNum = (start + i).toString().padStart(padding, '0');
+            generatedItems.push({
+              id: `${blankPrefix}-${idNum}`,
+              type: 'plant',
+              title: '',
+              subtitle: ''
+            });
+          }
+          setBlankStartId((start + blanksNeeded).toString().padStart(padding, '0'));
+        }
+      }
+    } else if (printMode === 'db') {
+      if (printActions.length === 0) {
       showToast('❌ Please select at least one action.');
       return;
     }
-
-    if (printMode === 'db') {
       printActions.forEach(action => {
         if (dbPrintCategories.includes('plant')) {
           instances.forEach(inst => {
@@ -101,6 +138,10 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
         }
       });
     } else {
+      if (printActions.length === 0) {
+        showToast('❌ Please select at least one action.');
+        return;
+      }
       // Generate sequence of blank tags
       const start = parseInt(blankStartId, 10);
       const padding = blankStartId.length;
@@ -219,12 +260,15 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
         <PrintLayout items={printItems} template={template} onClose={() => setShowPreview(false)} />
       )}
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
-          <button onClick={() => setPrintMode('db')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'db' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-            Database Export
+        <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+          <button onClick={() => setPrintMode('queue')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'queue' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+            Queue ({printQueue.length})
           </button>
-          <button onClick={() => setPrintMode('blank')} className={`flex-1 py-2 rounded-xl text-xs font-bold transition-colors ${printMode === 'blank' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400'}`}>
-            Blank Tags
+          <button onClick={() => setPrintMode('db')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'db' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+            Bulk from DB
+          </button>
+          <button onClick={() => setPrintMode('blank')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'blank' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+            Blanks
           </button>
         </div>
         
@@ -238,9 +282,59 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tag Actions</label>
-            <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+          {printMode === 'queue' && (
+            <div className="flex flex-col gap-3 mt-2">
+              <div className="flex justify-between items-end mb-1">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Items to Print</label>
+                {printQueue.length > 0 && (
+                  <button onClick={() => setPrintQueue([])} className="text-xs text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                    Clear Queue
+                  </button>
+                )}
+              </div>
+              
+              {printQueue.length === 0 ? (
+                <div className="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                  <span className="text-2xl block mb-2">🛒</span>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Your Print Queue is empty.</p>
+                  <p className="text-xs text-slate-500 mt-1">Add specific tags to the queue directly from the Plant, Zone, and Location detail screens.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+                  {printQueue.map(item => (
+                    <div key={item.id} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{item.type === 'plant' ? '🌿' : item.type === 'location' ? '📍' : '🗺️'}</span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{item.action !== 'none' ? `${item.action === 'water' ? '💧 Water' : '🍽️ Feed'} ` : ''}{item.title}</span>
+                          <span className="text-[10px] text-slate-500 uppercase tracking-wider">{item.type}</span>
+                        </div>
+                      </div>
+                      <button onClick={() => setPrintQueue(prev => prev.filter(q => q.id !== item.id))} className="text-red-400 hover:text-red-600 p-2 leading-none font-bold text-lg rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors">
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="p-3 mt-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input type="checkbox" checked={smartFill} onChange={e => setSmartFill(e.target.checked)} className="mt-1 accent-emerald-600 w-4 h-4 cursor-pointer flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Smart Fill Sheet</span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 leading-relaxed">Automatically generate sequential blank tags to fill the remaining empty spaces on the printer sheet so no paper goes to waste!</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {printMode !== 'queue' && (
+            <>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tag Actions</label>
+                <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('none')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'none']);
@@ -262,13 +356,13 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
                 }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
                 🍽️ Feed
               </label>
-            </div>
-          </div>
+                </div>
+              </div>
 
-          {printMode === 'db' ? (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
-              <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+              {printMode === 'db' ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
+                  <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('plant')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'plant']);
@@ -290,12 +384,12 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
-              <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
+                  <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('plant')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'plant']);
@@ -317,11 +411,13 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes
                   }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
-              </div>
-            </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
-          {printMode === 'blank' && (
+          {(printMode === 'blank' || (printMode === 'queue' && smartFill)) && (
             <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Prefix</label>

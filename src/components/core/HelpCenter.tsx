@@ -146,6 +146,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           <p>As a garden Owner, you can generate perfectly formatted, printable sheets of QR codes directly from the app.</p>
           <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout and preview the sheets before sending them to your printer.</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
+            <li><strong>Print Queue & Smart Fill:</strong> Tap the 🖨️ buttons on any Plant, Location, or Zone detail screen to add specific tags to your Print Queue. When you print your queue, turn on <strong>Smart Fill Sheet</strong> to automatically generate blank tags for any remaining empty spaces on the paper so nothing goes to waste!</li>
             <li><strong>Different Styles & Layouts:</strong> We offer several print sizes to fit your needs. The popular <strong>6cm x 3cm Labels</strong> are perfectly sized to fit the standard white plastic garden stakes found at any dollar store or on Amazon!</li>
             <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
             <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form! (You can also apply Actions to blank tags for instant care logging).</li>

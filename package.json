@@ -4,7 +4,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "api": "node scripts/node/server.js",
+    "api": "node server.js",
     "seed": "node scripts/node/import-seed.js",
     "backup": "node scripts/node/export-backup.js",
     "restore": "node scripts/node/restore-backup.js"

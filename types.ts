@@ -82,3 +82,12 @@ export interface Zone {
   isPinned?: boolean;
   pinnedActions?: Record<string, string[]>;
 }
+
+export interface PrintQueueItem {
+  id: string;
+  targetId: string;
+  type: 'plant' | 'location' | 'zone';
+  action: 'none' | 'water' | 'feed';
+  title: string;
+  subtitle: string;
+}

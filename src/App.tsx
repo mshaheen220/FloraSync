@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, FC, useRef } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../types';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../types';
 import { Dashboard } from './components/core/Dashboard';
 import { PlantDetail } from './components/inventory/PlantDetail';
 import { Scanner } from './components/common/Scanner';
@@ -46,6 +46,7 @@ export const App: FC = () => {
   const [archetypes, setArchetypes] = useState<PlantArchetype[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
+  const [printQueue, setPrintQueue] = useState<PrintQueueItem[]>([]);
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [initialLoadSuccess, setInitialLoadSuccess] = useState<boolean | null>(null);
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -170,6 +171,7 @@ export const App: FC = () => {
 
         setZones(loadedZones);
         setLocations(loadedLocations);
+        setPrintQueue(data.printQueue || []);
         
         setIsDbLoaded(true);
         setInitialLoadSuccess(true);
@@ -212,7 +214,7 @@ export const App: FC = () => {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ instances, archetypes, locations, zones })
+      body: JSON.stringify({ instances, archetypes, locations, zones, printQueue })
     })
     .then(res => {
       if (!res.ok) {
@@ -223,7 +225,7 @@ export const App: FC = () => {
       }
     })
     .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
-  }, [instances, archetypes, locations, zones, isDbLoaded, currentUser, token, initialLoadSuccess]);
+  }, [instances, archetypes, locations, zones, printQueue, isDbLoaded, currentUser, token, initialLoadSuccess]);
 
   const syncRoute = useCallback(() => {
     const pathname = window.location.pathname;
@@ -282,6 +284,7 @@ export const App: FC = () => {
         setArchetypes(data.archetypes || []);
         setZones(data.zones || []);
         setLocations(data.locations || []);
+        setPrintQueue(data.printQueue || []);
         setIsDbLoaded(true);
         setSyncStatus('synced');
       })
@@ -376,6 +379,23 @@ export const App: FC = () => {
     localStorage.removeItem('florasync_user');
     navigateTo('/');
   };
+
+  const handleQueuePrint = useCallback((targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action: 'none' | 'water' | 'feed' = 'none') => {
+    setPrintQueue(prev => {
+      const existing = prev.find(q => q.targetId === targetId && q.action === action);
+      if (existing) {
+        return prev.filter(q => q.id !== existing.id);
+      }
+      return [...prev, {
+        id: `pq-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        targetId,
+        type,
+        action,
+        title,
+        subtitle
+      }];
+    });
+  }, []);
 
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
@@ -722,7 +742,7 @@ export const App: FC = () => {
       const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
       return (
-        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} currentUser={currentUser || undefined} />
+        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
       );
     }
 
@@ -732,7 +752,7 @@ export const App: FC = () => {
       const locationInstances = instances.filter(i => i.locationId === activeLoc);
       
       return (
-        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
+        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onUpdateLocation={handleUpdateLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
       );
     }
 
@@ -743,7 +763,7 @@ export const App: FC = () => {
       const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
       
       return (
-        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onUpdateZone={handleUpdateZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} />
+        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onUpdateZone={handleUpdateZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
       );
     }
 
@@ -778,7 +798,7 @@ export const App: FC = () => {
     if (currentView === 'print') {
       const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
       if (isAdminOrOwner) {
-        return <PrintCenter gardenProfile={gardenProfile} instances={instances} archetypes={archetypes} locations={locations} zones={zones} token={token} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+        return <PrintCenter gardenProfile={gardenProfile} instances={instances} archetypes={archetypes} locations={locations} zones={zones} printQueue={printQueue} setPrintQueue={setPrintQueue} token={token} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
       }
     }
 

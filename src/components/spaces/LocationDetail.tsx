@@ -1,5 +1,5 @@
 import { useEffect, useState, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../types';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
@@ -22,11 +22,13 @@ interface LocationDetailProps {
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
+  onQueuePrint?: (targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action?: 'none' | 'water' | 'feed') => void;
   currentUser?: User;
+  printQueue?: PrintQueueItem[];
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, currentUser 
+  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, onQueuePrint, currentUser, printQueue
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [newLocName, setNewLocName] = useState('');
@@ -138,26 +140,29 @@ export const LocationDetail: FC<LocationDetailProps> = ({
           </div>
         )}
         
-        {currentUser?.workspaceRole !== 'viewer' && onUpdateLocation && (
-          <div className="w-full flex flex-col gap-2 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4 px-2">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">📌 Pin to Dashboard</p>
-            <div className="flex gap-2">
-              <Button 
-                $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => handlePinToggle('water')}
-              >💦 Water</Button>
-              <Button 
-                $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => handlePinToggle('feed')}
-              >🪴 Feed</Button>
-              <Button 
-                $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => handlePinToggle('navigate')}
-              >👁️ Navigate</Button>
-            </div>
+        {(currentUser?.workspaceRole !== 'viewer' || currentUser?.role === 'god-admin') && (
+          <div className="w-full flex flex-col gap-2 mt-6 px-1">
+            {currentUser?.workspaceRole !== 'viewer' && onUpdateLocation && (
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">📌 Pin to Dash</span>
+                <div className="flex gap-1.5">
+                  <button onClick={() => handlePinToggle('water')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('water') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>💦 Water</button>
+                  <button onClick={() => handlePinToggle('feed')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('feed') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>🪴 Feed</button>
+                  <button onClick={() => handlePinToggle('navigate')} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes('navigate') ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>👁️ Nav</button>
+                </div>
+              </div>
+            )}
+            
+            {(currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner') && onQueuePrint && (
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider ml-1">🖨️ Print Queue</span>
+                <div className="flex gap-1.5">
+                  <button onClick={() => { const q = printQueue?.some(q => q.targetId === locationId && q.action === 'none'); onQueuePrint(locationId, 'location', location.name, zone?.name || '', 'none'); showToast(q ? '❌ Removed Info Tag from Queue' : '🛒 Added Info Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === locationId && q.action === 'none') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>ℹ️ Info</button>
+                  <button onClick={() => { const q = printQueue?.some(q => q.targetId === locationId && q.action === 'water'); onQueuePrint(locationId, 'location', `Water ${location.name}`, zone?.name || '', 'water'); showToast(q ? '❌ Removed Water Tag from Queue' : '🛒 Added Water Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === locationId && q.action === 'water') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>💦 Water</button>
+                  <button onClick={() => { const q = printQueue?.some(q => q.targetId === locationId && q.action === 'feed'); onQueuePrint(locationId, 'location', `Feed ${location.name}`, zone?.name || '', 'feed'); showToast(q ? '❌ Removed Feed Tag from Queue' : '🛒 Added Feed Tag to Queue'); }} className={`px-2 py-1 rounded text-xs font-semibold transition-colors border ${printQueue?.some(q => q.targetId === locationId && q.action === 'feed') ? 'bg-emerald-100 border-emerald-200 text-emerald-800 dark:bg-emerald-900/50 dark:border-emerald-800 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`}>🪴 Feed</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Card>
