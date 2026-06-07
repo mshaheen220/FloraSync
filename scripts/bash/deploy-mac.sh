@@ -12,6 +12,7 @@ echo "2️⃣ Compressing the build folder..."
 tar -czf dist.tar.gz dist
 
 echo "3️⃣ Sending to TheForge's home folder..."
+echo -e "\033[1m🔑 HEADS UP: Please enter your password for TheForge below...\033[0m"
 scp dist.tar.gz michael@theforge.local:~
 
 echo "4️⃣ Committing and pushing to GitHub..."
