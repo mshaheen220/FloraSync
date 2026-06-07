@@ -1,27 +1,18 @@
 import { useState, useMemo, useEffect, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { PlantInstanceCard } from './PlantInstanceCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface InventoryManagerProps {
-  gardenName: string;
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  locations: Location[];
-  zones: Zone[];
-  onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
-  currentUser: User;
 }
 
-export const InventoryManager: FC<InventoryManagerProps> = ({ 
-  gardenName, currentUser, instances, archetypes, locations, zones, onRegister, onNavigate, onOpenMenu, onOpenWorkspaceMenu 
-}) => {
+export const InventoryManager: FC<InventoryManagerProps> = ({ onNavigate, onOpenMenu, onOpenWorkspaceMenu }) => {
+  const { gardenProfile, currentUser, instances, archetypes, locations, zones, onRegister } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [isAddingPlant, setIsAddingPlant] = useState(false);
   const [expandedInventoryCategories, setExpandedInventoryCategories] = useState<string[]>([]);
@@ -110,7 +101,7 @@ export const InventoryManager: FC<InventoryManagerProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <PageHeader title="Inventory Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <PageHeader title="Inventory Manager" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Your Plants</Subtitle>
       {!isAddingPlant && currentUser?.workspaceRole !== 'viewer' && (

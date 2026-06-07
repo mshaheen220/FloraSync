@@ -1,7 +1,7 @@
 import { useState, useEffect, FC } from 'react';
 import { Container, Card, Subtitle } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
-import { GardenProfile, User } from '../../App';
+import { GardenProfile, User } from '../../../types';
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
   <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">

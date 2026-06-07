@@ -1,36 +1,30 @@
 import { useEffect, useState, useMemo, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../types';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
 import { ActionControlStrip } from '../common/ActionControlStrip';
+import { useGarden } from '../../contexts/GardenContext';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface ZoneDetailProps {
   zoneId: string;
-  zone?: Zone;
   initialAction: string | null;
-  locations: Location[];
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  onRegisterZone: (id: string, name: string) => void;
-  onUpdateZone: (id: string, updates: Partial<Zone>) => void;
-  onBatchWaterZone: (zoneId: string) => void;
-  onBatchFeedZone: (zoneId: string) => void;
   onNavigate: (qrId: string) => void;
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
-  onQueuePrint?: (targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action?: 'none' | 'water' | 'feed') => void;
-  currentUser?: User;
-  printQueue?: PrintQueueItem[];
 }
 
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
-  zoneId, zone, initialAction, locations, instances, archetypes, onRegisterZone, onUpdateZone, onBatchWaterZone, onBatchFeedZone, onNavigate, onGoBack, onOpenMenu, onClearAction, onQueuePrint, currentUser, printQueue
+  zoneId, initialAction, onNavigate, onGoBack, onOpenMenu, onClearAction
 }) => {
+  const { zones, locations, instances, archetypes, onRegisterZone, onUpdateZone, onBatchWaterZone, onBatchFeedZone, currentUser } = useGarden();
+  const zone = zones.find(z => z.id === zoneId);
+  const zoneLocations = locations.filter(l => l.zoneId === zoneId);
+  const zoneLocIds = zoneLocations.map(l => l.id);
+  const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
+
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
   const [newZoneName, setNewZoneName] = useState('');
@@ -49,13 +43,13 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   };
 
   const groupedInstances = useMemo(() => {
-    const groups = instances.reduce((acc, inst) => {
+    const groups = zoneInstances.reduce((acc, inst) => {
       const loc = locations.find(l => l.id === inst.locationId);
       const locName = loc ? loc.name : 'Unassigned Location';
       if (!acc[locName]) acc[locName] = [];
       acc[locName].push(inst);
       return acc;
-    }, {} as Record<string, PlantInstance[]>);
+    }, {} as Record<string, typeof zoneInstances>);
 
     const sortedLocations = Object.keys(groups).sort();
     sortedLocations.forEach(loc => {
@@ -71,18 +65,18 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
 
   // "Zero-Click" Action Handling for entire zones
   useEffect(() => {
-    if (zone && locations.length > 0 && initialAction === 'water') {
+    if (zone && zoneLocations.length > 0 && initialAction === 'water') {
       onBatchWaterZone(zone.id);
       showToast('💦 Entire zone watered successfully!');
       window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
-    } else if (zone && locations.length > 0 && initialAction === 'feed') {
+    } else if (zone && zoneLocations.length > 0 && initialAction === 'feed') {
       onBatchFeedZone(zone.id);
       showToast('🪴 Entire zone fed successfully!');
       window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
     }
-  }, [locations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
+  }, [zoneLocations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
 
   const currentUserId = currentUser?.id || '';
   const userPins = (zone?.pinnedActions && !Array.isArray(zone.pinnedActions)) 
@@ -159,7 +153,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           {zone.description && (
             <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-6 italic text-center leading-relaxed">"{zone.description}"</p>
           )}
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} across {locations.length} locations.</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{zoneInstances.length} active plant{zoneInstances.length !== 1 ? 's' : ''} across {zoneLocations.length} locations.</p>
           {currentUser?.workspaceRole !== 'viewer' && (
             <div className="w-full flex flex-col gap-3 px-2">
               <div className="flex gap-3">
@@ -170,11 +164,8 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           )}
 
           <ActionControlStrip 
-            currentUser={currentUser}
             userPins={userPins}
             onPinToggle={handlePinToggle}
-            onQueuePrint={onQueuePrint}
-            printQueue={printQueue}
             targetId={zone.id}
             targetType="zone"
             targetTitle={zone.name}
@@ -187,7 +178,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
       <Subtitle className="!mb-0">Plants in {zone.name}</Subtitle>
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">(grouped by Location)</p>
       <div className="space-y-4">
-        {instances.length === 0 ? (
+        {zoneInstances.length === 0 ? (
            <p className="text-sm text-slate-500 italic mt-4">No plants currently assigned to this zone.</p>
         ) : (
           groupedInstances.sortedLocations.map(locName => (

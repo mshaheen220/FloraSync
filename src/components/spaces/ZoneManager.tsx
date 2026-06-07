@@ -1,26 +1,18 @@
 import { useState, FC, FormEvent } from 'react';
-import { Zone, Location } from '../../../types';
 import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { ZoneCard } from './ZoneCard';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
+import { useGarden } from '../../contexts/GardenContext';
+import { Zone } from '../../../types';
 
 interface ZoneManagerProps {
-  gardenName: string;
-  zones: Zone[];
-  locations: Location[];
-  onAddZone: (name: string) => void;
-  onUpdateZone: (id: string, updates: Partial<Zone>) => void;
-  onDeleteZone: (id: string) => void;
   onNavigateZone: (id: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
-  currentUser: User;
 }
 
-export const ZoneManager: FC<ZoneManagerProps> = ({ 
-  gardenName, currentUser, zones, locations, onAddZone, onUpdateZone, onDeleteZone, onNavigateZone, onOpenMenu, onOpenWorkspaceMenu 
-}) => {
+export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, onOpenWorkspaceMenu }) => {
+  const { gardenProfile, currentUser, zones, locations, onAddZone, onUpdateZone, onDeleteZone } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
@@ -41,7 +33,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <PageHeader title="Zone Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <PageHeader title="Zone Manager" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Zones</Subtitle>
       {currentUser?.workspaceRole !== 'viewer' && (

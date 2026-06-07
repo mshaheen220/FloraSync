@@ -1,41 +1,32 @@
 import { useEffect, useState, FC, FormEvent } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../types';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
-import { User } from '../../App';
 import { ActionControlStrip } from '../common/ActionControlStrip';
+import { useGarden } from '../../contexts/GardenContext';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface PlantDetailProps {
   qrId: string;
   initialAction: string | null;
-  instance?: PlantInstance;
-  archetype?: PlantArchetype;
-  archetypes: PlantArchetype[];
-  location?: Location;
-  locations: Location[];
-  zone?: Zone;
-  zones: Zone[];
-  onWater: (qrId: string) => void;
-  onFeed: (qrId: string) => void;
-  onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
-  onUpdate: (qrId: string, updates: Partial<PlantInstance>) => void;
-  onDelete: (qrId: string) => void;
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
   onNavigateLocation: (locId: string) => void;
   onNavigateZone: (zoneName: string) => void;
-  onQueuePrint?: (targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action?: 'none' | 'water' | 'feed') => void;
-  currentUser?: User;
-  printQueue?: PrintQueueItem[];
 }
 
 export const PlantDetail: FC<PlantDetailProps> = ({ 
-  qrId, initialAction, instance, archetype, archetypes, location, locations, zone, zones, onWater, onFeed, onRegister, onUpdate, onDelete, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone, onQueuePrint, currentUser, printQueue
+  qrId, initialAction, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
+  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
+
+  const instance = instances.find(i => i.qrId === qrId);
+  const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
+  const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
+  const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
+
   const [toastMessage, setToastMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '', untracked: false });
@@ -101,7 +92,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     if (!instance) return;
     const newPins = userPins.includes(action) ? userPins.filter(a => a !== action) : [...userPins, action];
     const existingPins = (instance.pinnedActions && !Array.isArray(instance.pinnedActions)) ? instance.pinnedActions : {};
-    onUpdate(qrId, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
+    onUpdateInstance(qrId, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
   };
 
   const handleRegistrationSubmit = (id: string, identifier: string, isNew: boolean, locId: string, isNewLoc?: boolean, zId?: string, isNewZ?: boolean, img?: string) => {
@@ -141,7 +132,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   if (isEditing && instance) {
     const handleSave = (e: FormEvent) => {
       e.preventDefault();
-      onUpdate(qrId, {
+      onUpdateInstance(qrId, {
         locationId: editData.locationId,
         lastWatered: new Date(editData.lastWatered).toISOString(),
         lastFed: new Date(editData.lastFed).toISOString(),
@@ -251,7 +242,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             type="button" 
             onClick={() => {
               if (window.confirm('Are you sure you want to delete this plant?')) {
-                onDelete(qrId);
+                onDeleteInstance(qrId);
               }
             }} 
             className="!bg-red-100 dark:!bg-red-900/50 !text-red-700 dark:!text-red-300 border border-red-200 dark:border-red-800 hover:!bg-red-200 dark:hover:!bg-red-900 shadow-none"
@@ -388,11 +379,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
 
                   <ActionControlStrip 
-          currentUser={currentUser}
           userPins={userPins}
           onPinToggle={handlePinToggle}
-          onQueuePrint={onQueuePrint}
-          printQueue={printQueue}
           targetId={qrId}
           targetType="plant"
           targetTitle={archetype?.commonName || 'Plant'}
@@ -589,7 +577,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         {expandedSections.includes('journal') && (
           <PlantJournal 
             instance={instance} 
-            onUpdate={(updates) => onUpdate(qrId, updates)} 
+            onUpdate={(updates) => onUpdateInstance(qrId, updates)} 
             showToast={showToast} 
             currentUser={currentUser}
           />

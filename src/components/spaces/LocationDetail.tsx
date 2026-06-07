@@ -1,36 +1,28 @@
 import { useEffect, useState, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../types';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
 import { ActionControlStrip } from '../common/ActionControlStrip';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface LocationDetailProps {
   locationId: string;
   initialAction: string | null;
-  location?: Location;
-  zone?: Zone;
-  zones: Zone[];
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  onRegisterLocation: (id: string, name: string, zoneId: string) => void;
-  onUpdateLocation?: (id: string, updates: Partial<Location>) => void;
-  onBatchWater: (locationId: string) => void;
-  onBatchFeed: (locationId: string) => void;
   onNavigate: (qrId: string) => void;
   onNavigateZone: (zoneName: string) => void;
   onGoBack: () => void;
   onOpenMenu: () => void;
   onClearAction: () => void;
-  onQueuePrint?: (targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action?: 'none' | 'water' | 'feed') => void;
-  currentUser?: User;
-  printQueue?: PrintQueueItem[];
 }
 
 export const LocationDetail: FC<LocationDetailProps> = ({ 
-  locationId, initialAction, location, zone, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWater, onBatchFeed, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction, onQueuePrint, currentUser, printQueue
+  locationId, initialAction, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction
 }) => {
+  const { locations, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWaterLocation, onBatchFeedLocation, currentUser } = useGarden();
+  const location = locations.find(l => l.id === locationId);
+  const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
+  const locationInstances = instances.filter(i => i.locationId === locationId);
+
   const [toastMessage, setToastMessage] = useState('');
   const [newLocName, setNewLocName] = useState('');
   const [newLocZone, setNewLocZone] = useState('');
@@ -43,23 +35,23 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   // "Zero-Click" Action Handling for entire locations
   useEffect(() => {
     if (location && initialAction === 'water') {
-      onBatchWater(locationId);
+      onBatchWaterLocation(locationId);
       showToast('💦 All plants watered successfully!');
       window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     } else if (location && initialAction === 'feed') {
-      onBatchFeed(locationId);
+      onBatchFeedLocation(locationId);
       showToast('🪴 All plants fed successfully!');
       window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     }
-  }, [location, initialAction, locationId, onBatchWater, onBatchFeed, onClearAction]);
+  }, [location, initialAction, locationId, onBatchWaterLocation, onBatchFeedLocation, onClearAction]);
 
   const currentUserId = currentUser?.id || '';
   const userPins = (location?.pinnedActions && !Array.isArray(location.pinnedActions)) ? (location.pinnedActions[currentUserId] || []) : [];
 
   const handlePinToggle = (action: string) => {
-    if (!location || !onUpdateLocation) return;
+    if (!location) return;
     const newPins = userPins.includes(action) ? userPins.filter(a => a !== action) : [...userPins, action];
     const existingPins = (location.pinnedActions && !Array.isArray(location.pinnedActions)) ? location.pinnedActions : {};
     onUpdateLocation(location.id, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
@@ -133,20 +125,17 @@ export const LocationDetail: FC<LocationDetailProps> = ({
       />
 
       <Card className="flex flex-col items-center py-6 mb-6">
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{instances.length} active plant{instances.length !== 1 ? 's' : ''} in this location.</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{locationInstances.length} active plant{locationInstances.length !== 1 ? 's' : ''} in this location.</p>
         {currentUser?.workspaceRole !== 'viewer' && (
           <div className="w-full flex gap-3 px-2">
-            <Button onClick={() => { onBatchWater(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
-            <Button $variant="secondary" onClick={() => { onBatchFeed(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
+            <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
+            <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
           </div>
         )}
         
         <ActionControlStrip 
-          currentUser={currentUser}
           userPins={userPins}
-          onPinToggle={onUpdateLocation ? handlePinToggle : undefined}
-          onQueuePrint={onQueuePrint}
-          printQueue={printQueue}
+          onPinToggle={handlePinToggle}
           targetId={locationId}
           targetType="location"
           targetTitle={location.name}
@@ -157,10 +146,10 @@ export const LocationDetail: FC<LocationDetailProps> = ({
 
       <Subtitle>Plants in {location.name}</Subtitle>
       <div className="space-y-3">
-        {instances.length === 0 ? (
+        {locationInstances.length === 0 ? (
            <p className="text-sm text-slate-500 italic mt-4">No plants currently assigned to this location.</p>
         ) : (
-          instances.map(item => {
+          locationInstances.map(item => {
             const archetype = archetypes.find(a => a.id === item.archetypeId);
 
             return (

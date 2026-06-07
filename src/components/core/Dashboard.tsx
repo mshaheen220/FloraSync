@@ -1,7 +1,5 @@
 import { useMemo, FC } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone } from '../../../types';
 import { Container } from '../../styles/StyledElements';
-import { GardenProfile, User } from '../../App';
 import { GardenPulse } from './dashboard/GardenPulse';
 import { HealthWatchlist } from './dashboard/HealthWatchlist';
 import { RandomSpotlight } from './dashboard/RandomSpotlight';
@@ -13,32 +11,19 @@ import { Nursery } from './dashboard/Nursery';
 import { UrgentLocationCare } from './dashboard/UrgentLocationCare';
 import { NeedsWatering } from './dashboard/NeedsWatering';
 import { HungryPlants } from './dashboard/HungryPlants';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface DashboardProps {
-  gardenProfile?: GardenProfile | null;
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  locations: Location[];
-  zones: Zone[];
-  onBatchWater: (locationId: string) => void;
-  onBatchWaterAll: () => void;
-  onBatchFeedAll: () => void;
-  onBatchWaterZone: (zoneId: string) => void;
-  onBatchFeedZone?: (zoneId: string) => void;
-  onBatchWaterLocation?: (locId: string) => void;
-  onBatchFeedLocation?: (locId: string) => void;
-  onWater?: (qrId: string) => void;
-  onFeed?: (qrId: string) => void;
   onNavigate: (qrId: string) => void;
   onOpenMenu: () => void;
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
   onNavigateLocation: (locId: string) => void;
   onOpenWorkspaceMenu?: () => void;
-  currentUser: User;
 }
 
-export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archetypes, locations, zones, onBatchWater, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onBatchFeedZone, onBatchWaterLocation, onBatchFeedLocation, onWater, onFeed, onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu, currentUser }) => {
+export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu }) => {
+  const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
 
   // Filter out any plants that have already completed their lifecycle
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
@@ -134,12 +119,12 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
         locations={locations}
         instances={instances}
         archetypes={archetypes}
-        currentUser={currentUser} 
+        currentUser={currentUser!} 
         onBatchWaterAll={onBatchWaterAll} 
         onBatchFeedAll={onBatchFeedAll} 
         onBatchWaterZone={onBatchWaterZone} 
         onBatchFeedZone={onBatchFeedZone}
-        onBatchWaterLocation={onBatchWaterLocation || onBatchWater} 
+        onBatchWaterLocation={onBatchWaterLocation} 
         onBatchFeedLocation={onBatchFeedLocation}
         onWater={onWater}
         onFeed={onFeed}
@@ -177,8 +162,8 @@ export const Dashboard: FC<DashboardProps> = ({ gardenProfile, instances, archet
       <UrgentLocationCare 
         overdueLocations={overdueLocations} 
         zones={zones} 
-        currentUser={currentUser} 
-        onBatchWater={onBatchWater} 
+        currentUser={currentUser!} 
+        onBatchWater={onBatchWaterLocation} 
       />
 
       <NeedsWatering 

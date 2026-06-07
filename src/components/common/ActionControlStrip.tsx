@@ -1,13 +1,9 @@
 import { FC } from 'react';
-import { User } from '../../App';
-import { PrintQueueItem } from '../../../types';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface ActionControlStripProps {
-  currentUser?: User;
   userPins: string[];
   onPinToggle?: (action: string) => void;
-  onQueuePrint?: (targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action?: 'none' | 'water' | 'feed') => void;
-  printQueue?: PrintQueueItem[];
   targetId: string;
   targetType: 'plant' | 'location' | 'zone';
   targetTitle: string;
@@ -16,17 +12,16 @@ interface ActionControlStripProps {
 }
 
 export const ActionControlStrip: FC<ActionControlStripProps> = ({
-  currentUser,
   userPins,
   onPinToggle,
-  onQueuePrint,
-  printQueue,
   targetId,
   targetType,
   targetTitle,
   targetSubtitle,
   showToast
 }) => {
+  const { currentUser, printQueue, onQueuePrint } = useGarden();
+  
   if (currentUser?.workspaceRole === 'viewer' && currentUser?.role !== 'god-admin') {
     return null;
   }
@@ -34,7 +29,6 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
   const isOwnerOrAdmin = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
 
   const handleQueueAction = (action: 'none' | 'water' | 'feed') => {
-    if (!onQueuePrint) return;
     const isQueued = printQueue?.some(q => q.targetId === targetId && q.action === action);
     
     let title = targetTitle;
@@ -75,7 +69,7 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
         </div>
       )}
       
-      {isOwnerOrAdmin && onQueuePrint && (
+      {isOwnerOrAdmin && (
         <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
           <div className="flex items-start gap-1.5 ml-1 mr-2">
             <span className="text-[10px] leading-tight mt-[1px]">🖨️</span>

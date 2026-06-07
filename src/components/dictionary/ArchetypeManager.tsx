@@ -1,23 +1,17 @@
 import React, { useState, useMemo, useEffect, FC } from 'react';
-import { PlantArchetype, PlantInstance } from '../../../types';
+import { PlantArchetype } from '../../../types';
 import { Container, Input, Toast, Subtitle, Button } from '../../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface ArchetypeManagerProps {
-  gardenName: string;
-  archetypes: PlantArchetype[];
-  instances: PlantInstance[];
-  onAdd: (archetype: PlantArchetype) => void;
-  onUpdate: (id: string, updates: Partial<PlantArchetype>) => void;
-  onDelete: (id: string) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
-  currentUser: User;
 }
 
-export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, currentUser, archetypes, instances, onAdd, onUpdate, onDelete, onOpenMenu, onOpenWorkspaceMenu }) => {
+export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpenWorkspaceMenu }) => {
+  const { gardenProfile, currentUser, archetypes, instances, onAddArchetype, onUpdateArchetype, onDeleteArchetype } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -70,7 +64,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
 
   const handleSave = (e: React.FormEvent, id: string) => {
     e.preventDefault();
-    onUpdate(id, editData);
+    onUpdateArchetype(id, editData);
     setEditingId(null);
     showToast('📖 Plant reference updated!');
   };
@@ -116,7 +110,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
       ...newData
     };
 
-    onAdd(newArchetype);
+    onAddArchetype(newArchetype);
     setIsAdding(false);
     setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun', lifecycle: 'Unknown', funFacts: [] });
     showToast('✅ New plant added successfully!');
@@ -132,7 +126,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
-      <PageHeader title="Plant Dictionary" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <PageHeader title="Plant Dictionary" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
@@ -205,7 +199,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ gardenName, curren
                         onEditStart={() => { setEditingId(arch.id); setEditData(arch); setViewingId(null); }}
                         onEditCancel={() => setEditingId(null)}
                         onSave={(e) => handleSave(e, arch.id)}
-                        onDelete={() => { if (inUseCount === 0 && window.confirm('Delete this plant archetype?')) { onDelete(arch.id); showToast('🗑️ Archetype removed'); } }}
+                        onDelete={() => { if (inUseCount === 0 && window.confirm('Delete this plant archetype?')) { onDeleteArchetype(arch.id); showToast('🗑️ Archetype removed'); } }}
                       />
                     );
                   })}

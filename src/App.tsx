@@ -1,45 +1,11 @@
-import { useState, useEffect, useCallback, FC, useRef } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../types';
-import { Dashboard } from './components/core/Dashboard';
-import { PlantDetail } from './components/inventory/PlantDetail';
-import { Scanner } from './components/common/Scanner';
-import { LocationManager } from './components/spaces/LocationManager';
-import { ArchetypeManager } from './components/dictionary/ArchetypeManager';
-import { ZoneManager } from './components/spaces/ZoneManager';
-import { SettingsManager } from './components/core/SettingsManager';
-import { InventoryManager } from './components/inventory/InventoryManager';
-import { LocationDetail } from './components/spaces/LocationDetail';
-import { ZoneDetail } from './components/spaces/ZoneDetail';
-import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
-import { LoginScreen } from './components/core/LoginScreen';
-import { HelpCenter } from './components/core/HelpCenter';
-import { PrintCenter } from './components/core/settings/PrintCenter';
-import { FAB } from './styles/StyledElements';
+import { useState, useEffect, useCallback, FC, useRef, useMemo } from 'react';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, User, GardenProfile, Workspace } from '../types';
+import { GardenContext } from './contexts/GardenContext';
+import { AppRouter } from './AppRouter';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export interface User {
-  id: string;
-  username: string;
-  role?: string;
-  name: string;
-  imageUrl?: string;
-  accesses?: { id: string, name: string, role: string }[];
-  workspaceRole?: string;
-}
-
-export interface GardenProfile {
-  id: string;
-  name: string;
-  imageUrl?: string;
-}
-
-export interface Workspace {
-  id: string;
-  name: string;
-  imageUrl?: string;
-  role: string;
-}
+export type { User, GardenProfile, Workspace };
 
 export const App: FC = () => {
   const [instances, setInstances] = useState<PlantInstance[]>([]);
@@ -59,13 +25,6 @@ export const App: FC = () => {
   });
   const [gardenProfile, setGardenProfile] = useState<GardenProfile | null>(null);
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory' | 'help' | 'print'>('dashboard');
-  const [activeQr, setActiveQr] = useState<string | null>(null);
-  const [activeLoc, setActiveLoc] = useState<string | null>(null);
-  const [activeZone, setActiveZone] = useState<string | null>(null);
-  const [initialAction, setInitialAction] = useState<string | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error'>('synced');
 
   const skipNextSync = useRef(false);
@@ -91,11 +50,6 @@ export const App: FC = () => {
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
-
-  // Instantly scroll to the top of the window whenever the view changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentView]);
 
   useEffect(() => {
     if (!currentUser || !token) {
@@ -205,65 +159,33 @@ export const App: FC = () => {
     }
 
     setSyncStatus('syncing');
-    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
-    fetch(`${apiBase}/api/state`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ instances, archetypes, locations, zones, printQueue })
-    })
-    .then(res => {
-      if (!res.ok) {
-        console.error(`Server rejected state sync: HTTP ${res.status}`);
-        setSyncStatus('error');
-      } else {
-        setSyncStatus('synced');
-      }
-    })
-    .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
+    // Debounce the network request by 1.5 seconds to prevent spamming the server
+    const syncTimeout = setTimeout(() => {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+
+      fetch(`${apiBase}/api/state`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ instances, archetypes, locations, zones, printQueue })
+      })
+      .then(res => {
+        if (!res.ok) {
+          console.error(`Server rejected state sync: HTTP ${res.status}`);
+          setSyncStatus('error');
+        } else {
+          setSyncStatus('synced');
+        }
+      })
+      .catch(err => { console.error('Failed to sync state to database:', err); setSyncStatus('error'); });
+    }, 1500);
+
+    return () => clearTimeout(syncTimeout);
   }, [instances, archetypes, locations, zones, printQueue, isDbLoaded, currentUser, token, initialLoadSuccess]);
-
-  const syncRoute = useCallback(() => {
-    const pathname = window.location.pathname;
-    const parts = pathname.split('/').filter(Boolean);
-    
-    if (parts.length === 0) {
-      setCurrentView('dashboard');
-      setActiveQr(null);
-      setActiveLoc(null);
-      setActiveZone(null);
-      setInitialAction(null);
-      return;
-    }
-
-    const [type, id, action] = parts;
-    
-    if (type === 'plant' && id) {
-      setActiveQr(id);
-      setInitialAction(action || null);
-      setCurrentView('detail');
-    } else if (type === 'location' && id) {
-      setActiveLoc(id);
-      setInitialAction(action || null);
-      setCurrentView('locationDetail');
-    } else if (type === 'zone' && id) {
-      setActiveZone(decodeURIComponent(id));
-      setInitialAction(action || null);
-      setCurrentView('zoneDetail');
-    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print'].includes(type)) {
-      setCurrentView(type as any);
-      setActiveQr(null);
-      setActiveLoc(null);
-      setActiveZone(null);
-      setInitialAction(null);
-    } else {
-      setCurrentView('dashboard');
-    }
-  }, []);
 
   const handleSwitchGarden = (gardenId: string) => {
     if (!token) return;
@@ -295,28 +217,6 @@ export const App: FC = () => {
       });
   };
 
-  useEffect(() => {
-    if (!window.history.state?.internal) {
-      window.history.replaceState({ internal: true }, '', window.location.pathname);
-    }
-    syncRoute();
-    window.addEventListener('popstate', syncRoute);
-    return () => window.removeEventListener('popstate', syncRoute);
-  }, [syncRoute]);
-
-  const navigateTo = useCallback((path: string) => {
-    window.history.pushState({ internal: true }, '', path);
-    syncRoute();
-  }, [syncRoute]);
-
-  const handleGoBack = useCallback(() => {
-    if (window.history.state?.internal) {
-      window.history.back();
-    } else {
-      navigateTo('/');
-    }
-  }, [navigateTo]);
-
   const handleLogin = async (username: string, password: string): Promise<void> => {
     const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
     const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
@@ -337,7 +237,10 @@ export const App: FC = () => {
     setCurrentUser(userObj);
     localStorage.setItem('florasync_token', data.token);
     localStorage.setItem('florasync_user', JSON.stringify(userObj));
-    navigateTo('/');
+    
+    // Using a simpler approach than navigateTo('/')
+    window.history.pushState({ internal: true }, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   const handleUpdateUser = (updates: Partial<User>) => {
@@ -377,7 +280,8 @@ export const App: FC = () => {
     setToken(null);
     localStorage.removeItem('florasync_token');
     localStorage.removeItem('florasync_user');
-    navigateTo('/');
+    window.history.pushState({ internal: true }, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   const handleQueuePrint = useCallback((targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action: 'none' | 'water' | 'feed' = 'none') => {
@@ -541,10 +445,6 @@ export const App: FC = () => {
     ));
   }, [currentUser]);
 
-  const handleClearAction = useCallback(() => {
-    setInitialAction(null);
-  }, []);
-
   const handleRegister = (qrId: string, identifier: string, isNew: boolean, locationIdentifier: string, isNewLocation: boolean = false, zoneIdentifier: string = '', isNewZone: boolean = false, imageUrl: string = '') => {
     let targetArchetypeId = identifier;
 
@@ -614,7 +514,8 @@ export const App: FC = () => {
 
   const handleDeleteInstance = (qrId: string) => {
     setInstances(prev => prev.filter(inst => inst.qrId !== qrId));
-    handleGoBack();
+    // handleDeleteInstance is called within detail view usually. We can dispatch a popstate.
+    window.history.back();
   };
 
   const handleUpdateArchetype = (id: string, updates: Partial<PlantArchetype>) => {
@@ -663,174 +564,39 @@ export const App: FC = () => {
     setLocations(prev => prev.filter(loc => loc.id !== id));
   };
 
-  const handleNavigate = (qrId: string) => navigateTo(`/plant/${qrId}`);
-  const handleNavigateLocation = (locId: string) => navigateTo(`/location/${locId}`);
-  const handleNavigateZone = (zoneId: string) => navigateTo(`/zone/${zoneId}`);
-
-  const handleMenuNavigate = (route: MenuRoute) => {
-    setIsMenuOpen(false);
-    if (route === 'dashboard') {
-      navigateTo('/');
-    } else {
-      navigateTo(`/${route}`);
-    }
-  };
-
-  const handleScanResult = (qrString: string) => {
-    try {
-      // By providing the current origin as the base, it seamlessly supports both relative paths and absolute URLs!
-      const url = new URL(qrString, window.location.origin);
-      const parts = url.pathname.split('/').filter(Boolean);
-      const [type, id] = parts;
-      
-      if (['plant', 'location', 'zone'].includes(type) && id) {
-        navigateTo(url.pathname);
-        return;
-      }
-    } catch (e) {
-      // Fallback below
-    }
-    
-    // Fallback: Check if the scanned string matches a Location ID first, else assume it's a Plant Instance QR
-    if (locations.some(l => l.id === qrString)) {
-      handleNavigateLocation(qrString);
-    } else {
-      handleNavigate(qrString);
-    }
-  };
-
-  const handleOpenWorkspaceMenu = workspaces.length > 1 ? () => setIsWorkspaceMenuOpen(true) : undefined;
-
-  const renderView = () => {
-    if (!currentUser || !token) {
-      return <LoginScreen onLogin={handleLogin} />;
-    }
-
-    if (!isDbLoaded) {
-      return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center text-emerald-800 dark:text-emerald-400 font-medium">
-          <img src='/images/icons/loader.apng.png' alt="FloraSync Loading Spinner" className="w-16 h-16 mb-4" />
-          Syncing with Greenhouse...
-        </div>
-      );
-    }
-
-    if (initialLoadSuccess === false) {
-      return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-          <div className="text-6xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Connection Error</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-sm leading-relaxed">
-            Could not securely connect to the FloraSync database. Your garden data is safe on the server, but cannot be loaded right now.
-          </p>
-          <div className="flex gap-3">
-            <button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">
-              Retry Connection
-            </button>
-            <button onClick={handleLogout} className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-6 py-2 rounded-xl font-bold active:scale-95 transition-all">
-              Log Out
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    if (currentView === 'detail' && activeQr) {
-      const instance = instances.find(i => i.qrId === activeQr);
-      const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
-      const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
-      const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
-
-      return (
-        <PlantDetail qrId={activeQr} initialAction={initialAction} instance={instance} archetype={archetype} archetypes={archetypes} location={location} locations={locations} zone={zone} zones={zones} onWater={handleWater} onFeed={handleFeed} onRegister={handleRegister} onUpdate={handleUpdateInstance} onDelete={handleDeleteInstance} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} onNavigateLocation={handleNavigateLocation} onNavigateZone={handleNavigateZone} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
-      );
-    }
-
-    if (currentView === 'locationDetail' && activeLoc) {
-      const location = locations.find(l => l.id === activeLoc);
-      const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
-      const locationInstances = instances.filter(i => i.locationId === activeLoc);
-      
-      return (
-        <LocationDetail locationId={activeLoc} initialAction={initialAction} location={location} zone={zone} zones={zones} instances={locationInstances} archetypes={archetypes} onRegisterLocation={handleRegisterLocation} onUpdateLocation={handleUpdateLocation} onBatchWater={handleBatchWater} onBatchFeed={handleBatchFeed} onNavigate={handleNavigate} onNavigateZone={handleNavigateZone} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
-      );
-    }
-
-    if (currentView === 'zoneDetail' && activeZone) {
-      const zone = zones.find(z => z.id === activeZone);
-      const zoneLocations = locations.filter(l => l.zoneId === activeZone);
-      const zoneLocIds = zoneLocations.map(l => l.id);
-      const zoneInstances = instances.filter(i => zoneLocIds.includes(i.locationId));
-      
-      return (
-        <ZoneDetail zoneId={activeZone} zone={zone} initialAction={initialAction} locations={zoneLocations} instances={zoneInstances} archetypes={archetypes} onRegisterZone={handleRegisterZone} onUpdateZone={handleUpdateZone} onBatchWaterZone={handleBatchWaterZone} onBatchFeedZone={handleBatchFeedZone} onNavigate={handleNavigate} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onClearAction={handleClearAction} currentUser={currentUser || undefined} onQueuePrint={handleQueuePrint} printQueue={printQueue} />
-      );
-    }
-
-    if (currentView === 'scanner') {
-      return <Scanner onScan={handleScanResult} onClose={handleGoBack} />
-    }
-
-    if (currentView === 'zones') {
-      return <ZoneManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} zones={zones} locations={locations} onAddZone={handleAddZone} onUpdateZone={handleUpdateZone} onDeleteZone={handleDeleteZone} onNavigateZone={handleNavigateZone} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-    }
-
-    if (currentView === 'inventory') {
-      return <InventoryManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onRegister={handleRegister} onNavigate={handleNavigate} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-    }
-
-    if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={handleUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={handleUpdateGarden} onLogout={handleLogout} token={token} />;
-    }
-
-    if (currentView === 'locations') {
-      return <LocationManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} locations={locations} zones={zones} instances={instances} onAdd={handleAddLocation} onUpdate={handleUpdateLocation} onDelete={handleDeleteLocation} onOpenMenu={() => setIsMenuOpen(true)} onNavigateLocation={handleNavigateLocation} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-    }
-
-    if (currentView === 'archetypes') {
-      return <ArchetypeManager gardenName={gardenProfile?.name || 'FloraSync'} currentUser={currentUser} archetypes={archetypes} instances={instances} onAdd={handleAddArchetype} onUpdate={handleUpdateArchetype} onDelete={handleDeleteArchetype} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-    }
-
-    if (currentView === 'help') {
-      return <HelpCenter gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-    }
-
-    if (currentView === 'print') {
-      const isAdminOrOwner = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
-      if (isAdminOrOwner) {
-        return <PrintCenter gardenProfile={gardenProfile} instances={instances} archetypes={archetypes} locations={locations} zones={zones} printQueue={printQueue} setPrintQueue={setPrintQueue} token={token} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
-      }
-    }
-
-    return (
-      <Dashboard 
-        gardenProfile={gardenProfile}
-        currentUser={currentUser}
-        instances={instances} 
-        archetypes={archetypes} 
-        locations={locations} 
-        zones={zones} 
-        onBatchWater={handleBatchWater} 
-        onBatchWaterAll={handleBatchWaterAll}
-        onBatchFeedAll={handleBatchFeedAll}
-        onBatchWaterZone={handleBatchWaterZone}
-        onBatchFeedZone={handleBatchFeedZone}
-        onBatchWaterLocation={handleBatchWater}
-        onBatchFeedLocation={handleBatchFeed}
-        onWater={handleWater}
-        onFeed={handleFeed}
-        onNavigate={handleNavigate} 
-        onOpenMenu={() => setIsMenuOpen(true)} 
-        onNavigateInventory={() => navigateTo('/inventory')} 
-        onNavigateZone={handleNavigateZone} 
-        onNavigateLocation={handleNavigateLocation}
-        onOpenWorkspaceMenu={handleOpenWorkspaceMenu}
-      />
-    );
-  };
+  const gardenContextValue = useMemo(() => ({
+    instances, archetypes, locations, zones, printQueue, setPrintQueue, currentUser, gardenProfile,
+    onWater: handleWater,
+    onFeed: handleFeed,
+    onRegister: handleRegister,
+    onUpdateInstance: handleUpdateInstance,
+    onDeleteInstance: handleDeleteInstance,
+    onQueuePrint: handleQueuePrint,
+    onBatchWaterLocation: handleBatchWater,
+    onBatchFeedLocation: handleBatchFeed,
+    onBatchWaterZone: handleBatchWaterZone,
+    onBatchFeedZone: handleBatchFeedZone,
+    onBatchWaterAll: handleBatchWaterAll,
+    onBatchFeedAll: handleBatchFeedAll,
+    onRegisterLocation: handleRegisterLocation,
+    onAddLocation: handleAddLocation,
+    onUpdateLocation: handleUpdateLocation,
+    onDeleteLocation: handleDeleteLocation,
+    onRegisterZone: handleRegisterZone,
+    onAddZone: handleAddZone,
+    onUpdateZone: handleUpdateZone,
+    onDeleteZone: handleDeleteZone,
+    onAddArchetype: handleAddArchetype,
+    onUpdateArchetype: handleUpdateArchetype,
+    onDeleteArchetype: handleDeleteArchetype
+  }), [
+    instances, archetypes, locations, zones, printQueue, currentUser, gardenProfile,
+    handleWater, handleFeed, handleRegister, handleQueuePrint, handleBatchWater,
+    handleBatchFeed, handleBatchWaterZone, handleBatchFeedZone, handleBatchWaterAll, handleBatchFeedAll
+  ]);
 
   return (
-    <>
+    <GardenContext.Provider value={gardenContextValue}>
       {syncStatus === 'syncing' && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-amber-500 text-white px-4 py-1.5 rounded-full text-xs font-bold z-50 animate-pulse shadow-lg flex items-center gap-2">
           <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div> Syncing to server...
@@ -841,63 +607,23 @@ export const App: FC = () => {
           ⚠️ Sync Failed! Check connection.
         </div>
       )}
-      <NavigationMenu 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)} 
-        onNavigate={handleMenuNavigate} 
+      
+      <AppRouter 
         currentUser={currentUser}
+        token={token}
+        isDbLoaded={isDbLoaded}
+        initialLoadSuccess={initialLoadSuccess}
+        workspaces={workspaces}
+        gardenProfile={gardenProfile}
+        theme={theme}
+        setTheme={setTheme}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
+        onSwitchGarden={handleSwitchGarden}
+        onUpdateUser={handleUpdateUser}
+        onUpdateGarden={handleUpdateGarden}
       />
-      {isWorkspaceMenuOpen && workspaces && workspaces.length > 1 && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setIsWorkspaceMenuOpen(false)}
-        >
-          <div 
-            className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-2xl animate-in slide-in-from-bottom-8 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Switch Garden</h3>
-              <button 
-                onClick={() => setIsWorkspaceMenuOpen(false)} 
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold leading-none p-2 -mr-2"
-              >✕</button>
-            </div>
-            <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-1">
-              {workspaces.map(ws => (
-                <button 
-                  key={ws.id}
-                  onClick={() => { setIsWorkspaceMenuOpen(false); if (ws.id !== gardenProfile?.id) handleSwitchGarden(ws.id); }}
-                  className={`flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2 ${ws.id === gardenProfile?.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800'}`}
-                >
-                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-xl">🏡</div>)}
-                  <div className="flex-1">
-                    <div className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight mb-0.5">{ws.name}</div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{ws.role}</div>
-                  </div>
-                  {ws.id === gardenProfile?.id && <span className="text-emerald-500 text-xl font-bold">✓</span>}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-      {renderView()}
-      {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
-        <FAB 
-          onClick={() => navigateTo('/scanner')}
-          style={{
-            position: 'fixed',
-            WebkitTransform: 'translateZ(0)',
-            transform: 'translateZ(0)',
-            transitionProperty: 'background-color, transform, opacity, box-shadow',
-            willChange: 'transform'
-          }}
-        >
-          📷
-        </FAB>
-      )}
-    </>
+    </GardenContext.Provider>
   );
 };
 

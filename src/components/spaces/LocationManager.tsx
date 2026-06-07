@@ -1,25 +1,18 @@
 import { useState, FC, FormEvent, useMemo } from 'react';
-import { Location, Zone, PlantInstance } from '../../../types';
 import { Container, Card, Button, Input, Toast, Subtitle } from '../../styles/StyledElements';
 import { LocationCard } from './LocationCard';
 import { PageHeader } from '../common/PageHeader';
-import { User } from '../../App';
+import { useGarden } from '../../contexts/GardenContext';
+import { Location } from '../../../types';
 
 interface LocationManagerProps {
-  gardenName: string;
-  locations: Location[];
-  zones: Zone[];
-  instances: PlantInstance[];
-  onAdd: (name: string, zoneId: string) => void;
-  onUpdate: (id: string, updates: Partial<Location>) => void;
-  onDelete: (id: string) => void;
   onOpenMenu: () => void;
   onNavigateLocation: (id: string) => void;
   onOpenWorkspaceMenu?: () => void;
-  currentUser: User;
 }
 
-export const LocationManager: FC<LocationManagerProps> = ({ gardenName, currentUser, locations, zones, instances, onAdd, onUpdate, onDelete, onOpenMenu, onNavigateLocation, onOpenWorkspaceMenu }) => {
+export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNavigateLocation, onOpenWorkspaceMenu }) => {
+  const { gardenProfile, currentUser, locations, zones, instances, onAddLocation, onUpdateLocation, onDeleteLocation } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
   const [selectedZoneId, setSelectedZoneId] = useState('');
@@ -35,7 +28,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, currentU
   const handleAdd = (e: FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !selectedZoneId) return;
-    onAdd(newName, selectedZoneId);
+    onAddLocation(newName, selectedZoneId);
     setNewName('');
     showToast('📍 Location added successfully!');
   };
@@ -67,7 +60,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, currentU
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <PageHeader title="Location Manager" supertitle={gardenName} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <PageHeader title="Location Manager" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Locations</Subtitle>
       {currentUser?.workspaceRole !== 'viewer' && (
@@ -128,8 +121,8 @@ export const LocationManager: FC<LocationManagerProps> = ({ gardenName, currentU
                         setEditData={setEditData}
                         onEditStart={() => { setEditingId(loc.id); setEditData(loc); }}
                         onEditCancel={() => setEditingId(null)}
-                        onSave={(e) => { e.preventDefault(); onUpdate(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
-                        onDelete={() => { if (plantsInLocation === 0 && window.confirm('Delete this location?')) { onDelete(loc.id); showToast('🗑️ Location removed'); } }}
+                        onSave={(e) => { e.preventDefault(); onUpdateLocation(loc.id, editData); setEditingId(null); showToast('📍 Location updated!'); }}
+                        onDelete={() => { if (plantsInLocation === 0 && window.confirm('Delete this location?')) { onDeleteLocation(loc.id); showToast('🗑️ Location removed'); } }}
                         onNavigateLocation={() => onNavigateLocation(loc.id)}
                       />
                     );

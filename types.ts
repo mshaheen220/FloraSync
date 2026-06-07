@@ -1,3 +1,26 @@
+export interface User {
+  id: string;
+  username: string;
+  role?: string;
+  name: string;
+  imageUrl?: string;
+  accesses?: { id: string, name: string, role: string }[];
+  workspaceRole?: string;
+}
+
+export interface GardenProfile {
+  id: string;
+  name: string;
+  imageUrl?: string;
+}
+
+export interface Workspace {
+  id: string;
+  name: string;
+  imageUrl?: string;
+  role: string;
+}
+
 export interface FunFact {
   title?: string;
   fact: string;

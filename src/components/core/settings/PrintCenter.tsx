@@ -1,24 +1,17 @@
 import { useState, useEffect, FC } from 'react';
 import { Card, Button, Input, Subtitle, Container, Toast } from '../../../styles/StyledElements';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../../../types';
 import { PrintLayout, PrintItem } from './PrintLayout';
 import { PageHeader } from '../../common/PageHeader';
-import { GardenProfile } from '../../../App';
+import { useGarden } from '../../../contexts/GardenContext';
 
 interface PrintCenterProps {
   token?: string | null;
-  instances: PlantInstance[];
-  archetypes: PlantArchetype[];
-  locations: Location[];
-  zones: Zone[];
-  printQueue: PrintQueueItem[];
-  setPrintQueue: React.Dispatch<React.SetStateAction<PrintQueueItem[]>>;
-  gardenProfile?: GardenProfile | null;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
 }
 
-export const PrintCenter: FC<PrintCenterProps> = ({ token, instances, archetypes, locations, zones, printQueue, setPrintQueue, gardenProfile, onOpenMenu, onOpenWorkspaceMenu }) => {
+export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWorkspaceMenu }) => {
+  const { instances, archetypes, locations, zones, printQueue, setPrintQueue, gardenProfile } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [generatedFiles, setGeneratedFiles] = useState<{name: string, time: number}[]>([]);
   
