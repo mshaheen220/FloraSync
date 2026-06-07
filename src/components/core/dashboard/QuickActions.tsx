@@ -31,9 +31,12 @@ export const QuickActions: FC<QuickActionsProps> = ({
   if (currentUser?.workspaceRole === 'viewer') return null;
 
   const pinnedItems: { id: string, name: string, icon: string, onClick: () => void }[] = [];
+  const currentUserId = currentUser?.id || '';
 
   zones.forEach(zone => {
-    const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
+    const actions = (zone.pinnedActions && !Array.isArray(zone.pinnedActions)) 
+      ? (zone.pinnedActions[currentUserId] || []) 
+      : (zone.isPinned ? ['water'] : []);
     actions.forEach(action => {
       if (action === 'water') {
         pinnedItems.push({ id: `z-w-${zone.id}`, name: `Water\n${zone.name}`, icon: '💦', onClick: () => onBatchWaterZone(zone.id) });
@@ -46,7 +49,7 @@ export const QuickActions: FC<QuickActionsProps> = ({
   });
 
   locations.forEach(loc => {
-    const actions = loc.pinnedActions || [];
+    const actions = (loc.pinnedActions && !Array.isArray(loc.pinnedActions)) ? (loc.pinnedActions[currentUserId] || []) : [];
     actions.forEach(action => {
       if (action === 'water') {
         pinnedItems.push({ id: `l-w-${loc.id}`, name: `Water\n${loc.name}`, icon: '💦', onClick: () => onBatchWaterLocation ? onBatchWaterLocation(loc.id) : alert('Action not available') });
@@ -59,7 +62,7 @@ export const QuickActions: FC<QuickActionsProps> = ({
   });
 
   instances.forEach(inst => {
-    const actions = inst.pinnedActions || [];
+    const actions = (inst.pinnedActions && !Array.isArray(inst.pinnedActions)) ? (inst.pinnedActions[currentUserId] || []) : [];
     if (actions.length > 0) {
       const arch = archetypes.find(a => a.id === inst.archetypeId);
       const name = arch?.commonName || 'Plant';

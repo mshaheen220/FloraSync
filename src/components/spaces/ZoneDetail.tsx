@@ -81,6 +81,18 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     }
   }, [locations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
 
+  const currentUserId = currentUser?.id || '';
+  const userPins = (zone?.pinnedActions && !Array.isArray(zone.pinnedActions)) 
+    ? (zone.pinnedActions[currentUserId] || []) 
+    : (zone?.isPinned ? ['water'] : []);
+
+  const handlePinToggle = (action: string) => {
+    if (!zone) return;
+    const newPins = userPins.includes(action) ? userPins.filter(a => a !== action) : [...userPins, action];
+    const existingPins = (zone.pinnedActions && !Array.isArray(zone.pinnedActions)) ? zone.pinnedActions : {};
+    onUpdateZone(zone.id, { pinnedActions: { ...existingPins, [currentUserId]: newPins }, isPinned: false });
+  };
+
   if (!zone) {
     if (currentUser?.workspaceRole === 'viewer') {
       return (
@@ -156,27 +168,18 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
                 <div className="flex gap-2">
                   <Button 
                     $variant="secondary" 
-                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || (zone.isPinned ? ['water'] : [])).includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                    onClick={() => {
-                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
-                      onUpdateZone(zone.id, { pinnedActions: actions.includes('water') ? actions.filter(a => a !== 'water') : [...actions, 'water'], isPinned: false });
-                    }}
+                    className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => handlePinToggle('water')}
                   >💦 Water</Button>
                   <Button 
                     $variant="secondary" 
-                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || []).includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                    onClick={() => {
-                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
-                      onUpdateZone(zone.id, { pinnedActions: actions.includes('feed') ? actions.filter(a => a !== 'feed') : [...actions, 'feed'], isPinned: false });
-                    }}
+                    className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => handlePinToggle('feed')}
                   >🪴 Feed</Button>
                   <Button 
                     $variant="secondary" 
-                    className={`flex-1 !py-2 !text-xs transition-colors ${(zone.pinnedActions || []).includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                    onClick={() => {
-                      const actions = zone.pinnedActions || (zone.isPinned ? ['water'] : []);
-                      onUpdateZone(zone.id, { pinnedActions: actions.includes('navigate') ? actions.filter(a => a !== 'navigate') : [...actions, 'navigate'], isPinned: false });
-                    }}
+                    className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                    onClick={() => handlePinToggle('navigate')}
                   >👁️ Navigate</Button>
                 </div>
               </div>

@@ -14,9 +14,10 @@ interface ZoneCardProps {
   onDelete: () => void;
   onNavigateZone: () => void;
   canEdit?: boolean;
+  currentUserId: string;
 }
 
-export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone, canEdit }) => {
+export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, editZoneData, setEditZoneData, onEditStart, onEditCancel, onSave, onDelete, onNavigateZone, canEdit, currentUserId }) => {
   if (isEditing) {
     return (
       <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
@@ -63,7 +64,7 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight flex items-center gap-2">
             {zone.name}
-            {((zone.pinnedActions && zone.pinnedActions.length > 0) || zone.isPinned) && (
+            {((zone.pinnedActions && !Array.isArray(zone.pinnedActions) && zone.pinnedActions[currentUserId]?.length > 0) || (zone.isPinned && (!zone.pinnedActions || Array.isArray(zone.pinnedActions)))) && (
               <span className="text-xs" title="Has actions pinned to the Dashboard">📌</span>
             )}
           </h3>

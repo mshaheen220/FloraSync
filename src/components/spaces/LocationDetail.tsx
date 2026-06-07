@@ -52,6 +52,16 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     }
   }, [location, initialAction, locationId, onBatchWater, onBatchFeed, onClearAction]);
 
+  const currentUserId = currentUser?.id || '';
+  const userPins = (location?.pinnedActions && !Array.isArray(location.pinnedActions)) ? (location.pinnedActions[currentUserId] || []) : [];
+
+  const handlePinToggle = (action: string) => {
+    if (!location || !onUpdateLocation) return;
+    const newPins = userPins.includes(action) ? userPins.filter(a => a !== action) : [...userPins, action];
+    const existingPins = (location.pinnedActions && !Array.isArray(location.pinnedActions)) ? location.pinnedActions : {};
+    onUpdateLocation(location.id, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
+  };
+
   if (!location) {
     if (currentUser?.workspaceRole === 'viewer') {
       return (
@@ -134,27 +144,18 @@ export const LocationDetail: FC<LocationDetailProps> = ({
             <div className="flex gap-2">
               <Button 
                 $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => {
-                  const actions = location.pinnedActions || [];
-                  onUpdateLocation(location.id, { pinnedActions: actions.includes('water') ? actions.filter(a => a !== 'water') : [...actions, 'water'] });
-                }}
+                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('water') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => handlePinToggle('water')}
               >💦 Water</Button>
               <Button 
                 $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => {
-                  const actions = location.pinnedActions || [];
-                  onUpdateLocation(location.id, { pinnedActions: actions.includes('feed') ? actions.filter(a => a !== 'feed') : [...actions, 'feed'] });
-                }}
+                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('feed') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => handlePinToggle('feed')}
               >🪴 Feed</Button>
               <Button 
                 $variant="secondary" 
-                className={`flex-1 !py-2 !text-xs transition-colors ${(location.pinnedActions || []).includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
-                onClick={() => {
-                  const actions = location.pinnedActions || [];
-                  onUpdateLocation(location.id, { pinnedActions: actions.includes('navigate') ? actions.filter(a => a !== 'navigate') : [...actions, 'navigate'] });
-                }}
+                className={`flex-1 !py-2 !text-xs transition-colors ${userPins.includes('navigate') ? '!bg-amber-100 !text-amber-800 !border-amber-200 dark:!bg-amber-900/30 dark:!text-amber-400 dark:!border-amber-800' : ''}`}
+                onClick={() => handlePinToggle('navigate')}
               >👁️ Navigate</Button>
             </div>
           </div>

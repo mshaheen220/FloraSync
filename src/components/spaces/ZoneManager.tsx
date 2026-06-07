@@ -64,6 +64,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({
           return (
             <ZoneCard
               canEdit={currentUser?.workspaceRole !== 'viewer'}
+              currentUserId={currentUser?.id || ''}
               key={zone.id} zone={zone} locationsInZone={locationsInZone} isEditing={isEditing}
               editZoneData={editZoneData} setEditZoneData={setEditZoneData}
               onEditStart={() => { setEditingZoneId(zone.id); setEditZoneData(zone); }} onEditCancel={() => setEditingZoneId(null)}
