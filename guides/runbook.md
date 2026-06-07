@@ -57,7 +57,7 @@ PM2 manages the Node API and serves the database and UI on Port 5050.
 cd /Users/michael/Documents/dev/FloraSync
 
 # Start the server explicitly on Port 5050 in production mode
-NODE_ENV=production PORT=5050 pm2 start scripts/node/server.js --name "florasync"
+NODE_ENV=production PORT=5050 pm2 start server.js --name "florasync"
 
 # Save the current PM2 state so it auto-starts on the next boot
 pm2 save
