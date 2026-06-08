@@ -5,6 +5,7 @@ import { PageHeader } from '../common/PageHeader';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { hasPermission } from '../../utils/permissions';
+import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -96,7 +97,9 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
           <Card className="text-center py-10 shadow-lg border-emerald-500">
-            <div className="text-5xl mb-4">🌍</div>
+            <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+              <Icon name="globe" size={48} />
+            </div>
             <Title>Unassigned Tag</Title>
             <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
               Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned. Viewers do not have permission to register new zones.
@@ -108,7 +111,9 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg border-emerald-500">
-          <div className="text-5xl mb-4">🌍</div>
+          <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+            <Icon name="globe" size={48} />
+          </div>
           <Title>New Zone Tag</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
             Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned.
@@ -158,8 +163,8 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           {currentUser?.workspaceRole !== 'viewer' && (
             <div className="w-full flex flex-col gap-3 px-2">
               <div className="flex gap-3">
-                <Button className="flex-1" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
-                <Button className="flex-1" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+                <Button className="flex-1 flex items-center justify-center gap-2" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}><Icon name="water" size={18} /> Water Zone</Button>
+                <Button className="flex-1 flex items-center justify-center gap-2" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}><Icon name="feed" size={18} /> Feed Zone</Button>
               </div>
             </div>
           )}

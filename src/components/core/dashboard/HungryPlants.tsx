@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
 import { Subtitle, Card, StatusBadge } from '../../../styles/StyledElements';
+import { Icon } from '../../common/Icon';
 
 interface HungryPlantsProps {
   trackedInstances: PlantInstance[];
@@ -28,7 +29,7 @@ export const HungryPlants: FC<HungryPlantsProps> = ({ trackedInstances, archetyp
 
   return (
     <section className="animate-in fade-in duration-500 delay-[400ms]">
-      <Subtitle>🍽️ Hungry Plants</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="utensils" size={20} className="text-amber-500 dark:text-amber-400" /> Hungry Plants</Subtitle>
       <div className="grid grid-cols-2 gap-3">
         {hungryPlants.map(item => (
           <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="cursor-pointer hover:border-amber-300 dark:hover:border-amber-700 !border-amber-200 dark:!border-amber-900/50 !bg-amber-50/30 dark:!bg-amber-900/10 !p-3 flex flex-col h-full">

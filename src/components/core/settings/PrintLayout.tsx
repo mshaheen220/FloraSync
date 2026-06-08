@@ -17,8 +17,8 @@ interface PrintLayoutProps {
 }
 
 // Helper to generate a clean white background icon for the center of the QR code
-const getIconSvg = (emoji: string) => {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="24" fill="white" stroke="black" stroke-width="8"/><text x="50" y="54" dominant-baseline="central" text-anchor="middle" font-size="56" font-family="system-ui, sans-serif" fill="black" stroke="black" stroke-width="3">${emoji}</text></svg>`;
+const getLucideSvg = (paths: string) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="24" fill="white" stroke="black" stroke-width="8"/><g transform="translate(26, 26) scale(2)"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${paths}</svg></g></svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
@@ -26,8 +26,8 @@ const ICONS: Record<string, string> = {
   plant: '/images/icons/qr/plant.png',
   location: '/images/icons/qr/location.png',
   zone: '/images/icons/qr/zone.png',
-  water: getIconSvg('💧'),
-  feed: getIconSvg('🍽️')
+  water: getLucideSvg('<path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7 2.99 7 2.99s-2.29 6.08-3.29 7.08c-1.14.93-1.71 2.03-1.71 3.19 0 2.22 1.8 4.05 4 4.05z"/><path d="M17 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S17 2.99 17 2.99s-2.29 6.08-3.29 7.08c-1.14.93-1.71 2.03-1.71 3.19 0 2.22 1.8 4.05 4 4.05z"/>'),
+  feed: getLucideSvg('<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>')
 };
 
 const TYPE_COLORS = {
@@ -65,11 +65,11 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
           <span className="text-xs text-slate-400">Set your printer margins to "None" or "Minimum" for best results.</span>
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors">
-            ❌
+          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors flex items-center justify-center">
+            Cancel
           </button>
-          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg">
-            🖨️
+          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg flex items-center gap-2">
+            Print
           </button>
         </div>
       </div>

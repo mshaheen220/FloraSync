@@ -3,6 +3,7 @@ import { Card, Button, Input, Subtitle, Container, Toast } from '../../../styles
 import { PrintLayout, PrintItem } from './PrintLayout';
 import { PageHeader } from '../../common/PageHeader';
 import { useGarden } from '../../../contexts/GardenContext';
+import { Icon } from '../../common/Icon';
 
 interface PrintCenterProps {
   token?: string | null;
@@ -288,7 +289,9 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
               
               {printQueue.length === 0 ? (
                 <div className="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
-                  <span className="text-2xl block mb-2">🛒</span>
+                  <div className="flex justify-center text-slate-400 mb-2">
+                    <Icon name="print" size={32} />
+                  </div>
                   <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Your Print Queue is empty.</p>
                   <p className="text-xs text-slate-500 mt-1">Add specific tags to the queue directly from the Plant, Zone, and Location detail screens.</p>
                 </div>
@@ -297,9 +300,14 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
                   {printQueue.map(item => (
                     <div key={item.id} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">{item.type === 'plant' ? '🌿' : item.type === 'location' ? '📍' : '🗺️'}</span>
+                        <span className="text-emerald-600 dark:text-emerald-400">
+                          <Icon name={item.type === 'plant' ? 'leaf' : item.type === 'location' ? 'map-pin' : 'globe'} size={20} />
+                        </span>
                         <div className="flex flex-col">
-                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{item.action !== 'none' ? `${item.action === 'water' ? '💧 Water' : '🍽️ Feed'} ` : ''}{item.title}</span>
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            {item.action !== 'none' && <Icon name={item.action === 'water' ? 'water' : 'feed'} size={14} />}
+                            {item.title}
+                          </span>
                           <span className="text-[10px] text-slate-500 uppercase tracking-wider">{item.type}</span>
                         </div>
                       </div>
@@ -333,21 +341,21 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
                   if (e.target.checked) setPrintActions(prev => [...prev, 'none']);
                   else setPrintActions(prev => prev.filter(a => a !== 'none'));
                 }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                ℹ️ Standard Info
+                <Icon name="info" size={16} /> Standard Info
               </label>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('water')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'water']);
                   else setPrintActions(prev => prev.filter(a => a !== 'water'));
                 }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                💧 Water
+                <Icon name="water" size={16} /> Water
               </label>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('feed')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'feed']);
                   else setPrintActions(prev => prev.filter(a => a !== 'feed'));
                 }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
-                🍽️ Feed
+                <Icon name="feed" size={16} /> Feed
               </label>
                 </div>
               </div>
@@ -425,7 +433,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
         </div>
         
         <Button onClick={handleOpenPrintPreview} className="mt-2 flex justify-center items-center gap-2">
-          🖨️ Open Print Preview
+          <Icon name="print" size={18} /> Open Print Preview
         </Button>
 
         {generatedFiles.length > 0 && (
@@ -443,11 +451,11 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleDownload(file.name)} className="text-xl text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1">
-                      ⬇️
+                    <button onClick={() => handleDownload(file.name)} className="text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1">
+                      <Icon name="download" size={20} />
                     </button>
-                    <button onClick={() => handleDeletePrint(file.name)} className="text-xl text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
-                      🗑️
+                    <button onClick={() => handleDeletePrint(file.name)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">
+                      <Icon name="delete" size={20} />
                     </button>
                   </div>
                 </div>

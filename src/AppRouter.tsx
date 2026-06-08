@@ -14,9 +14,10 @@ import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
 import { LoginScreen } from './components/core/LoginScreen';
 import { HelpCenter } from './components/core/HelpCenter';
 import { PrintCenter } from './components/core/settings/PrintCenter';
-import { FAB } from './styles/StyledElements';
 import { useGarden } from './contexts/GardenContext';
 import { Theme } from './App';
+import { FloatingScannerButton } from './components/common/FloatingScannerButton';
+import { Icon } from './components/common/Icon';
 
 export interface AppRouterProps {
   currentUser: User | null;
@@ -181,7 +182,9 @@ export const AppRouter: FC<AppRouterProps> = ({
     if (initialLoadSuccess === false) {
       return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-          <div className="text-6xl mb-4">⚠️</div>
+          <div className="mb-4 text-amber-500">
+            <Icon name="alert-circle" size={64} />
+          </div>
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Connection Error</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6 max-w-sm leading-relaxed">
             Could not securely connect to the FloraSync database. Your garden data is safe on the server, but cannot be loaded right now.
@@ -294,7 +297,7 @@ export const AppRouter: FC<AppRouterProps> = ({
                   onClick={() => { setIsWorkspaceMenuOpen(false); if (ws.id !== gardenProfile?.id) onSwitchGarden(ws.id); }}
                   className={`flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2 ${ws.id === gardenProfile?.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800'}`}
                 >
-                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-xl">🏡</div>)}
+                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-xl"><Icon name="tree-palm" /></div>)}
                   <div className="flex-1">
                     <div className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight mb-0.5">{ws.name}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{ws.role}</div>
@@ -308,18 +311,7 @@ export const AppRouter: FC<AppRouterProps> = ({
       )}
       {renderView()}
       {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
-        <FAB 
-          onClick={() => navigateTo('/scanner')}
-          style={{
-            position: 'fixed',
-            WebkitTransform: 'translateZ(0)',
-            transform: 'translateZ(0)',
-            transitionProperty: 'background-color, transform, opacity, box-shadow',
-            willChange: 'transform'
-          }}
-        >
-          📷
-        </FAB>
+        <FloatingScannerButton onClick={() => navigateTo('/scanner')} />
       )}
     </>
   );

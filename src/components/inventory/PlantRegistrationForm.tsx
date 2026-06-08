@@ -1,6 +1,7 @@
 import { useState, useMemo, FC, FormEvent, ChangeEvent } from 'react';
 import { PlantArchetype, Location, Zone } from '../../../types';
 import { Button, Input } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -11,7 +12,7 @@ interface PlantRegistrationFormProps {
   zones: Zone[];
   submitLabel: string;
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
 export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefilledQrId, archetypes, locations, zones, submitLabel, onRegister, onCancel }) => {
@@ -130,8 +131,8 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Plant Photo (Optional)</label>
             <div className="flex items-center gap-3">
               {customImage && <img src={customImage} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />}
-              <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                📸 {customImage ? 'Retake Photo' : 'Take Photo'}
+              <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
+                <Icon name="camera" size={18} /> {customImage ? 'Retake Photo' : 'Take Photo'}
                 <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
               </label>
             </div>

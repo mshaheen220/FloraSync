@@ -84,6 +84,34 @@ if (!dictStmt.get()) {
   db.prepare('INSERT INTO shared_dictionary (id, archetypes) VALUES (1, ?)').run('[]');
 }
 
+// One-time migration: Convert old emoji icons to SVG string names in the dictionary
+try {
+  const dictStmt = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1');
+  const dictRow = dictStmt.get();
+  if (dictRow && dictRow.archetypes) {
+    let archetypes = JSON.parse(dictRow.archetypes);
+    let updated = false;
+    
+    const emojiMap = {
+      '🪲': 'bug', '☠️': 'skull', '🍹': 'wine', '🍲': 'soup', '💡': 'lightbulb',
+      '❗': 'alert-circle', '😂': 'smile', '❤️': 'heart', '💰': 'coins',
+      '🐈': 'cat', '🧬': 'dna', '🤔': 'help-circle', '🤷': 'help-circle'
+    };
+
+    archetypes.forEach(arch => {
+      if (arch.funFacts) {
+        arch.funFacts.forEach(fact => {
+          if (fact.icon && emojiMap[fact.icon]) {
+            fact.icon = emojiMap[fact.icon];
+            updated = true;
+          }
+        });
+      }
+    });
+    if (updated) db.prepare('UPDATE shared_dictionary SET archetypes = ? WHERE id = 1').run(JSON.stringify(archetypes));
+  }
+} catch (err) {}
+
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];

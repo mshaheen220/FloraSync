@@ -4,6 +4,7 @@ import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PlantJournal } from './PlantJournal';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
+import { Icon, IconName } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -20,7 +21,7 @@ interface PlantDetailProps {
 export const PlantDetail: FC<PlantDetailProps> = ({ 
   qrId, initialAction, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
-  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
+  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser, gardenProfile } = useGarden();
 
   const instance = instances.find(i => i.qrId === qrId);
   const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
@@ -95,6 +96,34 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     onUpdateInstance(qrId, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
   };
 
+  // Dynamic Plugin Execution
+  const executePluginAction = async (manifestId: string, actionId: string) => {
+    try {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+      
+      // Fallback to localStorage if token isn't directly available in this component's scope
+      const token = localStorage.getItem('florasync_token'); 
+
+      const res = await fetch(`${apiBase}/api/addons/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ addonId: manifestId, actionId, contextData: { qrId: instance?.qrId } })
+      });
+      
+      const data = await res.json();
+      if (data.success && data.result?.clientAction?.type === 'UPDATE_INSTANCE') {
+        // The backend plugin successfully modified the DB and told the UI how to update!
+        onUpdateInstance(data.result.clientAction.qrId, data.result.clientAction.updates);
+        showToast(data.result.message || '✅ Action completed!');
+      } else if (!data.success) {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) {
+      showToast('❌ Failed to execute plugin action.');
+    }
+  };
+
   const handleRegistrationSubmit = (id: string, identifier: string, isNew: boolean, locId: string, isNewLoc?: boolean, zId?: string, isNewZ?: boolean, img?: string) => {
     onRegister(id, identifier, isNew, locId, isNewLoc, zId, isNewZ, img);
     showToast('🌱 Plant registered successfully!');
@@ -105,7 +134,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg">
-          <div className="text-5xl mb-4">🪴</div>
+          <div className="flex justify-center mb-4 text-emerald-500 dark:text-emerald-400">
+            <Icon name="leaf" size={48} />
+          </div>
           <Title>New Tag Detected</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed px-2">
             Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{qrId}</strong> is unassigned. 
@@ -147,8 +178,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return (
       <Container className="animate-in fade-in duration-300">
         <header className="mb-6 flex items-center gap-3 pt-6">
-          <button onClick={() => setIsEditing(false)} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
-            &larr;
+          <button onClick={() => setIsEditing(false)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            <Icon name="back" size={24} />
           </button>
           <div>
             <Title className="!mb-0">Edit Plant</Title>
@@ -302,34 +333,34 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     isValidData(archetype.usesForLargeHarvests)
   );
 
-  const getSunIcon = (requirement?: string) => {
-    if (!requirement) return '☀️';
+  const getSunIcon = (requirement?: string): IconName => {
+    if (!requirement) return 'sun';
     const req = requirement.toLowerCase();
-    if (req.includes('part') || req.includes('partial')) return '⛅';
-    if (req.includes('shade') && !req.includes('sun')) return '☁️';
-    return '☀️';
+    if (req.includes('part') || req.includes('partial')) return 'cloud-sun';
+    if (req.includes('shade') && !req.includes('sun')) return 'cloud';
+    return 'sun';
   };
 
-  const getWaterIcon = (days?: number) => {
-    if (!days) return '💧';
-    if (days <= 3) return '🚿'; // Frequent
-    if (days <= 7) return '💧'; // Moderate
-    return '🌵'; // Infrequent
+  const getWaterIcon = (days?: number): IconName => {
+    if (!days) return 'water';
+    if (days <= 3) return 'cloud-rain'; // Frequent
+    if (days <= 7) return 'water'; // Moderate
+    return 'droplet'; // Infrequent
   };
 
-  const getFeedIcon = (days?: number) => {
-    if (!days) return '🪴';
-    if (days <= 14) return '🍽️'; // Frequent
-    if (days <= 30) return '🪴'; // Moderate
-    return '⏳'; // Infrequent
+  const getFeedIcon = (days?: number): IconName => {
+    if (!days) return 'feed';
+    if (days <= 14) return 'utensils'; // Frequent
+    if (days <= 30) return 'feed'; // Moderate
+    return 'hourglass'; // Infrequent
   };
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <header className="mb-6 flex items-start justify-between pt-6">
         <div className="flex items-start gap-3">
-          <button onClick={onGoBack} className="text-3xl text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800 leading-none">
-            &larr;
+          <button onClick={onGoBack} className="text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+            <Icon name="back" size={24} />
           </button>
           <div className="pt-1">
             <Title className="!mb-0">{archetype?.commonName}</Title>
@@ -345,13 +376,11 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2 pt-0.5">
-          <button onClick={() => setIsEditing(true)} className="text-xl p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-transparent rounded-full shadow-sm">
-            ✏️
+          <button onClick={() => setIsEditing(true)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-transparent rounded-full shadow-sm">
+            <Icon name="edit" size={20} />
           </button>
           <MenuButton onClick={onOpenMenu}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
+            <Icon name="menu" size={24} />
           </MenuButton>
         </div>
       </header>
@@ -374,8 +403,17 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
           
           <div className="w-full flex gap-3 px-2">
-            <Button onClick={handleManualWater}>💦 Water</Button>
-            <Button $variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
+            <Button onClick={handleManualWater} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water</Button>
+            <Button $variant="secondary" onClick={handleManualFeed} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed</Button>
+            
+            {/* Dynamic Data-Driven Plugin Buttons */}
+            {gardenProfile?.activeAddonManifests?.map(manifest => 
+              manifest.actions?.filter(a => a.entryPoint === 'plant_detail_action').map(action => (
+                <Button key={`${manifest.id}-${action.id}`} $variant="secondary" onClick={() => executePluginAction(manifest.id, action.id)} className="!bg-purple-50 dark:!bg-purple-900/30 !text-purple-700 dark:!text-purple-400 !border-purple-200 dark:!border-purple-800 whitespace-nowrap">
+                  {action.label}
+                </Button>
+              ))
+            )}
           </div>
 
                   <ActionControlStrip 
@@ -401,7 +439,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               <ul className="space-y-5 text-sm">
               {isValidData(archetype?.sunRequirement) && (
                 <li className="flex gap-4 items-start">
-                  <span className="text-2xl bg-amber-50 dark:bg-amber-900/30 rounded-full p-2">{getSunIcon(archetype?.sunRequirement)}</span>
+                  <span className="flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-full w-10 h-10 flex-shrink-0 text-amber-600 dark:text-amber-400">
+                    <Icon name={getSunIcon(archetype?.sunRequirement)} size={20} />
+                  </span>
                   <div className="pt-1">
                     <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Sunlight</strong>
                     <span className="text-slate-500 dark:text-slate-400 leading-relaxed">{archetype?.sunRequirement}</span>
@@ -410,7 +450,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.waterIntervalDays) && (
                 <li className="flex gap-4 items-start">
-                  <span className="text-2xl bg-blue-50 dark:bg-blue-900/30 rounded-full p-2">{getWaterIcon(archetype?.waterIntervalDays)}</span>
+                  <span className="flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 rounded-full w-10 h-10 flex-shrink-0 text-blue-600 dark:text-blue-400">
+                    <Icon name={getWaterIcon(archetype?.waterIntervalDays)} size={20} />
+                  </span>
                   <div className="pt-1">
                     <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Watering Interval</strong>
                     <span className="text-slate-500 dark:text-slate-400 leading-relaxed">Every {archetype?.waterIntervalDays} days</span>
@@ -419,7 +461,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.feedingIntervalDays) && (
                 <li className="flex gap-4 items-start">
-                  <span className="text-2xl bg-amber-50 dark:bg-amber-900/30 rounded-full p-2">{getFeedIcon(archetype?.feedingIntervalDays)}</span>
+                  <span className="flex items-center justify-center bg-amber-50 dark:bg-amber-900/30 rounded-full w-10 h-10 flex-shrink-0 text-amber-600 dark:text-amber-400">
+                    <Icon name={getFeedIcon(archetype?.feedingIntervalDays)} size={20} />
+                  </span>
                   <div className="pt-1">
                     <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Feeding</strong>
                     <span className="text-slate-500 dark:text-slate-400 leading-relaxed block mb-1">Every {archetype?.feedingIntervalDays} days</span>
@@ -429,7 +473,9 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.pruningTips) && (
                 <li className="flex gap-4 items-start">
-                  <span className="text-2xl bg-emerald-50 dark:bg-emerald-900/30 rounded-full p-2">✂️</span>
+                  <span className="flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-full w-10 h-10 flex-shrink-0 text-emerald-600 dark:text-emerald-400">
+                    <Icon name="edit" size={20} />
+                  </span>
                   <div className="pt-1">
                     <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Pruning Care</strong>
                     <span className="text-slate-500 dark:text-slate-400 leading-relaxed">{archetype?.pruningTips}</span>

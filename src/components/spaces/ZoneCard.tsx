@@ -1,6 +1,7 @@
 import { FC, FormEvent } from 'react';
 import { Zone } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 interface ZoneCardProps {
   zone: Zone;
@@ -65,18 +66,20 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
           <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight flex items-center gap-2">
             {zone.name}
             {((zone.pinnedActions && !Array.isArray(zone.pinnedActions) && zone.pinnedActions[currentUserId]?.length > 0) || (zone.isPinned && (!zone.pinnedActions || Array.isArray(zone.pinnedActions)))) && (
-              <span className="text-xs" title="Has actions pinned to the Dashboard">📌</span>
+          <span className="text-emerald-500 mt-0.5" title="Has actions pinned to the Dashboard">
+            <Icon name="pin" size={14} />
+          </span>
             )}
           </h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{zone.id}</p>
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">{locationsInZone} sub-locations</p>
         </div>
         <div className="flex gap-1">
-          <button onClick={onNavigateZone} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Zone">👁️</button>
+      <button onClick={onNavigateZone} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Zone"><Icon name="view" size={18} /></button>
           {canEdit && (
             <>
-              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-              <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"><Icon name="edit" size={18} /></button>
+          <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${locationsInZone > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}><Icon name="delete" size={18} /></button>
             </>
           )}
         </div>

@@ -3,6 +3,7 @@ import { Container, Card, Subtitle } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
 import { hasPermission } from '../../utils/permissions';
+import { Icon } from '../common/Icon';
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
   <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
@@ -62,7 +63,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           className="w-full flex items-center justify-between text-left p-4 transition-colors hover:bg-emerald-100/50 dark:hover:bg-emerald-800/30 active:scale-[0.98]"
         >
           <span className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
-            <span className="text-xl">👋</span> Welcome to FloraSync
+            <span className="text-emerald-600 dark:text-emerald-400"><Icon name="sprout" size={24} /></span> Welcome to FloraSync
           </span>
           <span className={`text-emerald-600/50 dark:text-emerald-400/50 transition-transform duration-200 ${isWelcomeExpanded ? 'rotate-180' : ''}`}>▼</span>
         </button>
@@ -92,7 +93,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         </ul>
       </HelpSection>
 
-      <HelpSection title="The Plant Journal & Harvests" icon="📓" isExpanded={expandedSections.includes('journal')} onToggle={() => toggleSection('journal')}>
+      <HelpSection title="The Plant Journal & Harvests" icon={<Icon name="book-open-text" size={24} />} isExpanded={expandedSections.includes('journal')} onToggle={() => toggleSection('journal')}>
         <p>Clicking on any plant in your inventory opens its detail view, where you'll find its <strong>Plant Journal</strong> at the bottom. This is where your garden's history comes alive.</p>
         <ul className="list-disc pl-5 space-y-2 mt-2">
           <li><strong>Rich Media:</strong> Add photos to track growth, and click "Set as Cover Photo" to override the dictionary image with a picture of your actual living plant!</li>
@@ -101,7 +102,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         </ul>
       </HelpSection>
 
-      <HelpSection title="The Global Plant Dictionary" icon="📖" isExpanded={expandedSections.includes('dictionary')} onToggle={() => toggleSection('dictionary')}>
+      <HelpSection title="The Global Plant Dictionary" icon={<Icon name="book-open-text" size={24} />} isExpanded={expandedSections.includes('dictionary')} onToggle={() => toggleSection('dictionary')}>
         <p>The Plant Dictionary acts as the master reference for your entire FloraSync system. It contains the baseline rules for every plant, such as watering intervals, sunlight requirements, and harvest times.</p>
         <ul className="list-disc pl-5 space-y-2 mt-2">
           <li><strong className="text-slate-800 dark:text-slate-100">Shared by Everyone:</strong> The dictionary is global and shared across all gardens and workspaces on your server. When you create a physical plant instance in your garden, it inherits its rules from this shared master dictionary.</li>
@@ -109,23 +110,23 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         </ul>
       </HelpSection>
 
-      <HelpSection title="Privacy & Your Data" icon="🔒" isExpanded={expandedSections.includes('privacy')} onToggle={() => toggleSection('privacy')}>
+      <HelpSection title="Privacy & Your Data" icon={<Icon name="shield" size={24} />} isExpanded={expandedSections.includes('privacy')} onToggle={() => toggleSection('privacy')}>
         <p>FloraSync is a local, privacy-first command center. It <strong>does not use the internet</strong> to 'research' plants or pull from public databases.</p>
         <p>The Plant Dictionary is built entirely from your own private data. When you add a plant and define its rules (like watering intervals and sunlight), you are teaching your local server exactly how you want your garden managed. Your data never leaves this network.</p>
       </HelpSection>
 
-      <HelpSection title="Unmonitored / Rain-Fed Plants" icon="🌧️" isExpanded={expandedSections.includes('unmonitored')} onToggle={() => toggleSection('unmonitored')}>
+      <HelpSection title="Unmonitored / Rain-Fed Plants" icon={<Icon name="cloud-rain" size={24} />} isExpanded={expandedSections.includes('unmonitored')} onToggle={() => toggleSection('unmonitored')}>
         <p>Got a mature shrub in the yard that relies entirely on the rain, but you still want it in your inventory?</p>
         <p>When viewing a plant, tap the <strong>Edit (✏️)</strong> icon and check the <strong>'Unmonitored / Rain-fed'</strong> box. </p>
         <p>The plant will drop out of all your daily care queues (like Needs Watering) and will no longer negatively affect your Garden Vitality percentages. However, you can still use its journal to track blooms, photos, and harvests!</p>
       </HelpSection>
 
-      <HelpSection title="Switching Gardens" icon="🌍" isExpanded={expandedSections.includes('switching')} onToggle={() => toggleSection('switching')}>
+      <HelpSection title="Switching Gardens" icon={<Icon name="globe" size={24} />} isExpanded={expandedSections.includes('switching')} onToggle={() => toggleSection('switching')}>
         <p>If you help manage multiple gardens (like a community greenhouse and your home patio), you can easily jump between them.</p>
         <p>Tap your current garden's name (or logo) at the top left of the <strong>Dashboard</strong> or <strong>Settings</strong> screen to open the Workspace Switcher, then tap the garden you want to switch to.</p>
       </HelpSection>
 
-      <HelpSection title="Understanding User Roles" icon="👥" isExpanded={expandedSections.includes('roles')} onToggle={() => toggleSection('roles')}>
+      <HelpSection title="Understanding User Roles" icon={<Icon name="handshake" size={24} />} isExpanded={expandedSections.includes('roles')} onToggle={() => toggleSection('roles')}>
         <p>FloraSync utilizes different roles to keep your garden safe if you invite friends or family to help:</p>
         <ul className="list-disc pl-5 space-y-2 mt-2">
           <li><strong className="text-slate-800 dark:text-slate-100">Owner:</strong> Has full control over the garden, including the ability to permanently delete it or manage its members.</li>
@@ -135,7 +136,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         <p className="mt-2 text-xs italic opacity-80">*Note: A "God-Admin" is a special system-level role that has ultimate administrative power over the entire server.*</p>
       </HelpSection>
 
-      <HelpSection title="Scanning Tags" icon="📷" isExpanded={expandedSections.includes('scanning')} onToggle={() => toggleSection('scanning')}>
+      <HelpSection title="Scanning Tags" icon={<Icon name="camera" size={24} />} isExpanded={expandedSections.includes('scanning')} onToggle={() => toggleSection('scanning')}>
         <p>Use the floating camera button in the bottom corner of the app to scan the physical QR tags in your garden.</p>
         <p>You can generate QR codes for <strong>all items</strong> in your garden: individual plants, specific locations, and entire zones. Scanning a tag instantly brings up the details for that specific item. From there, you can log individual care or take bulk actions—like watering an entire zone with a single tap!</p>
         <p>If you scan an unassigned blank tag, the app will instantly launch a "Just-In-Time" registration form so you can tell the system what you just planted or created.</p>
@@ -143,7 +144,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
       </HelpSection>
 
       {isAdminOrOwner && (
-        <HelpSection title="Print Center & QR Tags" icon="🖨️" isExpanded={expandedSections.includes('print')} onToggle={() => toggleSection('print')}>
+        <HelpSection title="Print Center & QR Tags" icon={<Icon name="print" size={24} />} isExpanded={expandedSections.includes('print')} onToggle={() => toggleSection('print')}>
           <p>As a garden Owner, you can generate perfectly formatted, printable sheets of QR codes directly from the app.</p>
           <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout and preview the sheets before sending them to your printer.</p>
           <ul className="list-disc pl-5 space-y-2 mt-2">
@@ -166,7 +167,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
       )}
 
       {isAdminOrOwner && (
-        <HelpSection title="Bulk Data Import" icon="📥" isExpanded={expandedSections.includes('import')} onToggle={() => toggleSection('import')}>
+        <HelpSection title="Bulk Data Import" icon={<Icon name="package" size={24} />} isExpanded={expandedSections.includes('import')} onToggle={() => toggleSection('import')}>
           <p>If you have a lot of existing garden data or want to share a customized plant dictionary with a friend, use the bulk Data Import tool.</p>
           <p>Navigate to General Settings and scroll to <strong>Data Import</strong>. Select your data type, paste a formatted JSON array, and click Import. FloraSync will automatically skip items with duplicate IDs to protect your existing garden.</p>
         </HelpSection>

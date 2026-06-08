@@ -1,6 +1,7 @@
 import { FC } from 'react';
 import { Subtitle, Card } from '../../../styles/StyledElements';
 import { PlantInstanceCard } from '../../inventory/PlantInstanceCard';
+import { Icon } from '../../common/Icon';
 
 interface NeedsWateringProps {
   overduePlants: any[];
@@ -10,10 +11,10 @@ interface NeedsWateringProps {
 export const NeedsWatering: FC<NeedsWateringProps> = ({ overduePlants, onNavigate }) => {
   return (
     <section>
-      <Subtitle>💦 Needs Watering</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="water" size={20} className="text-blue-500 dark:text-blue-400" /> Needs Watering</Subtitle>
       {overduePlants.length === 0 ? (
         <Card className="text-center py-10">
-          <div className="text-4xl mb-3">✨</div>
+          <div className="flex justify-center mb-3 text-slate-300 dark:text-slate-600"><Icon name="sparkles" size={40} /></div>
           <p className="text-slate-500 dark:text-slate-400 font-medium">All plants are perfectly hydrated!</p>
         </Card>
       ) : (

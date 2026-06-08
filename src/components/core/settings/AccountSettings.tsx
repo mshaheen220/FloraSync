@@ -1,6 +1,7 @@
 import { useState, FC, FormEvent } from 'react';
 import { Card, Button, Input } from '../../../styles/StyledElements';
 import { User } from '../../../App';
+import { Icon } from '../../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -62,8 +63,8 @@ export const AccountSettings: FC<AccountSettingsProps> = ({ currentUser, onUpdat
               {currentUser.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <label className="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-emerald-600 transition-colors shadow-md text-xs leading-none">
-            📷
+          <label className="absolute bottom-0 right-0 bg-emerald-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-emerald-600 transition-colors shadow-md text-xs leading-none flex items-center justify-center">
+            <Icon name="camera" size={14} />
             <input type="file" accept="image/*" className="hidden" onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {

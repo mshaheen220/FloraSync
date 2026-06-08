@@ -1,6 +1,7 @@
 import { FC, FormEvent } from 'react';
 import { Location, Zone } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 interface LocationCardProps {
   location: Location;
@@ -53,11 +54,11 @@ export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones,
           <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-2">{plantsInLocation} active plant{plantsInLocation !== 1 && 's'}</p>
         </div>
         <div className="flex gap-1">
-          <button onClick={onNavigateLocation} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Location">👁️</button>
+      <button onClick={onNavigateLocation} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Location"><Icon name="view" size={18} /></button>
           {canEdit && (
             <>
-              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-              <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"><Icon name="edit" size={18} /></button>
+          <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}><Icon name="delete" size={18} /></button>
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 import { PlantInstance, PlantArchetype } from '../../../../types';
 import { Subtitle, Card } from '../../../styles/StyledElements';
+import { Icon } from '../../common/Icon';
 
 interface NurseryProps {
   activeInstances: PlantInstance[];
@@ -37,7 +38,7 @@ export const Nursery: FC<NurseryProps> = ({ activeInstances, archetypes, onNavig
 
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-200">
-      <Subtitle>🌱 The Nursery</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="sprout" size={20} className="text-emerald-500 dark:text-emerald-400" /> The Nursery</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {nurseryPlants.map(item => (
           <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-44 !p-3.5 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">

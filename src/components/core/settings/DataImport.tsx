@@ -1,6 +1,7 @@
 import { useState, FC, useRef } from 'react';
 import { Card, Button } from '../../../styles/StyledElements';
 import JSZip from 'jszip';
+import { Icon } from '../../common/Icon';
 
 interface DataImportProps {
   token?: string | null;
@@ -90,7 +91,7 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plant Package Import</label>
           <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            ❓ <span className="underline decoration-dotted underline-offset-2">Package Format</span>
+            <Icon name="help-circle" size={16} /> <span className="underline decoration-dotted underline-offset-2">Package Format</span>
           </button>
         </div>
 
@@ -106,7 +107,9 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
         )}
 
         <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-800/50">
-          <span className="text-4xl mb-3">📦</span>
+          <div className="mb-3 text-emerald-500 dark:text-emerald-400">
+            <Icon name="package" size={48} />
+          </div>
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Select a Plant Package</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Upload a .zip file containing your .json file and images.</p>
           

@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { User } from '../../../App';
+import { Icon } from '../../common/Icon';
 
 interface UserCardProps {
   user: User;
@@ -35,7 +36,7 @@ export const UserCard: FC<UserCardProps> = ({
             return (order[a.role] || 5) - (order[b.role] || 5);
             }).map(acc => (
               <span key={acc.id} className="text-[10px] bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded font-medium border border-slate-200 dark:border-slate-600 flex items-center gap-1">
-              {acc.role === 'admin' ? '🛡️' : acc.role === 'owner' ? '👑' : acc.role === 'helper' ? '🤝' : '👁️'} {acc.name}
+              <Icon name={acc.role === 'admin' ? 'shield' : acc.role === 'owner' ? 'crown' : acc.role === 'helper' ? 'handshake' : 'view'} size={12} /> {acc.name}
               </span>
             )) : (
               <span className="text-[10px] text-slate-400 italic">No garden access</span>
@@ -46,11 +47,11 @@ export const UserCard: FC<UserCardProps> = ({
           {user.id === currentUser.id && (
             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 px-2 mr-1">You</span>
           )}
-          <button type="button" onClick={() => onManageAccess(user.id)} title="Manage Access" className={`p-1.5 text-base rounded-lg transition-colors active:scale-90 ${isManagingAccess ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`}>🛡️</button>
+          <button type="button" onClick={() => onManageAccess(user.id)} title="Manage Access" className={`p-1.5 rounded-lg transition-colors active:scale-90 ${isManagingAccess ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`}><Icon name="shield" size={18} /></button>
           {user.id !== currentUser.id && (
             <>
-              <button type="button" onClick={() => onResetPassword(user.id, user.username)} title="Reset Password" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">🔑</button>
-              <button type="button" onClick={() => onDeleteUser(user.id, user.username)} title="Delete User" className="p-1.5 text-base rounded-lg transition-colors text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 active:scale-90">🗑️</button>
+              <button type="button" onClick={() => onResetPassword(user.id, user.username)} title="Reset Password" className="p-1.5 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"><Icon name="key-round" size={18} /></button>
+              <button type="button" onClick={() => onDeleteUser(user.id, user.username)} title="Delete User" className="p-1.5 rounded-lg transition-colors text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 active:scale-90"><Icon name="delete" size={18} /></button>
             </>
           )}
         </div>

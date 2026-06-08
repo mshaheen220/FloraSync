@@ -4,6 +4,7 @@ import { PlantInstanceCard } from './PlantInstanceCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PageHeader } from '../common/PageHeader';
 import { useGarden } from '../../contexts/GardenContext';
+import { Icon } from '../common/Icon';
 
 interface InventoryManagerProps {
   onNavigate: (qrId: string) => void;
@@ -146,7 +147,9 @@ export const InventoryManager: FC<InventoryManagerProps> = ({ onNavigate, onOpen
       <div className="space-y-4">
         {groupedInventory.totalCount === 0 ? (
           <Card className="text-center py-12 shadow-sm border-dashed border-2 border-emerald-200 dark:border-emerald-800">
-            <div className="text-4xl mb-4">🌱</div>
+            <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+              <Icon name="sprout" size={48} />
+            </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{inventorySearchTerm.trim() ? "No plants match your search." : "You have no active plants in your inventory. Scan a new tag to get started!"}</p>
           </Card>
         ) : (

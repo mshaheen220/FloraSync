@@ -5,6 +5,7 @@ import { PageHeader } from '../common/PageHeader';
 import { hasPermission } from '../../utils/permissions';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
+import { Icon } from '../common/Icon';
 
 interface LocationDetailProps {
   locationId: string;
@@ -63,7 +64,9 @@ export const LocationDetail: FC<LocationDetailProps> = ({
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
           <Card className="text-center py-10 shadow-lg border-emerald-500">
-            <div className="text-5xl mb-4">📍</div>
+            <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+              <Icon name="map-pin" size={48} />
+            </div>
             <Title>Unassigned Tag</Title>
             <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
               Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned. Viewers do not have permission to register new locations.
@@ -75,7 +78,9 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg border-emerald-500">
-          <div className="text-5xl mb-4">📍</div>
+          <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+            <Icon name="map-pin" size={48} />
+          </div>
           <Title>New Location Tag</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
             Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned.
@@ -129,8 +134,8 @@ export const LocationDetail: FC<LocationDetailProps> = ({
         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{locationInstances.length} active plant{locationInstances.length !== 1 ? 's' : ''} in this location.</p>
         {currentUser?.workspaceRole !== 'viewer' && (
           <div className="w-full flex gap-3 px-2">
-            <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }}>💦 Water All</Button>
-            <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }}>🪴 Feed All</Button>
+            <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water All</Button>
+            <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed All</Button>
           </div>
         )}
         

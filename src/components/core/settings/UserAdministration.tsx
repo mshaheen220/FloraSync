@@ -3,6 +3,7 @@ import { Card, Button, Input, Subtitle } from '../../../styles/StyledElements';
 import { User } from '../../../App';
 import { UserCard } from './UserCard';
 import { hasPermission } from '../../../utils/permissions';
+import { Icon } from '../../common/Icon';
 
 interface UserAdministrationProps {
   currentUser: User;
@@ -289,10 +290,10 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
             {gardensList.map(g => (
               <div key={g.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">🏡 {g.name}</span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block"><Icon name="tree-palm" size={14} className='float-left inline-block mr-1' /> {g.name}</span>
                 </div>
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => handleRenameGarden(g.id, g.name)} title="Rename Garden" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+                  <button type="button" onClick={() => handleRenameGarden(g.id, g.name)} title="Rename Garden" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90"><Icon name="pencil" size={14} /></button>
                 </div>
               </div>
             ))}
