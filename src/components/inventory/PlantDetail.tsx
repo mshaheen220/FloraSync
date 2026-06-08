@@ -20,7 +20,7 @@ interface PlantDetailProps {
 export const PlantDetail: FC<PlantDetailProps> = ({ 
   qrId, initialAction, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
-  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
+  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser, gardenProfile } = useGarden();
 
   const instance = instances.find(i => i.qrId === qrId);
   const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
@@ -93,6 +93,34 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     const newPins = userPins.includes(action) ? userPins.filter(a => a !== action) : [...userPins, action];
     const existingPins = (instance.pinnedActions && !Array.isArray(instance.pinnedActions)) ? instance.pinnedActions : {};
     onUpdateInstance(qrId, { pinnedActions: { ...existingPins, [currentUserId]: newPins } });
+  };
+
+  // Dynamic Plugin Execution
+  const executePluginAction = async (manifestId: string, actionId: string) => {
+    try {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+      
+      // Fallback to localStorage if token isn't directly available in this component's scope
+      const token = localStorage.getItem('florasync_token'); 
+
+      const res = await fetch(`${apiBase}/api/addons/execute`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ addonId: manifestId, actionId, contextData: { qrId: instance?.qrId } })
+      });
+      
+      const data = await res.json();
+      if (data.success && data.result?.clientAction?.type === 'UPDATE_INSTANCE') {
+        // The backend plugin successfully modified the DB and told the UI how to update!
+        onUpdateInstance(data.result.clientAction.qrId, data.result.clientAction.updates);
+        showToast(data.result.message || '✅ Action completed!');
+      } else if (!data.success) {
+        showToast(`❌ Error: ${data.error}`);
+      }
+    } catch (err) {
+      showToast('❌ Failed to execute plugin action.');
+    }
   };
 
   const handleRegistrationSubmit = (id: string, identifier: string, isNew: boolean, locId: string, isNewLoc?: boolean, zId?: string, isNewZ?: boolean, img?: string) => {
@@ -376,6 +404,15 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <div className="w-full flex gap-3 px-2">
             <Button onClick={handleManualWater}>💦 Water</Button>
             <Button $variant="secondary" onClick={handleManualFeed}>🪴 Feed</Button>
+            
+            {/* Dynamic Data-Driven Plugin Buttons */}
+            {gardenProfile?.activeAddonManifests?.map(manifest => 
+              manifest.actions?.filter(a => a.entryPoint === 'plant_detail_action').map(action => (
+                <Button key={`${manifest.id}-${action.id}`} $variant="secondary" onClick={() => executePluginAction(manifest.id, action.id)} className="!bg-purple-50 dark:!bg-purple-900/30 !text-purple-700 dark:!text-purple-400 !border-purple-200 dark:!border-purple-800 whitespace-nowrap">
+                  {action.label}
+                </Button>
+              ))
+            )}
           </div>
 
                   <ActionControlStrip 

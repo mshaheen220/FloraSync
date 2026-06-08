@@ -8,6 +8,7 @@ import { AccountSettings } from '../core/settings/AccountSettings';
 import { UserAdministration } from '../core/settings/UserAdministration';
 import { PageHeader } from '../common/PageHeader';
 import { hasPermission } from '../../utils/permissions';
+import { AddonManager } from './settings/AddonManager';
 
 const SettingsSection: FC<{ title: string; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, isExpanded, onToggle, children }) => (
   <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
@@ -82,6 +83,15 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
       {hasPermission(currentUser, 'manage_inventory') && (
         <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>
           <DataImport token={token} showToast={showToast} />
+        </SettingsSection>
+      )}
+
+      {hasPermission(currentUser, 'manage_addons') && (
+        <SettingsSection title="Add-ons & Plugins" isExpanded={expandedSettings.includes('addons')} onToggle={() => toggleSetting('addons')}>
+          <AddonManager 
+            gardenProfile={gardenProfile || null} 
+            token={token}
+          />
         </SettingsSection>
       )}
 

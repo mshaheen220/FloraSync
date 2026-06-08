@@ -1,0 +1,48 @@
+{
+  "id": "journal-activity-types",
+  "name": "Custom Journal Activity Types",
+  "version": "1.0.2",
+  "description": "Add custom activity types to journal entries for more detailed plant care logging.",
+  "author": "Michael Shaheen",
+  "uninstallScript": "uninstall.js",
+  "journalActivityTypes": [
+    {
+      "value": "Pruning",
+      "label": "🔪 Pruning",
+      "badgeLabel": "🔪 Pruning"
+    },
+    {
+      "value": "Harvest",
+      "label": "🚜 Big Harvest",
+      "badgeLabel": "🚜 Harvested",
+      "isHidden": true
+    },
+    {
+      "value": "Repotted",
+      "label": "🪴 Repotted",
+      "badgeLabel": "Repotted",
+      "iconUrl": "/plugins/journal-activity-types/repot.png"
+    },
+    {
+      "value": "Propagated",
+      "label": "🌱 Propagated",
+      "badgeLabel": "🌱 Propagated"
+    },
+    {
+      "value": "Relocated",
+      "label": "🚚 Relocated",
+      "badgeLabel": "🚚 Relocated"
+    },
+    {
+      "value": "Winterized",
+      "label": "❄️ Winterized",
+      "badgeLabel": "❄️ Winterized"
+    },
+    {
+      "value": "Pest Check",
+      "label": "🔎 Pest Check",
+      "badgeLabel": "🔎 Pest Check",
+      "isRoutine": true
+    }
+  ]
+}
