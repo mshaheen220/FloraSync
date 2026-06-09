@@ -1,5 +1,5 @@
 import { useState, FC } from 'react';
-import { Container, Card, Button, Toast, Subtitle } from '../../styles/StyledElements';
+import { Container, Card, Toast, Subtitle } from '../../styles/StyledElements';
 import { Theme, ColorTheme } from '../../hooks/useTheme';
 import { PageHeader } from '../common/PageHeader';
 import { Icon } from '../common/Icon';
