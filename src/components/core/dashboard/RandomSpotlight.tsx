@@ -44,7 +44,7 @@ export const RandomSpotlight: FC<RandomSpotlightProps> = ({ activeInstances, arc
           const factObj = typeof rawFact === 'string' ? { fact: rawFact } : rawFact;
           if (factObj.fact && factObj.fact.trim() !== '') {
             const factMessage = factObj.attributedTo ? `"${factObj.fact}" — ${factObj.attributedTo}` : factObj.fact;
-            const factIcon = factObj.icon || '💡';
+            const factIcon = factObj.icon || 'lightbulb';
             const factTitle = factObj.title || "Did You Know?";
             allFunFacts.push({ instance, archetype, title: factTitle, message: factMessage, imageUrl: factObj.imageUrl, icon: factIcon });
           }

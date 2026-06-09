@@ -7,6 +7,7 @@ import { LocationManager } from './components/spaces/LocationManager';
 import { ArchetypeManager } from './components/dictionary/ArchetypeManager';
 import { ZoneManager } from './components/spaces/ZoneManager';
 import { SettingsManager } from './components/core/SettingsManager';
+import { AppearanceManager } from './components/core/AppearanceManager';
 import { InventoryManager } from './components/inventory/InventoryManager';
 import { LocationDetail } from './components/spaces/LocationDetail';
 import { ZoneDetail } from './components/spaces/ZoneDetail';
@@ -18,7 +19,7 @@ import { useGarden } from './contexts/GardenContext';
 import { Theme } from './App';
 import { ColorTheme } from './hooks/useTheme';
 import { FloatingScannerButton } from './components/common/FloatingScannerButton';
-import { Icon, IconProvider, ELEGANT_THEME, MINIMALIST_THEME, BOHO_NATURE_THEME, SCIENCE_THEME} from './components/common/Icon';
+import { Icon, IconProvider, ELEGANT_THEME, MINIMALIST_THEME, BOHO_NATURE_THEME, SCIENCE_THEME, EMOJI_THEME } from './components/common/Icon';
 
 export interface AppRouterProps {
   currentUser: User | null;
@@ -36,8 +37,8 @@ export interface AppRouterProps {
   onSwitchGarden: (gardenId: string) => void;
   onUpdateUser: (updates: Partial<User>) => void;
   onUpdateGarden: (name: string, imageUrl: string) => void;
-  iconTheme?: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science';
-  onIconThemeChange?: (theme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') => void;
+  iconTheme?: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji';
+  onIconThemeChange?: (theme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji') => void;
 }
 
 export const AppRouter: FC<AppRouterProps> = ({
@@ -61,7 +62,7 @@ export const AppRouter: FC<AppRouterProps> = ({
 }) => {
   const { locations } = useGarden();
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'zones' | 'inventory' | 'help' | 'print'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -101,7 +102,7 @@ export const AppRouter: FC<AppRouterProps> = ({
       setActiveZone(decodeURIComponent(id));
       setInitialAction(action || null);
       setCurrentView('zoneDetail');
-    } else if (['settings', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print'].includes(type)) {
+    } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
@@ -241,7 +242,11 @@ export const AppRouter: FC<AppRouterProps> = ({
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} colorTheme={colorTheme} onColorThemeChange={setColorTheme} iconTheme={iconTheme} onIconThemeChange={onIconThemeChange} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} token={token} />;
+      return <SettingsManager onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} token={token} />;
+    }
+
+    if (currentView === 'appearance') {
+      return <AppearanceManager theme={theme} onThemeChange={setTheme} colorTheme={colorTheme} onColorThemeChange={setColorTheme} iconTheme={iconTheme} onIconThemeChange={onIconThemeChange} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'locations') {
@@ -275,7 +280,7 @@ export const AppRouter: FC<AppRouterProps> = ({
     );
   };
 
-  const activeThemeMap = iconTheme === 'elegant' ? ELEGANT_THEME : iconTheme === 'minimalist' ? MINIMALIST_THEME : iconTheme === 'boho-nature' ? BOHO_NATURE_THEME : iconTheme === 'science' ? SCIENCE_THEME : {};
+  const activeThemeMap = iconTheme === 'elegant' ? ELEGANT_THEME : iconTheme === 'minimalist' ? MINIMALIST_THEME : iconTheme === 'boho-nature' ? BOHO_NATURE_THEME : iconTheme === 'science' ? SCIENCE_THEME : iconTheme === 'emoji' ? EMOJI_THEME : {};
 
   return (
     <IconProvider theme={activeThemeMap}>

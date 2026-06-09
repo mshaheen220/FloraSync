@@ -3,7 +3,7 @@ import { User } from '../../App';
 import { hasPermission } from '../../utils/permissions';
 import { Icon } from './Icon';
 
-export type MenuRoute = 'dashboard' | 'settings' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help' | 'print';
+export type MenuRoute = 'dashboard' | 'settings' | 'appearance' | 'archetypes' | 'zones' | 'locations' | 'inventory' | 'help' | 'print';
 
 interface NavigationMenuProps {
   isOpen: boolean;
@@ -31,7 +31,7 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
         </div>
         <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2 mt-2">
           <button onClick={() => onNavigate('dashboard')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-primary-100 dark:hover:bg-surface-800 transition-colors active:scale-95">
-            <span className="text-2xl"><img src="/images/icons/dashboard.png" alt="Dashboard" className="w-5 h-5 mb-1  object-contain" /></span> Dashboard
+            <span className="text-2xl"><Icon name="dashboard" size={24} /></span> Dashboard
           </button>
           <button 
             onClick={() => setIsGardenExpanded(!isGardenExpanded)}
@@ -68,6 +68,9 @@ export const NavigationMenu: FC<NavigationMenuProps> = ({ isOpen, onClose, onNav
           <div className="mt-4 mb-1 px-4 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             System
           </div>
+          <button onClick={() => onNavigate('appearance')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-primary-100 dark:hover:bg-surface-800 transition-colors active:scale-95">
+            <span className="text-2xl"><Icon name="palette" size={24} /></span> Appearance
+          </button>
           <button onClick={() => onNavigate('settings')} className="flex items-center gap-4 w-full p-4 rounded-xl text-left font-semibold text-slate-700 dark:text-slate-200 hover:bg-primary-100 dark:hover:bg-surface-800 transition-colors active:scale-95">
             <span className="text-2xl"><Icon name="settings" size={24} /></span> General Settings
           </button>

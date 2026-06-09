@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
-export type ColorTheme = 'emerald' | 'ocean' | 'sunset' | 'amethyst';
+export type ColorTheme = 'default' | 'emerald' | 'ocean' | 'sunset' | 'boho-nature' | 'amethyst';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
-  const [colorTheme, setColorTheme] = useState<ColorTheme>(() => (localStorage.getItem('florasync_color_theme') as ColorTheme) || 'emerald');
+  // Support legacy 'emerald' name, map to 'default'
+  const storedColorTheme = localStorage.getItem('florasync_color_theme') as ColorTheme || 'default';
+  const normalizedColorTheme = storedColorTheme === 'emerald' ? 'default' : storedColorTheme;
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(normalizedColorTheme);
 
   useEffect(() => {
     localStorage.setItem('florasync_theme', theme);

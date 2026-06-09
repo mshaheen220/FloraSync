@@ -16,6 +16,7 @@ export const AppearanceSettings: FC<AppearanceSettingsProps> = ({ theme, onTheme
     { value: 'ocean', label: 'Ocean', color: '#3b82f6' },
     { value: 'sunset', label: 'Sunset', color: '#f97316' },
     { value: 'amethyst', label: 'Amethyst', color: '#d946ef' },
+    { value: 'science' as ColorTheme, label: 'Science', color: '#2d5a27' },
   ];
 
   return (

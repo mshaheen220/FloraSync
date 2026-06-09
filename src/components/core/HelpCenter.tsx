@@ -79,7 +79,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         )}
       </Card>
 
-      <HelpSection title="Understanding the Dashboard" icon={<img src="/images/icons/dashboard.png" alt="Dashboard" className="w-6 h-6 object-contain" />} isExpanded={expandedSections.includes('dashboard')} onToggle={() => toggleSection('dashboard')}>
+      <HelpSection title="Understanding the Dashboard" icon={<Icon name="dashboard" size={24} />} isExpanded={expandedSections.includes('dashboard')} onToggle={() => toggleSection('dashboard')}>
         <p>The Dashboard is your dynamic command center. Instead of a standard static list, it acts as a sorting engine that floats the most urgent tasks and relevant insights to the top of your screen!</p>
         <ul className="list-disc pl-5 space-y-2 mt-2">
           <li><strong className="text-slate-800 dark:text-slate-100">Garden Vitality & Quick Actions:</strong> Monitor your overall hydration and nutrition percentages. You can instantly water or feed your entire garden, or customize the dashboard by <strong>Pinning (📌)</strong> specific Zones to create your own Quick Action buttons.</li>

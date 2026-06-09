@@ -29,10 +29,10 @@ export const App: FC = () => {
   );
 
   // Track the active icon theme and persist it between sessions
-  const [iconTheme, setIconTheme] = useState<'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science'>(() => {
-    return (localStorage.getItem('florasync_icon_theme') as 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') || 'default';
+  const [iconTheme, setIconTheme] = useState<'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji'>(() => {
+    return (localStorage.getItem('florasync_icon_theme') as 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji') || 'default';
   });
-  const handleIconThemeChange = (newTheme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') => {
+  const handleIconThemeChange = (newTheme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji') => {
     setIconTheme(newTheme);
     localStorage.setItem('florasync_icon_theme', newTheme);
   };
