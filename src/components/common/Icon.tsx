@@ -259,7 +259,10 @@ export const BOHO_NATURE_THEME: Record<string, ThemeIconDef> = {
   'heart': createImageIcon('/images/icons/boho-nature/heart.png'),
   'smile': createImageIcon('/images/icons/boho-nature/laughing.png'),
   'cat': createImageIcon('/images/icons/boho-nature/cats.png'),
-  'key-round': createImageIcon('/images/icons/boho-nature/key.png'),
+  'key-round': {
+    light: createImageIcon('/images/icons/boho-nature/key.png'),
+    dark: '🔑'
+  },
   'tree-palm': createImageIcon('/images/icons/boho-nature/tree.png'),
   'crown': createImageIcon('/images/icons/boho-nature/crown.png'),
 };

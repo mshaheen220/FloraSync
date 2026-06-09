@@ -1,9 +1,9 @@
-import { FC, useMemo, useState } from 'react';
+import { FC, useMemo, useState, useEffect, useRef } from 'react';
 import { User, GardenProfile, Workspace } from '../types';
 import { GardenContext } from './contexts/GardenContext';
 import { AppRouter } from './AppRouter';
 
-import { useTheme, Theme } from './hooks/useTheme';
+import { useTheme, Theme, ColorTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { useGardenState } from './hooks/useGardenState';
 import { useGardenSync } from './hooks/useGardenSync';
@@ -32,9 +32,76 @@ export const App: FC = () => {
   const [iconTheme, setIconTheme] = useState<'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji'>(() => {
     return (localStorage.getItem('florasync_icon_theme') as 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji') || 'default';
   });
+
+  // Track the ID of the currently synced user to prevent aggressive mid-session overwrites
+  const syncedUserId = useRef<string | null>(null);
+
+  // Sync themes from the user profile exactly ONCE per session, after the fresh state is fully loaded
+  useEffect(() => {
+    if (auth.currentUser && sync.isDbLoaded) {
+      if (syncedUserId.current !== auth.currentUser.id) {
+        const user = auth.currentUser as any;
+        
+        const targetTheme = user.theme || 'system';
+        const targetColorTheme = user.colorTheme || 'default';
+        const targetIconTheme = user.iconTheme || 'default';
+
+        setTheme(targetTheme);
+        setColorTheme(targetColorTheme);
+        setIconTheme(targetIconTheme);
+        localStorage.setItem('florasync_icon_theme', targetIconTheme);
+        
+        syncedUserId.current = auth.currentUser.id;
+      }
+    } else if (!auth.currentUser) {
+      // Reset to defaults on logout so settings don't bleed over to the next user
+      if (syncedUserId.current !== null) {
+        setTheme('system');
+        setColorTheme('default');
+        setIconTheme('default');
+        localStorage.setItem('florasync_icon_theme', 'default');
+        syncedUserId.current = null;
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.currentUser, sync.isDbLoaded]);
+
+  // Directly sync themes to the backend to bypass any strict-typing strippers in useAuth
+  const syncThemeToBackend = (updates: any) => {
+    if (!auth.currentUser || !auth.token) return;
+    
+    auth.setCurrentUser(prev => prev ? { ...prev, ...updates } : prev);
+    
+    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+    
+    fetch(`${apiBase}/api/users/${auth.currentUser.id}/profile`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth.token}` },
+      body: JSON.stringify(updates)
+    }).catch(err => console.error('Failed to sync theme to server:', err));
+  };
+
+  const handleThemeChange = (newTheme: Theme) => {
+    setTheme(newTheme);
+    if (auth.currentUser && (auth.currentUser as any).theme !== newTheme) {
+      syncThemeToBackend({ theme: newTheme });
+    }
+  };
+
+  const handleColorThemeChange = (newTheme: ColorTheme) => {
+    setColorTheme(newTheme);
+    if (auth.currentUser && (auth.currentUser as any).colorTheme !== newTheme) {
+      syncThemeToBackend({ colorTheme: newTheme });
+    }
+  };
+
   const handleIconThemeChange = (newTheme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science' | 'emoji') => {
     setIconTheme(newTheme);
     localStorage.setItem('florasync_icon_theme', newTheme);
+    if (auth.currentUser && (auth.currentUser as any).iconTheme !== newTheme) {
+      syncThemeToBackend({ iconTheme: newTheme });
+    }
   };
 
   const gardenContextValue = useMemo(() => ({
@@ -98,8 +165,8 @@ export const App: FC = () => {
         gardenProfile={sync.gardenProfile}
         theme={theme}
         colorTheme={colorTheme}
-        setTheme={setTheme}
-        setColorTheme={setColorTheme}
+        setTheme={handleThemeChange}
+        setColorTheme={handleColorThemeChange}
         onLogin={auth.handleLogin}
         onLogout={auth.handleLogout}
         onSwitchGarden={sync.handleSwitchGarden}

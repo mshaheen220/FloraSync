@@ -45,7 +45,10 @@ db.exec(`
     role TEXT NOT NULL,
     name TEXT,
     image_url TEXT,
-    garden_id TEXT
+    garden_id TEXT,
+    theme TEXT,
+    color_theme TEXT,
+    icon_theme TEXT
   );
 
   CREATE TABLE IF NOT EXISTS shared_dictionary (
@@ -76,6 +79,15 @@ try {
 } catch (err) {}
 try {
   db.exec("ALTER TABLE gardens ADD COLUMN print_queue TEXT DEFAULT '[]';");
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN theme TEXT;');
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN color_theme TEXT;');
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN icon_theme TEXT;');
 } catch (err) {}
 
 // Auto-create shared dictionary row if missing
@@ -186,7 +198,19 @@ app.post('/api/login', (req, res) => {
 
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
     
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name, imageUrl: user.image_url } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        role: user.role, 
+        name: user.name, 
+        imageUrl: user.image_url,
+        theme: user.theme,
+        colorTheme: user.color_theme,
+        iconTheme: user.icon_theme
+      } 
+    });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error.' });
@@ -426,9 +450,26 @@ app.put('/api/users/:id/profile', authenticateToken, (req, res) => {
   if (req.user.role !== 'god-admin' && req.user.id !== req.params.id) {
     return res.status(403).json({ error: 'Not authorized to edit this profile.' });
   }
-  const { name, imageUrl } = req.body;
+  const { name, imageUrl, theme, colorTheme, iconTheme } = req.body;
   try {
-    db.prepare('UPDATE users SET name = ?, image_url = ? WHERE id = ?').run(name || '', imageUrl || '', req.params.id);
+    // Using COALESCE allows partial updates (e.g. only updating the theme without wiping out the name)
+    db.prepare(`
+      UPDATE users 
+      SET 
+        name = COALESCE(?, name), 
+        image_url = COALESCE(?, image_url),
+        theme = COALESCE(?, theme),
+        color_theme = COALESCE(?, color_theme),
+        icon_theme = COALESCE(?, icon_theme)
+      WHERE id = ?
+    `).run(
+      name !== undefined ? name : null, 
+      imageUrl !== undefined ? imageUrl : null, 
+      theme !== undefined ? theme : null, 
+      colorTheme !== undefined ? colorTheme : null, 
+      iconTheme !== undefined ? iconTheme : null, 
+      req.params.id
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('Error updating profile:', err);
@@ -490,7 +531,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
       if (!access && req.user.role === 'god-admin') access = { role: 'admin' };
     }
 
-    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id FROM users WHERE id = ?').get(req.user.id);
+    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id, theme, color_theme, icon_theme FROM users WHERE id = ?').get(req.user.id);
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
     const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue FROM gardens WHERE id = ?').get(requestedGardenId);
 
@@ -506,7 +547,10 @@ app.get('/api/state', authenticateToken, (req, res) => {
         role: userRow.role, 
         name: userRow.name || userRow.username, 
         imageUrl: userRow.image_url || '',
-        workspaceRole: access?.role || 'viewer' 
+        workspaceRole: access?.role || 'viewer',
+        theme: userRow.theme,
+        colorTheme: userRow.color_theme,
+        iconTheme: userRow.icon_theme
       } : null,
       garden: garden ? {
         id: garden.id,
