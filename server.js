@@ -153,44 +153,60 @@ app.post('/api/login', (req, res) => {
 
     let bestGardenId = user.garden_id;
     try {
-      let bestGarden;
-      if (user.role === 'god-admin') {
-        bestGarden = db.prepare(`
-          SELECT g.id as garden_id
-          FROM gardens g
-          LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
-          ORDER BY
-            CASE COALESCE(gm.role, 'admin')
-              WHEN 'owner' THEN 1
-              WHEN 'admin' THEN 2
-              WHEN 'helper' THEN 3
-              WHEN 'viewer' THEN 4
-              ELSE 5
-            END,
-            g.name ASC
-          LIMIT 1
-        `).get(user.id);
-      } else {
-        bestGarden = db.prepare(`
-          SELECT gm.garden_id
-          FROM garden_members gm
-          JOIN gardens g ON gm.garden_id = g.id
-          WHERE gm.user_id = ?
-          ORDER BY
-            CASE gm.role
-              WHEN 'owner' THEN 1
-              WHEN 'helper' THEN 2
-              WHEN 'viewer' THEN 3
-              ELSE 4
-            END,
-            g.name ASC
-          LIMIT 1
-        `).get(user.id);
-      }
+      let hasAccess = false;
       
-      if (bestGarden && bestGarden.garden_id) {
-        bestGardenId = bestGarden.garden_id;
-        db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(bestGardenId, user.id);
+      // First, verify if the user still has access to their last saved garden
+      if (bestGardenId) {
+        if (user.role === 'god-admin') {
+          const g = db.prepare('SELECT id FROM gardens WHERE id = ?').get(bestGardenId);
+          if (g) hasAccess = true;
+        } else {
+          const access = db.prepare('SELECT garden_id FROM garden_members WHERE user_id = ? AND garden_id = ?').get(user.id, bestGardenId);
+          if (access) hasAccess = true;
+        }
+      }
+
+      // If they don't have a saved garden or lost access to it, find the next best one alphabetically
+      if (!hasAccess) {
+        let bestGarden;
+        if (user.role === 'god-admin') {
+          bestGarden = db.prepare(`
+            SELECT g.id as garden_id
+            FROM gardens g
+            LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
+            ORDER BY
+              CASE COALESCE(gm.role, 'admin')
+                WHEN 'owner' THEN 1
+                WHEN 'admin' THEN 2
+                WHEN 'helper' THEN 3
+                WHEN 'viewer' THEN 4
+                ELSE 5
+              END,
+              g.name ASC
+            LIMIT 1
+          `).get(user.id);
+        } else {
+          bestGarden = db.prepare(`
+            SELECT gm.garden_id
+            FROM garden_members gm
+            JOIN gardens g ON gm.garden_id = g.id
+            WHERE gm.user_id = ?
+            ORDER BY
+              CASE gm.role
+                WHEN 'owner' THEN 1
+                WHEN 'helper' THEN 2
+                WHEN 'viewer' THEN 3
+                ELSE 4
+              END,
+              g.name ASC
+            LIMIT 1
+          `).get(user.id);
+        }
+        
+        if (bestGarden && bestGarden.garden_id) {
+          bestGardenId = bestGarden.garden_id;
+          db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(bestGardenId, user.id);
+        }
       }
     } catch (e) {
       console.error('Error determining default garden:', e);
