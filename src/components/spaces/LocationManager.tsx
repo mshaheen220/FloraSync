@@ -68,7 +68,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
         <form onSubmit={handleAdd} className="flex flex-col gap-3 mt-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
-            <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZoneId} onChange={e => setSelectedZoneId(e.target.value)} required>
+            <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZoneId} onChange={e => setSelectedZoneId(e.target.value)} required>
               <option value="" disabled>Select a zone...</option>
               {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
             </select>
@@ -94,7 +94,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
                 onClick={() => toggleLocationZone(zoneName)}
                 className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
               >
-                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   {zoneName} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedLocations.groups[zoneName].length})</span>
                 </Subtitle>
                 <span className={`text-slate-400 transition-transform duration-200 ${expandedLocationZones.includes(zoneName) ? 'rotate-180' : ''}`}>

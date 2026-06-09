@@ -59,16 +59,16 @@ export const PrintLayout: FC<PrintLayoutProps> = ({ items, template, onClose }) 
     <div id="print-portal" className="fixed inset-0 z-[9999] bg-white text-black overflow-y-auto">
       
       {/* Non-printing Control Header */}
-      <div className="print:hidden sticky top-0 left-0 right-0 bg-slate-800 text-white p-4 flex justify-between items-center shadow-xl z-50">
+      <div className="print:hidden sticky top-0 left-0 right-0 bg-surface-800 text-white p-4 flex justify-between items-center shadow-xl z-50">
         <div className="flex flex-col">
           <h2 className="font-bold text-lg">Print Preview ({items.length} items)</h2>
           <span className="text-xs text-slate-400">Set your printer margins to "None" or "Minimum" for best results.</span>
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors flex items-center justify-center">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg bg-surface-700 hover:bg-surface-600 font-bold transition-colors flex items-center justify-center">
             Cancel
           </button>
-          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg flex items-center gap-2">
+          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-600 font-bold transition-colors shadow-lg flex items-center gap-2">
             Print
           </button>
         </div>

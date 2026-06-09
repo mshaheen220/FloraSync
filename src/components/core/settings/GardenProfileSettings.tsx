@@ -16,13 +16,13 @@ export const GardenProfileSettings: FC<GardenProfileSettingsProps> = ({ gardenPr
       <div className="flex items-center gap-4 mb-2">
         <div className="relative">
           {gardenProfile.imageUrl ? (
-            <img src={gardenProfile.imageUrl} alt="Garden" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500" />
+            <img src={gardenProfile.imageUrl} alt="Garden" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-16 h-16 rounded-xl object-cover border-2 border-primary-500" />
           ) : (
-            <div className="w-16 h-16 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-3xl font-bold text-emerald-700 dark:text-emerald-400 border-2 border-emerald-500">
+            <div className="w-16 h-16 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-3xl font-bold text-primary-700 dark:text-primary-400 border-2 border-primary-500">
               <Icon name="leaf" size={32} />
             </div>
           )}
-          <label className="absolute bottom-[-8px] right-[-8px] bg-emerald-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-emerald-600 transition-colors shadow-md text-xs leading-none flex items-center justify-center">
+          <label className="absolute bottom-[-8px] right-[-8px] bg-primary-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors shadow-md text-xs leading-none flex items-center justify-center">
             <Icon name="camera" size={14} />
             <input type="file" accept="image/*" className="hidden" onChange={(e) => {
               const file = e.target.files?.[0];

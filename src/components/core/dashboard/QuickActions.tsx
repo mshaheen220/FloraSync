@@ -84,17 +84,17 @@ export const QuickActions: FC<QuickActionsProps> = ({
     <section className="mb-8 animate-in fade-in duration-500">
       <Subtitle>Quick Actions</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        <Card onClick={onBatchWaterAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+        <Card onClick={onBatchWaterAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
           <div className="mb-1 text-blue-500 dark:text-blue-400"><Icon name="water" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
         </Card>
-        <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
+        <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
           <div className="mb-1 text-amber-500 dark:text-amber-400"><Icon name="feed" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
         </Card>
         {pinnedItems.map(item => (
-          <Card key={item.id} onClick={item.onClick} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <div className="mb-1 text-emerald-600 dark:text-emerald-400"><Icon name={item.icon} size={28} /></div>
+          <Card key={item.id} onClick={item.onClick} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
+            <div className="mb-1 text-primary-600 dark:text-primary-400"><Icon name={item.icon} size={28} /></div>
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3 whitespace-pre-wrap">{item.name}</span>
           </Card>
         ))}

@@ -53,7 +53,37 @@ import {
   TreePalm,
   Globe,
   Download,
-  Shuffle
+  Shuffle,
+  Flower2,
+  PenTool,
+  XOctagon,
+  ScanEye,
+  Compass,
+  Eraser,
+  Search,
+  Map,
+  Feather, 
+  Clover, 
+  Cherry, 
+  ShieldAlert, 
+  ScrollText, 
+  Wand2, 
+  Trees,
+  MoreHorizontal, 
+  Sliders, 
+  Aperture, 
+  Fingerprint, 
+  LifeBuoy,
+  Bookmark, 
+  Tent, 
+  ShoppingBag, 
+  Bell, 
+  Book, 
+  Star, 
+  Box,
+  AlignJustify, 
+  Cog, 
+  Focus
 } from 'lucide-react';
 
 // This maps your friendly string names to the actual Lucide components
@@ -118,6 +148,109 @@ const DEFAULT_ICON_MAP = {
 } as const;
 
 export type IconName = keyof typeof DEFAULT_ICON_MAP;
+
+// Example of a secondary built-in theme! 
+// Notice how it only overrides a few icons. The provider will automatically 
+// fall back to DEFAULT_ICON_MAP for any icon not explicitly listed here!
+export const ELEGANT_THEME: Record<string, React.ElementType> = {
+  'water': CloudRain,
+  'feed': Flower2,
+  'edit': PenTool,
+  'delete': XOctagon,
+  'view': ScanEye,
+  'map-pin': Compass,
+  'leaf': Feather,
+  'sprout': Clover,
+  'apple': Cherry,
+  'alert': ShieldAlert,
+  'alert-circle': ShieldAlert,
+  'book-open-text': ScrollText,
+  'sparkles': Wand2,
+  'tree-palm': Trees,
+  'menu': MoreHorizontal,
+  'settings': Sliders,
+  'camera': Aperture,
+  'print': Fingerprint,
+  'help-circle': LifeBuoy
+};
+
+export const MINIMALIST_THEME: Record<string, React.ElementType> = {
+  'water': Droplet,
+  'feed': Leaf,
+  'edit': Pencil,
+  'delete': Eraser,
+  'view': Search,
+  'map-pin': Map,
+  'leaf': Bookmark,
+  'sprout': Tent,
+  'apple': ShoppingBag,
+  'alert': Bell,
+  'alert-circle': Bell,
+  'book-open-text': Book,
+  'sparkles': Star,
+  'tree-palm': Box,
+  'menu': AlignJustify,
+  'settings': Cog,
+  'camera': Focus,
+  'print': Printer,
+  'help-circle': Info
+};
+
+const createImageIcon = (src: string) => {
+  return ({ size = 24, className = '' }: { size?: number | string, className?: string }) => (
+    <img src={src} width={size} height={size} className={`object-contain ${className}`} alt="" />
+  );
+};
+
+export const BOHO_NATURE_THEME: Record<string, React.ElementType> = {
+  'alert-circle': createImageIcon('/images/icons/boho-nature/alert-circle.png'),
+  'alert': createImageIcon('/images/icons/boho-nature/alert.png'),
+  'apple': createImageIcon('/images/icons/boho-nature/apple.png'),
+  'book-open-text': createImageIcon('/images/icons/boho-nature/book.png'),
+  'camera': createImageIcon('/images/icons/boho-nature/camera.png'),
+  'delete': createImageIcon('/images/icons/boho-nature/delete.png'),
+  'download': createImageIcon('/images/icons/boho-nature/download.png'),
+  'edit': createImageIcon('/images/icons/boho-nature/edit.png'),
+  'feed': createImageIcon('/images/icons/boho-nature/feed.png'),
+  'land-plot': createImageIcon('/images/icons/boho-nature/garden.png'),
+  'help-circle': createImageIcon('/images/icons/boho-nature/help-circle.png'),
+  'leaf': createImageIcon('/images/icons/boho-nature/leaf.png'),
+  'map-pin': createImageIcon('/images/icons/boho-nature/map-pin.png'),
+  'menu': createImageIcon('/images/icons/boho-nature/menu.png'),
+  'print': createImageIcon('/images/icons/boho-nature/printer.png'),
+  'settings': createImageIcon('/images/icons/boho-nature/settings.png'),
+  'shield': createImageIcon('/images/icons/boho-nature/shield.png'),
+  'sprout': createImageIcon('/images/icons/boho-nature/sprout.png'),
+  'view': createImageIcon('/images/icons/boho-nature/view.png'),
+  'sparkles': createImageIcon('/images/icons/boho-nature/wand.png'),
+  'water': createImageIcon('/images/icons/boho-nature/water.png'),
+  'droplet': createImageIcon('/images/icons/boho-nature/watering-can.png')
+};
+
+export const SCIENCE_THEME: Record<string, React.ElementType> = {
+  'alert-circle': createImageIcon('/images/icons/science/alert-circle.png'),
+  'alert': createImageIcon('/images/icons/science/alert.png'),
+  'apple': createImageIcon('/images/icons/science/apple.png'),
+  'book-open-text': createImageIcon('/images/icons/science/book.png'),
+  'camera': createImageIcon('/images/icons/science/camera1.png'),
+  'delete': createImageIcon('/images/icons/science/trash.png'),
+  'download': createImageIcon('/images/icons/science/download.png'),
+  'edit': createImageIcon('/images/icons/science/edit.png'),
+  'feed': createImageIcon('/images/icons/science/leaf1.png'),
+  'land-plot': createImageIcon('/images/icons/science/garden4.png'),
+  'help-circle': createImageIcon('/images/icons/science/help.png'),
+  'leaf': createImageIcon('/images/icons/science/leaf1.png'),
+  'map-pin': createImageIcon('/images/icons/science/map-pin.png'),
+  'menu': createImageIcon('/images/icons/science/menu.png'),
+  'print': createImageIcon('/images/icons/science/printer.png'),
+  'settings': createImageIcon('/images/icons/science/settings.png'),
+  'shield': createImageIcon('/images/icons/science/shield.png'),
+  // 'sprout': createImageIcon('/images/icons/science/sprout.png'),
+  // 'view': createImageIcon('/images/icons/science/view.png'),
+  // 'sparkles': createImageIcon('/images/icons/science/wand.png'),
+  'water': createImageIcon('/images/icons/science/watering-can.png'),
+  'droplet': createImageIcon('/images/icons/science/droplet.png')
+};
 
 // 1. Create a Context to hold any active theme or plugin icon overrides
 export const IconContext = createContext<{ customIcons: Record<string, React.ElementType> }>({ customIcons: {} });

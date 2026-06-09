@@ -134,12 +134,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
         <Card className="text-center py-10 shadow-lg">
-          <div className="flex justify-center mb-4 text-emerald-500 dark:text-emerald-400">
+          <div className="flex justify-center mb-4 text-primary-500 dark:text-primary-400">
             <Icon name="leaf" size={48} />
           </div>
           <Title>New Tag Detected</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed px-2">
-            Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{qrId}</strong> is unassigned. 
+            Tag <strong className="text-primary-700 dark:text-primary-400 font-semibold">{qrId}</strong> is unassigned. 
             What are we planting here?
           </p>
           <PlantRegistrationForm 
@@ -152,7 +152,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             submitLabel="Initialize Care Routine" 
           />
           <div className="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-400">
-            Not a plant? Register this tag as a <button onClick={() => onNavigateLocation(qrId)} className="text-emerald-600 dark:text-emerald-400 font-semibold underline decoration-dotted underline-offset-2">Location</button> or <button onClick={() => onNavigateZone(qrId)} className="text-emerald-600 dark:text-emerald-400 font-semibold underline decoration-dotted underline-offset-2">Zone</button>.
+            Not a plant? Register this tag as a <button onClick={() => onNavigateLocation(qrId)} className="text-primary-600 dark:text-primary-400 font-semibold underline decoration-dotted underline-offset-2">Location</button> or <button onClick={() => onNavigateZone(qrId)} className="text-primary-600 dark:text-primary-400 font-semibold underline decoration-dotted underline-offset-2">Zone</button>.
           </div>
         </Card>
         <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
@@ -178,7 +178,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return (
       <Container className="animate-in fade-in duration-300">
         <header className="mb-6 flex items-center gap-3 pt-6">
-          <button onClick={() => setIsEditing(false)} className="text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+          <button onClick={() => setIsEditing(false)} className="text-slate-400 dark:text-slate-500 hover:text-primary-700 dark:hover:text-primary-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
             <Icon name="back" size={24} />
           </button>
           <div>
@@ -192,7 +192,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Location</label>
               <select 
-                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+                className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 value={editData.locationId}
                 onChange={e => setEditData({...editData, locationId: e.target.value})}
               >
@@ -246,12 +246,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
 
           <div>
-            <label className="flex items-start gap-3 text-sm font-semibold text-slate-700 dark:text-slate-300 mt-2 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors hover:border-emerald-300 dark:hover:border-emerald-700">
+            <label className="flex items-start gap-3 text-sm font-semibold text-slate-700 dark:text-slate-300 mt-2 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer transition-colors hover:border-primary-300 dark:hover:border-primary-700">
               <input 
                 type="checkbox" 
                 checked={editData.untracked} 
                 onChange={e => setEditData({...editData, untracked: e.target.checked})} 
-                className="w-5 h-5 mt-0.5 accent-emerald-600 rounded cursor-pointer"
+                className="w-5 h-5 mt-0.5 accent-primary-600 rounded cursor-pointer"
               />
               <div className="flex-1">
                 <span className="block text-slate-800 dark:text-slate-100">Unmonitored / Rain-fed</span>
@@ -359,16 +359,16 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <header className="mb-6 flex items-start justify-between pt-6">
         <div className="flex items-start gap-3">
-          <button onClick={onGoBack} className="text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+          <button onClick={onGoBack} className="text-slate-400 dark:text-slate-500 hover:text-primary-700 dark:hover:text-primary-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
             <Icon name="back" size={24} />
           </button>
           <div className="pt-1">
             <Title className="!mb-0">{archetype?.commonName}</Title>
             {location ? (
               <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">
-                <span onClick={() => zone && onNavigateZone(zone.id)} className="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2">{zone?.name}</span> 
+                <span onClick={() => zone && onNavigateZone(zone.id)} className="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2">{zone?.name}</span> 
                 {' • '}
-                <span onClick={() => onNavigateLocation(location.id)} className="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2">{location.name}</span>
+                <span onClick={() => onNavigateLocation(location.id)} className="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2">{location.name}</span>
               </p>
             ) : (
               <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-1">Unknown Location</p>
@@ -376,7 +376,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2 pt-0.5">
-          <button onClick={() => setIsEditing(true)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 active:scale-90 transition-all bg-transparent rounded-full shadow-sm">
+          <button onClick={() => setIsEditing(true)} className="p-2 text-slate-400 dark:text-slate-500 hover:text-primary-700 dark:hover:text-primary-400 active:scale-90 transition-all bg-transparent rounded-full shadow-sm">
             <Icon name="edit" size={20} />
           </button>
           <MenuButton onClick={onOpenMenu}>
@@ -389,7 +389,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         {instance.imageUrl || archetype?.imageUrl ? (
           <img src={instance.imageUrl || archetype?.imageUrl} alt={archetype?.commonName} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-56 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
         ) : (
-          <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-8"></div>
+          <div className="w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 mb-8"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
           <StatusBadge $status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-5 shadow-sm">
@@ -431,7 +431,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       {hasCultivationData && (
         <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
           <button onClick={() => toggleSection('cultivation')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-            <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Cultivation Basics</Subtitle>
+            <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Cultivation Basics</Subtitle>
             <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('cultivation') ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {expandedSections.includes('cultivation') && (
@@ -473,7 +473,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.pruningTips) && (
                 <li className="flex gap-4 items-start">
-                  <span className="flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 rounded-full w-10 h-10 flex-shrink-0 text-emerald-600 dark:text-emerald-400">
+                  <span className="flex items-center justify-center bg-primary-50 dark:bg-primary-900/30 rounded-full w-10 h-10 flex-shrink-0 text-primary-600 dark:text-primary-400">
                     <Icon name="edit" size={20} />
                   </span>
                   <div className="pt-1">
@@ -491,7 +491,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       {hasTraitsData && (
         <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
           <button onClick={() => toggleSection('traits')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-            <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Details & Traits</Subtitle>
+            <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Details & Traits</Subtitle>
             <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('traits') ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {expandedSections.includes('traits') && (
@@ -577,7 +577,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       {hasLifecycleData && (
         <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
           <button onClick={() => toggleSection('lifecycle')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-            <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Lifecycle & Harvest</Subtitle>
+            <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Lifecycle & Harvest</Subtitle>
             <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('lifecycle') ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {expandedSections.includes('lifecycle') && (
@@ -615,7 +615,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
 
       <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
         <button onClick={() => toggleSection('journal')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-          <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+          <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
             Plant Journal <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({instance.journal?.length || 0})</span>
           </Subtitle>
           <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('journal') ? 'rotate-180' : ''}`}>▼</span>

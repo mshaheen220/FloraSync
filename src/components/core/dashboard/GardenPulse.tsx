@@ -85,7 +85,7 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
 
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-[500ms]">
-      <Subtitle className="flex items-center gap-2"><Icon name="book-open-text" size={20} className="text-emerald-500 dark:text-emerald-400" /> Garden Pulse</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="book-open-text" size={20} className="text-primary-500 dark:text-primary-400" /> Garden Pulse</Subtitle>
       <Card className="!p-0 overflow-hidden">
         {recentActivity.map((entry, idx) => {
           const isWater = entry.activityType === 'Watered';
@@ -104,9 +104,9 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-800 dark:text-slate-200 leading-tight">
                   <strong className="font-bold">{entry.authorName || 'Someone'}</strong> {actionVerb} {entry.isBatch ? (
-                    <strong className="font-bold text-emerald-700 dark:text-emerald-400">{entry.batchScope}</strong>
+                    <strong className="font-bold text-primary-700 dark:text-primary-400">{entry.batchScope}</strong>
                   ) : (
-                    <span>the <strong className="font-bold text-emerald-700 dark:text-emerald-400">{entry.plantName}</strong></span>
+                    <span>the <strong className="font-bold text-primary-700 dark:text-primary-400">{entry.plantName}</strong></span>
                   )}
                 </p>
                 {(entry.note || entry.healthIssues) && (

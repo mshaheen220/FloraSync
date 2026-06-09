@@ -16,8 +16,9 @@ import { HelpCenter } from './components/core/HelpCenter';
 import { PrintCenter } from './components/core/settings/PrintCenter';
 import { useGarden } from './contexts/GardenContext';
 import { Theme } from './App';
+import { ColorTheme } from './hooks/useTheme';
 import { FloatingScannerButton } from './components/common/FloatingScannerButton';
-import { Icon } from './components/common/Icon';
+import { Icon, IconProvider, ELEGANT_THEME, MINIMALIST_THEME, BOHO_NATURE_THEME, SCIENCE_THEME} from './components/common/Icon';
 
 export interface AppRouterProps {
   currentUser: User | null;
@@ -27,12 +28,16 @@ export interface AppRouterProps {
   workspaces: Workspace[];
   gardenProfile: GardenProfile | null;
   theme: Theme;
+  colorTheme: ColorTheme;
   setTheme: (theme: Theme) => void;
+  setColorTheme: (colorTheme: ColorTheme) => void;
   onLogin: (username: string, password: string) => Promise<void>;
   onLogout: () => void;
   onSwitchGarden: (gardenId: string) => void;
   onUpdateUser: (updates: Partial<User>) => void;
   onUpdateGarden: (name: string, imageUrl: string) => void;
+  iconTheme?: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science';
+  onIconThemeChange?: (theme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') => void;
 }
 
 export const AppRouter: FC<AppRouterProps> = ({
@@ -44,11 +49,15 @@ export const AppRouter: FC<AppRouterProps> = ({
   gardenProfile,
   theme,
   setTheme,
+  colorTheme,
+  setColorTheme,
   onLogin,
   onLogout,
   onSwitchGarden,
   onUpdateUser,
-  onUpdateGarden
+  onUpdateGarden,
+  iconTheme = 'default',
+  onIconThemeChange
 }) => {
   const { locations } = useGarden();
 
@@ -172,7 +181,7 @@ export const AppRouter: FC<AppRouterProps> = ({
 
     if (!isDbLoaded) {
       return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center text-emerald-800 dark:text-emerald-400 font-medium">
+        <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex flex-col items-center justify-center text-primary-800 dark:text-primary-400 font-medium">
           <img src='/images/icons/loader.apng.png' alt="FloraSync Loading Spinner" className="w-16 h-16 mb-4" />
           Syncing with Greenhouse...
         </div>
@@ -181,7 +190,7 @@ export const AppRouter: FC<AppRouterProps> = ({
 
     if (initialLoadSuccess === false) {
       return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
+        <div className="min-h-screen bg-surface-50 dark:bg-surface-900 flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
           <div className="mb-4 text-amber-500">
             <Icon name="alert-circle" size={64} />
           </div>
@@ -190,10 +199,10 @@ export const AppRouter: FC<AppRouterProps> = ({
             Could not securely connect to the FloraSync database. Your garden data is safe on the server, but cannot be loaded right now.
           </p>
           <div className="flex gap-3">
-            <button onClick={() => window.location.reload()} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">
+            <button onClick={() => window.location.reload()} className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-xl font-bold active:scale-95 transition-all shadow-md">
               Retry Connection
             </button>
-            <button onClick={onLogout} className="bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 px-6 py-2 rounded-xl font-bold active:scale-95 transition-all">
+            <button onClick={onLogout} className="bg-surface-200 hover:bg-surface-300 text-slate-700 dark:bg-surface-800 dark:hover:bg-surface-700 dark:text-slate-300 px-6 py-2 rounded-xl font-bold active:scale-95 transition-all">
               Log Out
             </button>
           </div>
@@ -232,7 +241,7 @@ export const AppRouter: FC<AppRouterProps> = ({
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager theme={theme} onThemeChange={setTheme} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} token={token} />;
+      return <SettingsManager theme={theme} onThemeChange={setTheme} colorTheme={colorTheme} onColorThemeChange={setColorTheme} iconTheme={iconTheme} onIconThemeChange={onIconThemeChange} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} token={token} />;
     }
 
     if (currentView === 'locations') {
@@ -266,8 +275,10 @@ export const AppRouter: FC<AppRouterProps> = ({
     );
   };
 
+  const activeThemeMap = iconTheme === 'elegant' ? ELEGANT_THEME : iconTheme === 'minimalist' ? MINIMALIST_THEME : iconTheme === 'boho-nature' ? BOHO_NATURE_THEME : iconTheme === 'science' ? SCIENCE_THEME : {};
+
   return (
-    <>
+    <IconProvider theme={activeThemeMap}>
       <NavigationMenu 
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 
@@ -276,11 +287,11 @@ export const AppRouter: FC<AppRouterProps> = ({
       />
       {isWorkspaceMenuOpen && workspaces && workspaces.length > 1 && (
         <div 
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-surface-900/50 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setIsWorkspaceMenuOpen(false)}
         >
           <div 
-            className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-2xl animate-in slide-in-from-bottom-8 duration-300"
+            className="w-full sm:max-w-md bg-surface-50 dark:bg-surface-900 rounded-t-3xl sm:rounded-3xl p-6 pb-12 sm:pb-6 shadow-2xl animate-in slide-in-from-bottom-8 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -295,14 +306,14 @@ export const AppRouter: FC<AppRouterProps> = ({
                 <button 
                   key={ws.id}
                   onClick={() => { setIsWorkspaceMenuOpen(false); if (ws.id !== gardenProfile?.id) onSwitchGarden(ws.id); }}
-                  className={`flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2 ${ws.id === gardenProfile?.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' : 'border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-emerald-200 dark:hover:border-emerald-800'}`}
+                className={`flex items-center gap-4 p-4 rounded-2xl text-left transition-all active:scale-[0.98] border-2 ${ws.id === gardenProfile?.id ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-slate-100 dark:border-slate-800 bg-surface-50 dark:bg-surface-800 hover:border-primary-200 dark:hover:border-primary-800'}`}
                 >
-                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-xl"><Icon name="tree-palm" /></div>)}
+                  {ws.imageUrl ? (<img src={ws.imageUrl} alt={ws.name} className="w-12 h-12 rounded-xl object-cover" />) : (<div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-xl"><Icon name="tree-palm" /></div>)}
                   <div className="flex-1">
                     <div className="font-bold text-slate-800 dark:text-slate-100 text-lg leading-tight mb-0.5">{ws.name}</div>
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{ws.role}</div>
                   </div>
-                  {ws.id === gardenProfile?.id && <span className="text-emerald-500 text-xl font-bold">✓</span>}
+                  {ws.id === gardenProfile?.id && <span className="text-primary-500 text-xl font-bold">✓</span>}
                 </button>
               ))}
             </div>
@@ -313,6 +324,6 @@ export const AppRouter: FC<AppRouterProps> = ({
       {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
         <FloatingScannerButton onClick={() => navigateTo('/scanner')} />
       )}
-    </>
+    </IconProvider>
   );
 };

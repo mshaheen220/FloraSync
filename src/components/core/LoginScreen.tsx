@@ -30,8 +30,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ onLogin }) => {
 
   return (
     <Container className="flex flex-col justify-center h-screen animate-in fade-in duration-500">
-      <Card className="text-center py-10 shadow-lg border-emerald-500">
-        <div className="flex justify-center mb-4 text-emerald-500 dark:text-emerald-400">
+      <Card className="text-center py-10 shadow-lg border-primary-500">
+        <div className="flex justify-center mb-4 text-primary-500 dark:text-primary-400">
           <Icon name="leaf" size={64} />
         </div>
         <Title>FloraSync Login</Title>

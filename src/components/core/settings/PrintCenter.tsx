@@ -254,14 +254,14 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
         <PrintLayout items={printItems} template={template} onClose={() => setShowPreview(false)} />
       )}
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
-          <button onClick={() => setPrintMode('queue')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'queue' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+        <div className="flex gap-2 bg-surface-100 dark:bg-surface-800/50 p-1 rounded-xl border border-surface-200 dark:border-surface-700">
+          <button onClick={() => setPrintMode('queue')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'queue' ? 'bg-surface-50 dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             Queue ({printQueue.length})
           </button>
-          <button onClick={() => setPrintMode('db')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'db' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+          <button onClick={() => setPrintMode('db')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'db' ? 'bg-surface-50 dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             Bulk from DB
           </button>
-          <button onClick={() => setPrintMode('blank')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'blank' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
+          <button onClick={() => setPrintMode('blank')} className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${printMode === 'blank' ? 'bg-surface-50 dark:bg-surface-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             Blanks
           </button>
         </div>
@@ -269,7 +269,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
         <div className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Label Layout</label>
-            <select value={template} onChange={e => setTemplate(e.target.value as any)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+            <select value={template} onChange={e => setTemplate(e.target.value as any)} className="w-full border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-2 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-surface-50 dark:bg-surface-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
               <option value="label-6x3">6cm x 3cm Small Labels</option>
               <option value="stake-10x6">10cm x 6cm Garden Stakes</option>
               <option value="square-1in">1-inch Square Labels</option>
@@ -288,7 +288,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
               </div>
               
               {printQueue.length === 0 ? (
-                <div className="p-6 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+                <div className="p-6 text-center border-2 border-dashed border-surface-200 dark:border-surface-700 rounded-xl bg-surface-50 dark:bg-surface-800/50">
                   <div className="flex justify-center text-slate-400 mb-2">
                     <Icon name="print" size={32} />
                   </div>
@@ -298,9 +298,9 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
               ) : (
                 <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
                   {printQueue.map(item => (
-                    <div key={item.id} className="flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div key={item.id} className="flex justify-between items-center bg-surface-50 dark:bg-surface-800/50 p-2.5 rounded-lg border border-surface-200 dark:border-surface-700">
                       <div className="flex items-center gap-3">
-                        <span className="text-emerald-600 dark:text-emerald-400">
+                        <span className="text-primary-600 dark:text-primary-400">
                           <Icon name={item.type === 'plant' ? 'leaf' : item.type === 'location' ? 'map-pin' : 'globe'} size={20} />
                         </span>
                         <div className="flex flex-col">
@@ -319,12 +319,12 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
                 </div>
               )}
 
-              <div className="p-3 mt-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
+              <div className="p-3 mt-1 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-100 dark:border-primary-800">
                 <label className="flex items-start gap-3 cursor-pointer">
-                  <input type="checkbox" checked={smartFill} onChange={e => setSmartFill(e.target.checked)} className="mt-1 accent-emerald-600 w-4 h-4 cursor-pointer flex-shrink-0" />
+                  <input type="checkbox" checked={smartFill} onChange={e => setSmartFill(e.target.checked)} className="mt-1 accent-primary-600 w-4 h-4 cursor-pointer flex-shrink-0" />
                   <div className="flex flex-col">
-                    <span className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Smart Fill Sheet</span>
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 leading-relaxed">Automatically generate sequential blank tags to fill the remaining empty spaces on the printer sheet so no paper goes to waste!</span>
+                    <span className="text-sm font-bold text-primary-800 dark:text-primary-300">Smart Fill Sheet</span>
+                    <span className="text-xs text-primary-600 dark:text-primary-400 mt-0.5 leading-relaxed">Automatically generate sequential blank tags to fill the remaining empty spaces on the printer sheet so no paper goes to waste!</span>
                   </div>
                 </label>
               </div>
@@ -335,26 +335,26 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
             <>
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Tag Actions</label>
-                <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div className="flex flex-wrap gap-4 p-3 bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700">
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('none')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'none']);
                   else setPrintActions(prev => prev.filter(a => a !== 'none'));
-                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                 <Icon name="info" size={16} /> Standard Info
               </label>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('water')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'water']);
                   else setPrintActions(prev => prev.filter(a => a !== 'water'));
-                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                 <Icon name="water" size={16} /> Water
               </label>
               <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                 <input type="checkbox" checked={printActions.includes('feed')} onChange={(e) => {
                   if (e.target.checked) setPrintActions(prev => [...prev, 'feed']);
                   else setPrintActions(prev => prev.filter(a => a !== 'feed'));
-                }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                 <Icon name="feed" size={16} /> Feed
               </label>
                 </div>
@@ -363,26 +363,26 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
               {printMode === 'db' ? (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
-                  <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex flex-wrap gap-4 p-3 bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700">
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('plant')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'plant']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'plant'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/plant.png" alt="Plants" className="w-5 h-5 mb-1 object-contain" /> Plants
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('location')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'location']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'location'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/location.png" alt="Locations" className="w-5 h-5 mb-1 object-contain" /> Locations
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={dbPrintCategories.includes('zone')} onChange={(e) => {
                     if (e.target.checked) setDbPrintCategories(prev => [...prev, 'zone']);
                     else setDbPrintCategories(prev => prev.filter(c => c !== 'zone'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
                   </div>
@@ -390,26 +390,26 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
               ) : (
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Categories to Print</label>
-                  <div className="flex flex-wrap gap-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <div className="flex flex-wrap gap-4 p-3 bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700">
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('plant')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'plant']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'plant'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/plant.png" alt="Plants" className="w-5 h-5 mb-1 object-contain" /> Plants
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('location')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'location']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'location'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/location.png" alt="Locations" className="w-5 h-5 mb-1 object-contain" /> Locations
                 </label>
                 <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-200 cursor-pointer">
                   <input type="checkbox" checked={blankCategories.includes('zone')} onChange={(e) => {
                     if (e.target.checked) setBlankCategories(prev => [...prev, 'zone']);
                     else setBlankCategories(prev => prev.filter(c => c !== 'zone'));
-                  }} className="accent-emerald-600 w-4 h-4 cursor-pointer" />
+                  }} className="accent-primary-600 w-4 h-4 cursor-pointer" />
                   <img src="/images/icons/qr/zone.png" alt="Zones" className="w-5 h-5 mb-1 object-contain" /> Zones
                 </label>
                   </div>
@@ -441,17 +441,17 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
             <Subtitle className="!text-sm mb-2">Ready to Print</Subtitle>
             <div className="flex flex-col gap-2">
               {generatedFiles.map((file, i) => (
-                <div key={i} className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group">
+                <div key={i} className="flex items-center justify-between bg-primary-50 dark:bg-primary-900/30 p-3 rounded-xl border border-primary-100 dark:border-primary-800/50 hover:border-primary-300 dark:hover:border-primary-700 transition-colors group">
                   <div className="flex flex-col truncate mr-4">
-                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+                    <span className="text-sm font-semibold text-primary-800 dark:text-primary-300 truncate">
                       {formatPrintName(file.name)}
                     </span>
-                    <span className="text-[10px] font-medium text-emerald-600/80 dark:text-emerald-400/80 uppercase tracking-wider mt-0.5">
+                    <span className="text-[10px] font-medium text-primary-600/80 dark:text-primary-400/80 uppercase tracking-wider mt-0.5">
                       {new Date(file.time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => handleDownload(file.name)} className="text-emerald-600 dark:text-emerald-400 hover:scale-110 transition-transform p-1">
+                    <button onClick={() => handleDownload(file.name)} className="text-primary-600 dark:text-primary-400 hover:scale-110 transition-transform p-1">
                       <Icon name="download" size={20} />
                     </button>
                     <button onClick={() => handleDeletePrint(file.name)} className="text-red-400 hover:text-red-600 hover:scale-110 transition-transform p-1">

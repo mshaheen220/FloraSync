@@ -63,13 +63,13 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     if (!hasPermission(currentUser, 'perform_actions')) {
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-          <Card className="text-center py-10 shadow-lg border-emerald-500">
-            <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+          <Card className="text-center py-10 shadow-lg border-primary-500">
+            <div className="mb-4 flex justify-center text-primary-500 dark:text-primary-400">
               <Icon name="map-pin" size={48} />
             </div>
             <Title>Unassigned Tag</Title>
             <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
-              Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned. Viewers do not have permission to register new locations.
+              Tag <strong className="text-primary-700 dark:text-primary-400 font-semibold">{locationId}</strong> is unassigned. Viewers do not have permission to register new locations.
             </p>
           </Card>
         </Container>
@@ -77,13 +77,13 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     }
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-        <Card className="text-center py-10 shadow-lg border-emerald-500">
-          <div className="mb-4 flex justify-center text-emerald-500 dark:text-emerald-400">
+        <Card className="text-center py-10 shadow-lg border-primary-500">
+          <div className="mb-4 flex justify-center text-primary-500 dark:text-primary-400">
             <Icon name="map-pin" size={48} />
           </div>
           <Title>New Location Tag</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
-            Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{locationId}</strong> is unassigned.
+            Tag <strong className="text-primary-700 dark:text-primary-400 font-semibold">{locationId}</strong> is unassigned.
             Where is this located?
           </p>
           <form onSubmit={(e) => {
@@ -94,7 +94,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
           }} className="flex flex-col gap-3 text-left">
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
-              <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={newLocZone} onChange={e => setNewLocZone(e.target.value)} required>
+              <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={newLocZone} onChange={e => setNewLocZone(e.target.value)} required>
                 <option value="" disabled>Select a zone...</option>
                 {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
               </select>
@@ -120,7 +120,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
         title={location.name}
         subtitle={
           <span 
-            className="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 underline decoration-dotted underline-offset-2"
+            className="cursor-pointer hover:text-primary-600 dark:hover:text-primary-400 underline decoration-dotted underline-offset-2"
             onClick={() => zone && onNavigateZone(zone.id)}
           >
             {zone?.name}

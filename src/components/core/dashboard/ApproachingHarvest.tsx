@@ -43,9 +43,9 @@ export const ApproachingHarvest: FC<ApproachingHarvestProps> = ({ activeInstance
       <Subtitle className="flex items-center gap-2"><Icon name="apple" size={20} className="text-amber-500 dark:text-amber-400" /> Approaching Harvest</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {approachingHarvest.map(item => (
-          <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-44 !p-3.5 cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700">
+          <Card key={item.qrId} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-44 !p-3.5 cursor-pointer hover:border-primary-300 dark:hover:border-primary-700">
             <h3 className="font-bold text-slate-800 dark:text-slate-100 text-sm truncate">{item.archetype?.commonName}</h3>
-            <p className={`text-xs font-semibold mt-1 ${item.daysUntil <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+            <p className={`text-xs font-semibold mt-1 ${item.daysUntil <= 0 ? 'text-amber-600 dark:text-amber-400' : 'text-primary-600 dark:text-primary-400'}`}>
               {item.daysUntil <= 0 ? 'Ready to pick!' : `${item.daysUntil} days left`}
             </p>
           </Card>

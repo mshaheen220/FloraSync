@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, useState } from 'react';
 import { User, GardenProfile, Workspace } from '../types';
 import { GardenContext } from './contexts/GardenContext';
 import { AppRouter } from './AppRouter';
@@ -11,7 +11,7 @@ import { useGardenSync } from './hooks/useGardenSync';
 export type { Theme, User, GardenProfile, Workspace };
 
 export const App: FC = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, colorTheme, setColorTheme } = useTheme();
   
   const auth = useAuth();
   
@@ -27,6 +27,15 @@ export const App: FC = () => {
     gardenState.zones, gardenState.setZones,
     gardenState.printQueue, gardenState.setPrintQueue
   );
+
+  // Track the active icon theme and persist it between sessions
+  const [iconTheme, setIconTheme] = useState<'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science'>(() => {
+    return (localStorage.getItem('florasync_icon_theme') as 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') || 'default';
+  });
+  const handleIconThemeChange = (newTheme: 'default' | 'elegant' | 'minimalist' | 'boho-nature' | 'science') => {
+    setIconTheme(newTheme);
+    localStorage.setItem('florasync_icon_theme', newTheme);
+  };
 
   const gardenContextValue = useMemo(() => ({
     instances: gardenState.instances,
@@ -88,12 +97,16 @@ export const App: FC = () => {
         workspaces={sync.workspaces}
         gardenProfile={sync.gardenProfile}
         theme={theme}
+        colorTheme={colorTheme}
         setTheme={setTheme}
+        setColorTheme={setColorTheme}
         onLogin={auth.handleLogin}
         onLogout={auth.handleLogout}
         onSwitchGarden={sync.handleSwitchGarden}
         onUpdateUser={auth.handleUpdateUser}
         onUpdateGarden={sync.handleUpdateGarden}
+        iconTheme={iconTheme}
+        onIconThemeChange={handleIconThemeChange}
       />
     </GardenContext.Provider>
   );

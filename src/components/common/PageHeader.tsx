@@ -16,7 +16,7 @@ export const PageHeader: FC<PageHeaderProps> = ({ title, subtitle, supertitle, o
   <header className="mb-6 flex items-start justify-between pt-6">
     <div className="flex items-start gap-3">
       {onGoBack && (
-        <button onClick={onGoBack} className="text-slate-400 dark:text-slate-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+        <button onClick={onGoBack} className="text-slate-400 dark:text-slate-500 hover:text-primary-700 dark:hover:text-primary-400 transition-colors p-2 -ml-2 rounded-full active:bg-slate-200 dark:active:bg-slate-800">
           <Icon name="back" size={24} />
         </button>
       )}
@@ -25,7 +25,7 @@ export const PageHeader: FC<PageHeaderProps> = ({ title, subtitle, supertitle, o
           <button 
             onClick={onOpenWorkspaceMenu}
             disabled={!onOpenWorkspaceMenu}
-            className={`text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1 mb-1 ${onOpenWorkspaceMenu ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : 'cursor-default text-left'}`}
+            className={`text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest flex items-center gap-1 mb-1 ${onOpenWorkspaceMenu ? 'cursor-pointer hover:opacity-80 active:scale-95 transition-all' : 'cursor-default text-left'}`}
           >
             {supertitle} {onOpenWorkspaceMenu && <span className="-mt-0.5">▼</span>}
           </button>

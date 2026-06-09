@@ -6,11 +6,11 @@ import { hasPermission } from '../../utils/permissions';
 import { Icon } from '../common/Icon';
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
-  <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
+  <div className="border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0">
     <button onClick={onToggle} className="w-full flex items-center justify-between text-left group py-3 mb-2 active:scale-[0.98] transition-transform">
       <div className="flex items-center gap-3">
         <span className="text-2xl">{icon}</span>
-        <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</Subtitle>
+        <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{title}</Subtitle>
       </div>
       <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
     </button>
@@ -57,22 +57,22 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
       <PageHeader title="Help & FAQs" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
-      <Card className="mb-6 !bg-emerald-50 dark:!bg-emerald-900/20 !border-emerald-200 dark:!border-emerald-800 !p-0 overflow-hidden">
+      <Card className="mb-6 !bg-primary-50 dark:!bg-primary-900/20 !border-primary-200 dark:!border-primary-800 !p-0 overflow-hidden">
         <button 
           onClick={() => setIsWelcomeExpanded(prev => !prev)} 
-          className="w-full flex items-center justify-between text-left p-4 transition-colors hover:bg-emerald-100/50 dark:hover:bg-emerald-800/30 active:scale-[0.98]"
+          className="w-full flex items-center justify-between text-left p-4 transition-colors hover:bg-primary-100/50 dark:hover:bg-primary-800/30 active:scale-[0.98]"
         >
-          <span className="font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-2">
-            <span className="text-emerald-600 dark:text-emerald-400"><Icon name="sprout" size={24} /></span> Welcome to FloraSync
+          <span className="font-bold text-primary-900 dark:text-primary-300 flex items-center gap-2">
+            <span className="text-primary-600 dark:text-primary-400"><Icon name="sprout" size={24} /></span> Welcome to FloraSync
           </span>
-          <span className={`text-emerald-600/50 dark:text-emerald-400/50 transition-transform duration-200 ${isWelcomeExpanded ? 'rotate-180' : ''}`}>▼</span>
+          <span className={`text-primary-600/50 dark:text-primary-400/50 transition-transform duration-200 ${isWelcomeExpanded ? 'rotate-180' : ''}`}>▼</span>
         </button>
         {isWelcomeExpanded && (
           <div className="px-4 pb-4 animate-in slide-in-from-top-2 fade-in duration-200 space-y-3">
-            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
               Welcome to FloraSync, your local, privacy-first garden command center! FloraSync is designed to eliminate the friction of data entry when managing your home greenhouse or raised beds by bridging the physical and digital worlds.
             </p>
-            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+            <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
               Tap any topic below to explore the guide and learn how to get the absolute most out of your digital greenhouse.
             </p>
           </div>
@@ -153,13 +153,13 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
             <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
             <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form! (You can also apply Actions to blank tags for instant care logging).</li>
           </ul>
-          <div className="mt-4 p-3 bg-emerald-100/50 dark:bg-emerald-900/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
-            <p className="font-bold text-emerald-800 dark:text-emerald-300 mb-1">DIY Weatherproofing Tip 🌧️</p>
-            <p className="text-sm text-emerald-700 dark:text-emerald-400 leading-relaxed">To make your labels survive the elements, print them onto <strong>full-sheet vinyl sticker paper</strong>, then laminate the entire printed sheet. The laminating plastic will adhere to both sides. When you cut out your individual tags, simply peel the back lamination layer off to expose the vinyl's sticky back and apply it to your stakes!<br/><br/><span className="text-xs opacity-80 italic">*Note: Standard inkjet ink will eventually fade in the sun over time, but you can always quickly print a fresh batch when they do!</span></p>
+          <div className="mt-4 p-3 bg-primary-100/50 dark:bg-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800/50">
+            <p className="font-bold text-primary-800 dark:text-primary-300 mb-1">DIY Weatherproofing Tip 🌧️</p>
+            <p className="text-sm text-primary-700 dark:text-primary-400 leading-relaxed">To make your labels survive the elements, print them onto <strong>full-sheet vinyl sticker paper</strong>, then laminate the entire printed sheet. The laminating plastic will adhere to both sides. When you cut out your individual tags, simply peel the back lamination layer off to expose the vinyl's sticky back and apply it to your stakes!<br/><br/><span className="text-xs opacity-80 italic">*Note: Standard inkjet ink will eventually fade in the sun over time, but you can always quickly print a fresh batch when they do!</span></p>
           </div>
           <button
             onClick={() => setShowPrintExamples(true)}
-            className="mt-4 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:hover:bg-emerald-800/60 text-emerald-800 dark:text-emerald-300 px-4 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all flex items-center gap-2"
+            className="mt-4 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900/40 dark:hover:bg-primary-800/60 text-primary-800 dark:text-primary-300 px-4 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all flex items-center gap-2"
           >
             📷 View Label Examples
           </button>
@@ -175,11 +175,11 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
 
       {showPrintExamples && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-surface-900/80 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setShowPrintExamples(false)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col gap-6"
+            className="bg-surface-50 dark:bg-surface-900 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col gap-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center">
@@ -190,22 +190,22 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
             <div>
               <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">6cm x 3cm Labels</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/6x3%20Plant.png" alt="Plant" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/6x3%20Plant.png" alt="Plant" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-xs font-bold text-slate-500">Standard Plant Tag</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/6x3%20Zone.png" alt="Zone" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/6x3%20Zone.png" alt="Zone" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-xs font-bold text-slate-500">Standard Zone Tag</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/6x3%20location.png" alt="Location" className="w-full max-w-[240px] rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/6x3%20location.png" alt="Location" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-xs font-bold text-slate-500">Standard Location Tag</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
                   <div className="flex gap-2 w-full max-w-[240px]">
-                    <img src="/images/examples/qr/6x3%20water%20zone.png" alt="Water Action" className="w-1/2 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
-                    <img src="/images/examples/qr/6x3%20feed%20zone.png" alt="Feed Action" className="w-1/2 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                    <img src="/images/examples/qr/6x3%20water%20zone.png" alt="Water Action" className="w-1/2 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
+                    <img src="/images/examples/qr/6x3%20feed%20zone.png" alt="Feed Action" className="w-1/2 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   </div>
                   <span className="text-xs font-bold text-slate-500">Water / Feed Action Tags</span>
                 </div>
@@ -215,20 +215,20 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
             <div>
               <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">1-inch Square Labels</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/1x1%20plant.png" alt="Plant" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/1x1%20plant.png" alt="Plant" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Plant</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/1x1%20location.png" alt="Location" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/1x1%20location.png" alt="Location" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Location</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/1x1%20zone.png" alt="Zone" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/1x1%20zone.png" alt="Zone" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Zone</span>
                 </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
-                  <img src="/images/examples/qr/1x1%20feed%20location.png" alt="Action" className="w-16 h-16 rounded border border-slate-200 dark:border-slate-700 shadow-sm object-contain" />
+                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
+                  <img src="/images/examples/qr/1x1%20feed%20location.png" alt="Action" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
                   <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Action</span>
                 </div>
               </div>

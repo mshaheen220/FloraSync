@@ -22,7 +22,7 @@ export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archet
   const isOverdue = !instance.untracked && ratio <= 0;
 
   return (
-    <Card onClick={onClick} className={`cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors ${compact ? '!p-3 flex flex-col h-full' : '!p-4'}`}>
+    <Card onClick={onClick} className={`cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors ${compact ? '!p-3 flex flex-col h-full' : '!p-4'}`}>
       <div className={`flex ${compact ? 'flex-col gap-2' : 'justify-between items-start'} mb-2`}>
         <div>
           <h3 className={`font-bold text-slate-800 dark:text-slate-100 leading-tight ${compact ? 'text-base line-clamp-1' : 'text-lg'}`}>{archetype?.commonName || 'Unknown Plant'}</h3>
@@ -38,7 +38,7 @@ export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archet
         <div className={compact ? 'mt-auto pt-2' : 'mt-4'}>
           <div className={`flex justify-between font-semibold text-slate-500 dark:text-slate-400 mb-1.5 ${compact ? 'text-[10px]' : 'text-xs'}`}>
             <span>Hydration Level</span>
-            <span className={isOverdue ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}>{Math.round(ratio * 100)}%</span>
+            <span className={isOverdue ? 'text-amber-600 dark:text-amber-400' : 'text-primary-600 dark:text-primary-400'}>{Math.round(ratio * 100)}%</span>
           </div>
         <ProgressBarContainer className={compact ? '!h-1.5' : ''}>
           <ProgressBarFill $ratio={ratio} />
