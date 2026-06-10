@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@yudiel/react-qr-scanner": "^2.6.0",
+    "adm-zip": "^0.5.17",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",

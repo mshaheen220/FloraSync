@@ -8,6 +8,21 @@ export interface User {
   workspaceRole?: string;
 }
 
+export interface AddonManifest {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  author?: string;
+  entryPoints?: string[]; // e.g. ['plant_detail_action', 'dashboard_widget']
+  installScript?: string; // e.g. 'installHealthTracker'
+  uninstallScript: string; // e.g. 'uninstallHealthTracker' (Required for cleanup)
+  executeScript?: string; // e.g. 'execute.js' (Handles dynamic actions)
+  settingsSchema?: AddonSettingField[];
+  actions?: AddonAction[];
+  journalActivityTypes?: JournalActivityType[];
+}
+
 export interface AddonAction {
   id: string;
   label: string;
@@ -28,6 +43,15 @@ export interface JournalActivityType {
   badgeLabel: string;
   isRoutine?: boolean;
   isHidden?: boolean;
+  iconUrl?: string; // Optional path to a custom image/SVG
+}
+
+export interface AddonSettingField {
+  key: string;
+  label: string;
+  type: 'string' | 'number' | 'boolean' | 'select';
+  options?: string[]; // Used if type is 'select'
+  defaultValue: any;
   iconUrl?: string;
 }
 
