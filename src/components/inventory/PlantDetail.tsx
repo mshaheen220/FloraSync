@@ -21,7 +21,7 @@ interface PlantDetailProps {
 export const PlantDetail: FC<PlantDetailProps> = ({ 
   qrId, initialAction, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
-  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser, gardenProfile } = useGarden();
+  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
 
   const instance = instances.find(i => i.qrId === qrId);
   const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
