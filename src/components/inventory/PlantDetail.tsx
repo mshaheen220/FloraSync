@@ -28,6 +28,21 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const location = instance ? locations.find(l => l.id === instance.locationId) : undefined;
   const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
 
+  // Dynamically determine the correct terminology based on the plant's category
+  const milestoneVerbPast = (() => {
+    const cat = archetype?.category?.toLowerCase() || '';
+    if (cat.includes('flower')) return 'Bloomed';
+    if (cat.includes('foliage') || cat.includes('succulent') || cat.includes('houseplant')) return 'Matured';
+    return 'Harvested';
+  })();
+
+  const milestoneVerbFuture = (() => {
+    const cat = archetype?.category?.toLowerCase() || '';
+    if (cat.includes('flower')) return 'Bloom';
+    if (cat.includes('foliage') || cat.includes('succulent') || cat.includes('houseplant')) return 'Maturity';
+    return 'Harvest';
+  })();
+
   const [toastMessage, setToastMessage] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '', untracked: false });
@@ -236,7 +251,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Date Harvested</label>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Date {milestoneVerbPast}</label>
             <Input 
               type="datetime-local" 
               value={editData.dateHarvested || ''}
@@ -355,9 +370,33 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return 'hourglass'; // Infrequent
   };
 
-  const expectedHarvestDate = (instance && archetype?.daysToHarvest)
+  const now = new Date().getTime();
+  const currentYear = new Date().getFullYear();
+
+  let expectedHarvestDate = (instance && archetype?.daysToHarvest)
     ? new Date(new Date(instance.datePlanted).getTime() + (archetype.daysToHarvest * 86400000))
     : null;
+
+  const isPerennialOrBiennial = archetype?.lifecycle?.toLowerCase().includes('perennial') || archetype?.lifecycle?.toLowerCase().includes('biennial');
+
+  if (isPerennialOrBiennial && expectedHarvestDate) {
+    // If the original historical date has passed, roll it forward to this year's anniversary
+    if (now > expectedHarvestDate.getTime()) {
+      expectedHarvestDate.setFullYear(currentYear);
+      // If we are already past this year's expected date (giving a 4-week grace period for the season), roll to next year
+      if (now > expectedHarvestDate.getTime() + (28 * 86400000)) {
+        expectedHarvestDate.setFullYear(currentYear + 1);
+      }
+    }
+  }
+
+  const isPastExpectedDate = expectedHarvestDate ? now >= expectedHarvestDate.getTime() : false;
+  const isLongPastExpectedDate = !isPerennialOrBiennial && expectedHarvestDate ? (now - expectedHarvestDate.getTime()) > (182 * 86400000) : false; 
+
+  // If a perennial was harvested/bloomed in a previous year, ignore it so we can anticipate this year's bloom
+  const isPastYearHarvest = instance?.dateHarvested && isPerennialOrBiennial
+    ? new Date(instance.dateHarvested).getFullYear() < currentYear
+    : false;
 
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
@@ -401,10 +440,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </StatusBadge>
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
           <p>Planted: {new Date(instance.datePlanted).toLocaleDateString()}</p>
-          {instance.dateHarvested ? (
-            <p className="text-amber-600 dark:text-amber-400 font-semibold">Harvested: {new Date(instance.dateHarvested).toLocaleDateString()}</p>
-          ) : expectedHarvestDate ? (
-            <p className="text-primary-600 dark:text-primary-400 font-semibold">Est. Harvest: {expectedHarvestDate.toLocaleDateString()}</p>
+          {instance.dateHarvested && !isPastYearHarvest ? (
+            <p className="text-amber-600 dark:text-amber-400 font-semibold">{milestoneVerbPast}: {new Date(instance.dateHarvested).toLocaleDateString()}</p>
+          ) : expectedHarvestDate && !isLongPastExpectedDate ? (
+            <p className={`${isPastExpectedDate ? 'text-slate-600 dark:text-slate-400' : 'text-primary-600 dark:text-primary-400'} font-semibold`}>
+              Est. {milestoneVerbFuture}: {expectedHarvestDate.toLocaleDateString()}
+            </p>
           ) : null}
             <p>Last watered: {new Date(instance.lastWatered).toLocaleDateString()}</p>
             <p>Last fed: {new Date(instance.lastFed).toLocaleDateString()}</p>
@@ -554,7 +595,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.daysToHarvest) && (
                 <div>
-                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Days to Harvest</strong>
+                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Days to {milestoneVerbFuture}</strong>
                   <span className="text-slate-500 dark:text-slate-400">{archetype?.daysToHarvest} days</span>
                 </div>
               )}
@@ -585,7 +626,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       {hasLifecycleData && (
         <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
           <button onClick={() => toggleSection('lifecycle')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-            <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Lifecycle & Harvest</Subtitle>
+            <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Lifecycle & {milestoneVerbFuture}</Subtitle>
             <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('lifecycle') ? 'rotate-180' : ''}`}>▼</span>
           </button>
           {expandedSections.includes('lifecycle') && (
@@ -605,13 +646,13 @@ export const PlantDetail: FC<PlantDetailProps> = ({
               )}
               {isValidData(archetype?.whenToHarvest) && (
                 <div>
-                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">When to Harvest</strong>
+                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">When to {milestoneVerbFuture}</strong>
                   <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.whenToHarvest}</span>
                 </div>
               )}
               {isValidData(archetype?.usesForLargeHarvests) && (
                 <div>
-                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Abundant Harvest Uses</strong>
+                  <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Abundant Yield Uses</strong>
                   <span className="text-slate-500 dark:text-slate-400 leading-relaxed block">{archetype?.usesForLargeHarvests}</span>
                 </div>
               )}
