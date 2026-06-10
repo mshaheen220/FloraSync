@@ -1,6 +1,7 @@
 import { FC, FormEvent, ChangeEvent, useState } from 'react';
 import { PlantArchetype, FunFact } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
+import { Icon, IconName } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -20,19 +21,18 @@ interface ArchetypeCardProps {
 }
 
 const FACT_ICONS = [
-  { value: '🪲', label: '🪲 Bugs' },
-  { value: '☠️', label: '☠️ Dangerous' },
-  { value: '🍹', label: '🍹 Drink' },
-  { value: '🍲', label: '🍲 Food' },
-  { value: '💡', label: '💡 Fun Fact' },
-  { value: '❗', label: '❗ Important' },
-  { value: '😂', label: '😂 Joke' },
-  { value: '❤️', label: '❤️ Love This' },
-  { value: '💰', label: '💰 Money' },
-  { value: '🐈', label: '🐈 Pets' },
-  {value: '🧬', label: '🧬 Science' },
-  { value: '🤔', label: '🤔 Weird Fact' },
-  { value: '🤷', label: '🤷 Why Not?' },
+  { value: 'bug', label: 'Bugs' },
+  { value: 'skull', label: 'Dangerous' },
+  { value: 'wine', label: 'Drink' },
+  { value: 'soup', label: 'Food' },
+  { value: 'lightbulb', label: 'Fun Fact' },
+  { value: 'alert-circle', label: 'Important' },
+  { value: 'smile', label: 'Joke' },
+  { value: 'heart', label: 'Love This' },
+  { value: 'coins', label: 'Money' },
+  { value: 'cat', label: 'Pets' },
+  { value: 'dna', label: 'Science' },
+  { value: 'help-circle', label: 'Weird Fact / Unknown' },
 ];
 
 export const ArchetypeCard: FC<ArchetypeCardProps> = ({
@@ -90,7 +90,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
       );
     };
 
-    const renderSectionHeader = (id: string, icon: string, title: string) => {
+    const renderSectionHeader = (id: string, icon: IconName, title: string) => {
       const isExpanded = expandedEditSections.includes(id);
       return (
         <button 
@@ -99,7 +99,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
           className={`w-full flex items-center justify-between text-left group outline-none ${isExpanded ? 'border-b border-slate-200 dark:border-slate-700 pb-4' : ''}`}
         >
           <span className="font-bold text-slate-700 dark:text-slate-200 text-sm flex items-center gap-2">
-            <span>{icon}</span> {title}
+            <Icon name={icon} size={18} /> {title}
           </span>
           <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
         </button>
@@ -107,12 +107,12 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
     };
 
     return (
-      <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-5">
+      <Card className="border-primary-500 dark:border-primary-500 shadow-md !p-5">
         <form onSubmit={onSave} className="flex flex-col gap-6">
           
           {/* Basic Info Section */}
           <div className={sectionClass}>
-            {renderSectionHeader('basic', '🌿', 'Basic Information')}
+            {renderSectionHeader('basic', 'leaf', 'Basic Information')}
             {expandedEditSections.includes('basic') && (
               <div className="flex flex-col gap-4 mt-4 animate-in fade-in duration-200">
                 <div>
@@ -135,8 +135,8 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                     {editData.imageUrl && (
                       <img src={editData.imageUrl} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-slate-700 shadow-sm" />
                     )}
-                    <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
-                      📸 {editData.imageUrl ? 'Change Photo' : 'Upload Photo'}
+                  <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
+                    <Icon name="camera" size={18} /> {editData.imageUrl ? 'Change Photo' : 'Upload Photo'}
                       <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
                     </label>
                     {editData.imageUrl && (
@@ -150,7 +150,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 
           {/* Care & Environment Section */}
           <div className={sectionClass}>
-            {renderSectionHeader('care', '☀️', 'Care & Environment')}
+            {renderSectionHeader('care', 'sun', 'Care & Environment')}
             {expandedEditSections.includes('care') && (
               <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in duration-200">
                 <div>
@@ -167,7 +167,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lifecycle</label>
-                  <select value={editData.lifecycle || ''} onChange={e => setEditData({...editData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 h-[42px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" required>
+                  <select value={editData.lifecycle || ''} onChange={e => setEditData({...editData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 h-[42px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" required>
                     <option value="Annual">Annual</option>
                     <option value="Biennial">Biennial</option>
                     <option value="Perennial">Perennial</option>
@@ -188,12 +188,12 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 
           {/* Planting & Harvest Section */}
           <div className={sectionClass}>
-            {renderSectionHeader('planting', '🌱', 'Planting & Harvest')}
+            {renderSectionHeader('planting', 'sprout', 'Planting & Harvest')}
             {expandedEditSections.includes('planting') && (
               <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in duration-200">
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">How to Plant</label>
-                  <textarea value={editData.plantingInstructions || ''} onChange={e => setEditData({...editData, plantingInstructions: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={4} placeholder="e.g. Sow 1/4 inch deep, mulch heavily..." />
+                  <textarea value={editData.plantingInstructions || ''} onChange={e => setEditData({...editData, plantingInstructions: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={4} placeholder="e.g. Sow 1/4 inch deep, mulch heavily..." />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">When to Plant</label>
@@ -217,20 +217,20 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 
           {/* Detailed Care & Traits */}
           <div className={sectionClass}>
-            {renderSectionHeader('details', '✂️', 'Detailed Care & Traits')}
+            {renderSectionHeader('details', 'info', 'Detailed Care & Traits')}
             {expandedEditSections.includes('details') && (
               <div className="flex flex-col gap-4 mt-4 animate-in fade-in duration-200">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Growth Requirements</label>
-                  <textarea value={editData.growthRequirements || ''} onChange={e => setEditData({...editData, growthRequirements: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={4} placeholder="e.g. Climbs aggressively, requires a sturdy trellis..." />
+                  <textarea value={editData.growthRequirements || ''} onChange={e => setEditData({...editData, growthRequirements: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={4} placeholder="e.g. Climbs aggressively, requires a sturdy trellis..." />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">What to Feed</label>
-                  <textarea value={editData.whatToFeed || ''} onChange={e => setEditData({...editData, whatToFeed: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
+                  <textarea value={editData.whatToFeed || ''} onChange={e => setEditData({...editData, whatToFeed: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Pruning Tips</label>
-                  <textarea value={editData.pruningTips || ''} onChange={e => setEditData({...editData, pruningTips: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
+                  <textarea value={editData.pruningTips || ''} onChange={e => setEditData({...editData, pruningTips: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
                 </div>
               </div>
             )}
@@ -238,7 +238,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 
           {/* Yield & Pairings */}
           <div className={sectionClass}>
-            {renderSectionHeader('yield', '🍅', 'Yield & Pairings')}
+            {renderSectionHeader('yield', 'apple', 'Yield & Pairings')}
             {expandedEditSections.includes('yield') && (
               <div className="flex flex-col gap-4 mt-4 animate-in fade-in duration-200">
                 <div>
@@ -247,7 +247,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Large Harvest Uses</label>
-                  <textarea value={editData.usesForLargeHarvests || ''} onChange={e => setEditData({...editData, usesForLargeHarvests: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
+                  <textarea value={editData.usesForLargeHarvests || ''} onChange={e => setEditData({...editData, usesForLargeHarvests: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} />
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-1">
                   <div>
@@ -265,7 +265,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 
           {/* Fun Facts */}
           <div className={sectionClass}>
-            {renderSectionHeader('funFacts', '💡', 'Fun Facts')}
+            {renderSectionHeader('funFacts', 'lightbulb', 'Fun Facts')}
             {expandedEditSections.includes('funFacts') && (
               <div className="flex flex-col gap-4 mt-4 animate-in fade-in duration-200">
                 {editData.funFacts?.map((rawFact, idx) => {
@@ -288,22 +288,22 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                           <select 
                             value={fact.icon || ''} 
                             onChange={e => handleFactChange('icon', e.target.value)}
-                            className="border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm"
+                            className="border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm"
                           >
-                            <option value="">Default (💡)</option>
+                            <option value="lightbulb">Default</option>
                             {FACT_ICONS.map(icon => (
                               <option key={icon.value} value={icon.value}>{icon.label}</option>
                             ))}
                           </select>
                         </div>
-                        <textarea placeholder="Fact / Trivia" value={fact.fact || ''} onChange={e => handleFactChange('fact', e.target.value)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} required />
+                        <textarea placeholder="Fact / Trivia" value={fact.fact || ''} onChange={e => handleFactChange('fact', e.target.value)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} required />
                         <Input placeholder="Attributed To (Optional)" value={fact.attributedTo || ''} onChange={e => handleFactChange('attributedTo', e.target.value)} className="!mb-0 py-2 text-sm" />
                         <div className="flex items-center gap-3">
                           {fact.imageUrl && (
                             <img src={fact.imageUrl} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shadow-sm" />
                           )}
-                          <label className="py-2 px-3 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
-                            📸 {fact.imageUrl ? 'Change Photo' : 'Upload Photo'}
+                        <label className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
+                          <Icon name="camera" size={16} /> {fact.imageUrl ? 'Change Photo' : 'Upload Photo'}
                             <input type="file" accept="image/*" onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) {
@@ -322,13 +322,13 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                             setEditData({...editData, funFacts: newFacts});
                             setEditingFactIndex(null);
                           }} className="text-red-500 hover:text-red-600 text-xs font-bold transition-colors">Delete</button>
-                          <button type="button" onClick={() => setEditingFactIndex(null)} className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold">Done</button>
+                          <button type="button" onClick={() => setEditingFactIndex(null)} className="bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400 hover:bg-primary-200 dark:hover:bg-primary-900 transition-colors px-3 py-1.5 rounded-lg text-xs font-bold">Done</button>
                         </div>
                       </div>
                     );
                   }
 
-                  const factIcon = fact.icon || '💡';
+                  const factIcon = fact.icon || 'lightbulb';
                   const factTitle = fact.title || "Did You Know?";
                   const factMessage = fact.attributedTo ? `"${fact.fact}" — ${fact.attributedTo}` : fact.fact;
 
@@ -338,7 +338,9 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                         {fact.imageUrl ? (
                           <img src={fact.imageUrl} alt="Fact" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 bg-slate-200 dark:bg-slate-800" />
                         ) : (
-                          <div className="text-2xl flex-shrink-0 w-10 text-center">{factIcon}</div>
+                          <div className="flex items-center justify-center flex-shrink-0 w-10 h-10 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 rounded-lg shadow-sm border border-primary-100 dark:border-primary-800/50">
+                            <Icon name={factIcon as IconName} size={20} />
+                          </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-0.5 truncate">{factTitle}</h4>
@@ -346,19 +348,19 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                         </div>
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
-                        <button type="button" onClick={() => setEditingFactIndex(idx)} title="Edit Fact" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+                    <button type="button" onClick={() => setEditingFactIndex(idx)} title="Edit Fact" className="p-1.5 rounded-lg transition-colors text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400 active:scale-90"><Icon name="edit" size={18} /></button>
                         <button type="button" onClick={() => {
                           const newFacts = [...(editData.funFacts || [])];
                           newFacts.splice(idx, 1);
                           setEditData({...editData, funFacts: newFacts});
-                        }} title="Delete Fact" className="p-1.5 text-base rounded-lg transition-colors text-red-400 hover:text-red-600 active:scale-90">🗑️</button>
+                    }} title="Delete Fact" className="p-1.5 rounded-lg transition-colors text-red-400 hover:text-red-600 active:scale-90"><Icon name="delete" size={18} /></button>
                       </div>
                     </div>
                   );
                 })}
                 <Button type="button" $variant="secondary" onClick={() => {
                   const currentFacts = editData.funFacts || [];
-                  setEditData({...editData, funFacts: [...currentFacts, { fact: '', icon: '💡' }]});
+                  setEditData({...editData, funFacts: [...currentFacts, { fact: '', icon: 'lightbulb' }]});
                   setEditingFactIndex(currentFacts.length);
                 }} className="w-full">
                   + Add Fun Fact
@@ -381,19 +383,19 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
         <div>
           <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{arch.commonName}</h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{arch.id}</p>
-          <div className="flex gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 mt-1.5">
-            <span>💧 {arch.waterIntervalDays}d</span>
-            <span>🪴 {arch.feedingIntervalDays}d</span>
-            <span>☀️ {arch.sunRequirement}</span>
+          <div className="flex gap-4 text-xs font-bold text-slate-500 dark:text-slate-400 mt-2">
+            <span className="flex items-center gap-1"><Icon name="water" size={14} /> {arch.waterIntervalDays}d</span>
+            <span className="flex items-center gap-1"><Icon name="feed" size={14} /> {arch.feedingIntervalDays}d</span>
+            <span className="flex items-center gap-1"><Icon name="sun" size={14} /> {arch.sunRequirement}</span>
           </div>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-2">{inUseCount} planted</p>
+          <p className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-2">{inUseCount} planted</p>
         </div>
         <div className="flex gap-1">
-          <button onClick={onViewToggle} className={`p-2 rounded-lg transition-colors active:scale-90 ${isViewing ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400'}`} title="View Details">👁️</button>
+      <button onClick={onViewToggle} className={`p-2 rounded-lg transition-colors active:scale-90 ${isViewing ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/50 dark:text-primary-400' : 'text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400'}`} title="View Details"><Icon name="view" size={18} /></button>
           {canEdit && (
             <>
-              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-              <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${inUseCount > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400 active:scale-90"><Icon name="edit" size={18} /></button>
+          <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${inUseCount > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}><Icon name="delete" size={18} /></button>
             </>
           )}
         </div>

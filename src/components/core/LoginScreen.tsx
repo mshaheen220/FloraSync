@@ -1,5 +1,6 @@
 import { useState, FC, FormEvent } from 'react';
 import { Container, Title, Card, Button, Input, Subtitle } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 interface LoginScreenProps {
   onLogin: (username: string, password: string) => Promise<void>;
@@ -29,9 +30,9 @@ export const LoginScreen: FC<LoginScreenProps> = ({ onLogin }) => {
 
   return (
     <Container className="flex flex-col justify-center h-screen animate-in fade-in duration-500">
-      <Card className="text-center py-10 shadow-lg border-emerald-500">
-        <div className="flex justify-center mb-4">
-          <span className="text-6xl">🌿</span>
+      <Card className="text-center py-10 shadow-lg border-primary-500">
+        <div className="flex justify-center mb-4 text-primary-500 dark:text-primary-400">
+          <Icon name="leaf" size={64} />
         </div>
         <Title>FloraSync Login</Title>
         <Subtitle className="mb-6">Please log in to access the garden data.</Subtitle>

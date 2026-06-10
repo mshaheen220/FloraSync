@@ -171,7 +171,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
                 onClick={() => toggleCategory(category)}
                 className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
               >
-                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   {category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedData.groups[category].length})</span>
                 </Subtitle>
                 <span className={`text-slate-400 transition-transform duration-200 ${expandedCategories.includes(category) ? 'rotate-180' : ''}`}>

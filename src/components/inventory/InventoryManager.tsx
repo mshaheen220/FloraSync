@@ -4,6 +4,7 @@ import { PlantInstanceCard } from './PlantInstanceCard';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
 import { PageHeader } from '../common/PageHeader';
 import { useGarden } from '../../contexts/GardenContext';
+import { Icon } from '../common/Icon';
 
 interface InventoryManagerProps {
   onNavigate: (qrId: string) => void;
@@ -108,7 +109,7 @@ export const InventoryManager: FC<InventoryManagerProps> = ({ onNavigate, onOpen
         <Button onClick={() => setIsAddingPlant(true)} className="mb-6">+ Add New Plant</Button>
       )}
       {isAddingPlant && currentUser?.workspaceRole !== 'viewer' && (
-        <Card className="mb-6 shadow-md border-emerald-500 dark:border-emerald-500">
+        <Card className="mb-6 shadow-md border-primary-500 dark:border-primary-500">
           <Subtitle className="!mt-0 mb-4">Add New Plant</Subtitle>
           <PlantRegistrationForm 
             archetypes={archetypes} 
@@ -133,7 +134,7 @@ export const InventoryManager: FC<InventoryManagerProps> = ({ onNavigate, onOpen
         <div className="flex justify-between items-center mb-4">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Group By</span>
           <select 
-            className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 transition-all text-slate-700 dark:text-slate-200 shadow-sm"
+            className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 transition-all text-slate-700 dark:text-slate-200 shadow-sm"
             value={inventoryGroupBy}
             onChange={e => { setInventoryGroupBy(e.target.value as any); setExpandedInventoryCategories([]); }}
           >
@@ -145,15 +146,17 @@ export const InventoryManager: FC<InventoryManagerProps> = ({ onNavigate, onOpen
       )}
       <div className="space-y-4">
         {groupedInventory.totalCount === 0 ? (
-          <Card className="text-center py-12 shadow-sm border-dashed border-2 border-emerald-200 dark:border-emerald-800">
-            <div className="text-4xl mb-4">🌱</div>
+          <Card className="text-center py-12 shadow-sm border-dashed border-2 border-primary-200 dark:border-primary-800">
+            <div className="mb-4 flex justify-center text-primary-500 dark:text-primary-400">
+              <Icon name="sprout" size={48} />
+            </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{inventorySearchTerm.trim() ? "No plants match your search." : "You have no active plants in your inventory. Scan a new tag to get started!"}</p>
           </Card>
         ) : (
           groupedInventory.sortedCategories.map(category => (
             <div key={category} className="border-b border-slate-200 dark:border-slate-800 pb-2 last:border-0">
               <button onClick={() => toggleInventoryCategory(category)} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedInventory.groups[category].length})</span></Subtitle>
+                <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{category} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedInventory.groups[category].length})</span></Subtitle>
                 <span className={`text-slate-400 transition-transform duration-200 ${expandedInventoryCategories.includes(category) ? 'rotate-180' : ''}`}>▼</span>
               </button>
               {expandedInventoryCategories.includes(category) && (

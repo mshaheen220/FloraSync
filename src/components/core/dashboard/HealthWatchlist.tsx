@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
 import { Card, Subtitle } from '../../../styles/StyledElements';
+import { Icon } from '../../common/Icon';
 
 interface HealthWatchlistProps {
   instances: PlantInstance[];
@@ -47,7 +48,7 @@ export const HealthWatchlist: FC<HealthWatchlistProps> = ({ instances, archetype
 
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-[175ms]">
-      <Subtitle>🚨 Health Watchlist</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="alert" size={20} className="text-red-500 dark:text-red-400" /> Health Watchlist</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {sickPlants.map((item, idx) => (
           <Card key={item.qrId || idx} onClick={() => onNavigate(item.qrId)} className="whitespace-nowrap flex-shrink-0 w-56 !p-3.5 cursor-pointer hover:border-red-300 dark:hover:border-red-700 !border-red-200 dark:!border-red-900/50 !bg-red-50/30 dark:!bg-red-900/10">

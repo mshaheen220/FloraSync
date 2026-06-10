@@ -52,7 +52,10 @@ db.exec(`
     role TEXT NOT NULL,
     name TEXT,
     image_url TEXT,
-    garden_id TEXT
+    garden_id TEXT,
+    theme TEXT,
+    color_theme TEXT,
+    icon_theme TEXT
   );
 
   CREATE TABLE IF NOT EXISTS shared_dictionary (
@@ -91,6 +94,13 @@ try {
 try {
   db.exec("ALTER TABLE gardens ADD COLUMN active_addons TEXT DEFAULT '[]';");
   db.exec("ALTER TABLE gardens ADD COLUMN addon_settings TEXT DEFAULT '{}';");
+  db.exec('ALTER TABLE users ADD COLUMN theme TEXT;');
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN color_theme TEXT;');
+} catch (err) {}
+try {
+  db.exec('ALTER TABLE users ADD COLUMN icon_theme TEXT;');
 } catch (err) {}
 
 // Auto-create shared dictionary row if missing
@@ -98,6 +108,34 @@ const dictStmt = db.prepare('SELECT id FROM shared_dictionary WHERE id = 1');
 if (!dictStmt.get()) {
   db.prepare('INSERT INTO shared_dictionary (id, archetypes) VALUES (1, ?)').run('[]');
 }
+
+// One-time migration: Convert old emoji icons to SVG string names in the dictionary
+try {
+  const dictStmt = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1');
+  const dictRow = dictStmt.get();
+  if (dictRow && dictRow.archetypes) {
+    let archetypes = JSON.parse(dictRow.archetypes);
+    let updated = false;
+    
+    const emojiMap = {
+      '🪲': 'bug', '☠️': 'skull', '🍹': 'wine', '🍲': 'soup', '💡': 'lightbulb',
+      '❗': 'alert-circle', '😂': 'smile', '❤️': 'heart', '💰': 'coins',
+      '🐈': 'cat', '🧬': 'dna', '🤔': 'help-circle', '🤷': 'help-circle'
+    };
+
+    archetypes.forEach(arch => {
+      if (arch.funFacts) {
+        arch.funFacts.forEach(fact => {
+          if (fact.icon && emojiMap[fact.icon]) {
+            fact.icon = emojiMap[fact.icon];
+            updated = true;
+          }
+        });
+      }
+    });
+    if (updated) db.prepare('UPDATE shared_dictionary SET archetypes = ? WHERE id = 1').run(JSON.stringify(archetypes));
+  }
+} catch (err) {}
 
 // JWT Authentication Middleware
 const authenticateToken = (req, res, next) => {
@@ -128,44 +166,60 @@ app.post('/api/login', (req, res) => {
 
     let bestGardenId = user.garden_id;
     try {
-      let bestGarden;
-      if (user.role === 'god-admin') {
-        bestGarden = db.prepare(`
-          SELECT g.id as garden_id
-          FROM gardens g
-          LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
-          ORDER BY
-            CASE COALESCE(gm.role, 'admin')
-              WHEN 'owner' THEN 1
-              WHEN 'admin' THEN 2
-              WHEN 'helper' THEN 3
-              WHEN 'viewer' THEN 4
-              ELSE 5
-            END,
-            g.name ASC
-          LIMIT 1
-        `).get(user.id);
-      } else {
-        bestGarden = db.prepare(`
-          SELECT gm.garden_id
-          FROM garden_members gm
-          JOIN gardens g ON gm.garden_id = g.id
-          WHERE gm.user_id = ?
-          ORDER BY
-            CASE gm.role
-              WHEN 'owner' THEN 1
-              WHEN 'helper' THEN 2
-              WHEN 'viewer' THEN 3
-              ELSE 4
-            END,
-            g.name ASC
-          LIMIT 1
-        `).get(user.id);
-      }
+      let hasAccess = false;
       
-      if (bestGarden && bestGarden.garden_id) {
-        bestGardenId = bestGarden.garden_id;
-        db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(bestGardenId, user.id);
+      // First, verify if the user still has access to their last saved garden
+      if (bestGardenId) {
+        if (user.role === 'god-admin') {
+          const g = db.prepare('SELECT id FROM gardens WHERE id = ?').get(bestGardenId);
+          if (g) hasAccess = true;
+        } else {
+          const access = db.prepare('SELECT garden_id FROM garden_members WHERE user_id = ? AND garden_id = ?').get(user.id, bestGardenId);
+          if (access) hasAccess = true;
+        }
+      }
+
+      // If they don't have a saved garden or lost access to it, find the next best one alphabetically
+      if (!hasAccess) {
+        let bestGarden;
+        if (user.role === 'god-admin') {
+          bestGarden = db.prepare(`
+            SELECT g.id as garden_id
+            FROM gardens g
+            LEFT JOIN garden_members gm ON g.id = gm.garden_id AND gm.user_id = ?
+            ORDER BY
+              CASE COALESCE(gm.role, 'admin')
+                WHEN 'owner' THEN 1
+                WHEN 'admin' THEN 2
+                WHEN 'helper' THEN 3
+                WHEN 'viewer' THEN 4
+                ELSE 5
+              END,
+              g.name ASC
+            LIMIT 1
+          `).get(user.id);
+        } else {
+          bestGarden = db.prepare(`
+            SELECT gm.garden_id
+            FROM garden_members gm
+            JOIN gardens g ON gm.garden_id = g.id
+            WHERE gm.user_id = ?
+            ORDER BY
+              CASE gm.role
+                WHEN 'owner' THEN 1
+                WHEN 'helper' THEN 2
+                WHEN 'viewer' THEN 3
+                ELSE 4
+              END,
+              g.name ASC
+            LIMIT 1
+          `).get(user.id);
+        }
+        
+        if (bestGarden && bestGarden.garden_id) {
+          bestGardenId = bestGarden.garden_id;
+          db.prepare('UPDATE users SET garden_id = ? WHERE id = ?').run(bestGardenId, user.id);
+        }
       }
     } catch (e) {
       console.error('Error determining default garden:', e);
@@ -173,7 +227,19 @@ app.post('/api/login', (req, res) => {
 
     const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
     
-    res.json({ token, user: { id: user.id, username: user.username, role: user.role, name: user.name, imageUrl: user.image_url } });
+    res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        role: user.role, 
+        name: user.name, 
+        imageUrl: user.image_url,
+        theme: user.theme,
+        colorTheme: user.color_theme,
+        iconTheme: user.icon_theme
+      } 
+    });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Internal server error.' });
@@ -413,9 +479,26 @@ app.put('/api/users/:id/profile', authenticateToken, (req, res) => {
   if (req.user.role !== 'god-admin' && req.user.id !== req.params.id) {
     return res.status(403).json({ error: 'Not authorized to edit this profile.' });
   }
-  const { name, imageUrl } = req.body;
+  const { name, imageUrl, theme, colorTheme, iconTheme } = req.body;
   try {
-    db.prepare('UPDATE users SET name = ?, image_url = ? WHERE id = ?').run(name || '', imageUrl || '', req.params.id);
+    // Using COALESCE allows partial updates (e.g. only updating the theme without wiping out the name)
+    db.prepare(`
+      UPDATE users 
+      SET 
+        name = COALESCE(?, name), 
+        image_url = COALESCE(?, image_url),
+        theme = COALESCE(?, theme),
+        color_theme = COALESCE(?, color_theme),
+        icon_theme = COALESCE(?, icon_theme)
+      WHERE id = ?
+    `).run(
+      name !== undefined ? name : null, 
+      imageUrl !== undefined ? imageUrl : null, 
+      theme !== undefined ? theme : null, 
+      colorTheme !== undefined ? colorTheme : null, 
+      iconTheme !== undefined ? iconTheme : null, 
+      req.params.id
+    );
     res.json({ success: true });
   } catch (err) {
     console.error('Error updating profile:', err);
@@ -477,7 +560,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
       if (!access && req.user.role === 'god-admin') access = { role: 'admin' };
     }
 
-    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id FROM users WHERE id = ?').get(req.user.id);
+    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id, theme, color_theme, icon_theme FROM users WHERE id = ?').get(req.user.id);
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
     const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue, installed_addons, active_addons, addon_settings FROM gardens WHERE id = ?').get(requestedGardenId);
 
@@ -502,7 +585,10 @@ app.get('/api/state', authenticateToken, (req, res) => {
         role: userRow.role, 
         name: userRow.name || userRow.username, 
         imageUrl: userRow.image_url || '',
-        workspaceRole: access?.role || 'viewer' 
+        workspaceRole: access?.role || 'viewer',
+        theme: userRow.theme,
+        colorTheme: userRow.color_theme,
+        iconTheme: userRow.icon_theme
       } : null,
       garden: garden ? {
         id: garden.id,

@@ -3,6 +3,7 @@ import { Subtitle, Card } from '../../../styles/StyledElements';
 import { Zone, Location, PlantInstance, PlantArchetype } from '../../../../types';
 import { User } from '../../../App';
 import { hasPermission } from '../../../utils/permissions';
+import { Icon, IconName } from '../../common/Icon';
 
 interface QuickActionsProps {
   zones: Zone[];
@@ -31,7 +32,7 @@ export const QuickActions: FC<QuickActionsProps> = ({
 }) => {
   if (!hasPermission(currentUser, 'perform_actions')) return null;
 
-  const pinnedItems: { id: string, name: string, icon: string, onClick: () => void }[] = [];
+  const pinnedItems: { id: string, name: string, icon: IconName, onClick: () => void }[] = [];
   const currentUserId = currentUser?.id || '';
 
   zones.forEach(zone => {
@@ -40,11 +41,11 @@ export const QuickActions: FC<QuickActionsProps> = ({
       : (zone.isPinned ? ['water'] : []);
     actions.forEach(action => {
       if (action === 'water') {
-        pinnedItems.push({ id: `z-w-${zone.id}`, name: `Water\n${zone.name}`, icon: '💦', onClick: () => onBatchWaterZone(zone.id) });
+        pinnedItems.push({ id: `z-w-${zone.id}`, name: `Water\n${zone.name}`, icon: 'water', onClick: () => onBatchWaterZone(zone.id) });
       } else if (action === 'feed') {
-        pinnedItems.push({ id: `z-f-${zone.id}`, name: `Feed\n${zone.name}`, icon: '🪴', onClick: () => onBatchFeedZone ? onBatchFeedZone(zone.id) : alert('Action not available') });
+        pinnedItems.push({ id: `z-f-${zone.id}`, name: `Feed\n${zone.name}`, icon: 'feed', onClick: () => onBatchFeedZone ? onBatchFeedZone(zone.id) : alert('Action not available') });
       } else if (action === 'navigate') {
-        pinnedItems.push({ id: `z-n-${zone.id}`, name: zone.name, icon: '🗺️', onClick: () => onNavigateZone(zone.id) });
+        pinnedItems.push({ id: `z-n-${zone.id}`, name: zone.name, icon: 'globe', onClick: () => onNavigateZone(zone.id) });
       }
     });
   });
@@ -53,11 +54,11 @@ export const QuickActions: FC<QuickActionsProps> = ({
     const actions = (loc.pinnedActions && !Array.isArray(loc.pinnedActions)) ? (loc.pinnedActions[currentUserId] || []) : [];
     actions.forEach(action => {
       if (action === 'water') {
-        pinnedItems.push({ id: `l-w-${loc.id}`, name: `Water\n${loc.name}`, icon: '💦', onClick: () => onBatchWaterLocation ? onBatchWaterLocation(loc.id) : alert('Action not available') });
+        pinnedItems.push({ id: `l-w-${loc.id}`, name: `Water\n${loc.name}`, icon: 'water', onClick: () => onBatchWaterLocation ? onBatchWaterLocation(loc.id) : alert('Action not available') });
       } else if (action === 'feed') {
-        pinnedItems.push({ id: `l-f-${loc.id}`, name: `Feed\n${loc.name}`, icon: '🪴', onClick: () => onBatchFeedLocation ? onBatchFeedLocation(loc.id) : alert('Action not available') });
+        pinnedItems.push({ id: `l-f-${loc.id}`, name: `Feed\n${loc.name}`, icon: 'feed', onClick: () => onBatchFeedLocation ? onBatchFeedLocation(loc.id) : alert('Action not available') });
       } else if (action === 'navigate') {
-        pinnedItems.push({ id: `l-n-${loc.id}`, name: loc.name, icon: '📍', onClick: () => onNavigateLocation(loc.id) });
+        pinnedItems.push({ id: `l-n-${loc.id}`, name: loc.name, icon: 'map-pin', onClick: () => onNavigateLocation(loc.id) });
       }
     });
   });
@@ -69,11 +70,11 @@ export const QuickActions: FC<QuickActionsProps> = ({
       const name = arch?.commonName || 'Plant';
       actions.forEach(action => {
         if (action === 'water') {
-          pinnedItems.push({ id: `p-w-${inst.qrId}`, name: `Water\n${name}`, icon: '💦', onClick: () => onWater ? onWater(inst.qrId) : alert('Action not available') });
+          pinnedItems.push({ id: `p-w-${inst.qrId}`, name: `Water\n${name}`, icon: 'water', onClick: () => onWater ? onWater(inst.qrId) : alert('Action not available') });
         } else if (action === 'feed') {
-          pinnedItems.push({ id: `p-f-${inst.qrId}`, name: `Feed\n${name}`, icon: '🪴', onClick: () => onFeed ? onFeed(inst.qrId) : alert('Action not available') });
+          pinnedItems.push({ id: `p-f-${inst.qrId}`, name: `Feed\n${name}`, icon: 'feed', onClick: () => onFeed ? onFeed(inst.qrId) : alert('Action not available') });
         } else if (action === 'navigate') {
-          pinnedItems.push({ id: `p-n-${inst.qrId}`, name: name, icon: '🌿', onClick: () => onNavigate(inst.qrId) });
+          pinnedItems.push({ id: `p-n-${inst.qrId}`, name: name, icon: 'leaf', onClick: () => onNavigate(inst.qrId) });
         }
       });
     }
@@ -83,17 +84,17 @@ export const QuickActions: FC<QuickActionsProps> = ({
     <section className="mb-8 animate-in fade-in duration-500">
       <Subtitle>Quick Actions</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        <Card onClick={onBatchWaterAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-          💦
+        <Card onClick={onBatchWaterAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
+          <div className="mb-1 text-blue-500 dark:text-blue-400"><Icon name="water" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
         </Card>
-        <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-          <img src="/images/icons/qr/plant.png" alt="All Plants" className="w-7 h-7 mb-1 object-contain" />
+        <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
+          <div className="mb-1 text-amber-500 dark:text-amber-400"><Icon name="feed" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
         </Card>
         {pinnedItems.map(item => (
-          <Card key={item.id} onClick={item.onClick} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors active:scale-95 shadow-sm">
-            <span className="text-2xl mb-1">{item.icon}</span>
+          <Card key={item.id} onClick={item.onClick} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
+            <div className="mb-1 text-primary-600 dark:text-primary-400"><Icon name={item.icon} size={28} /></div>
             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3 whitespace-pre-wrap">{item.name}</span>
           </Card>
         ))}

@@ -2,6 +2,7 @@ import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
 import { PlantInstance, JournalEntry, User, JournalActivityType } from '../../../types';
 import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
 import { useGarden } from '../../contexts/GardenContext';
+import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -129,14 +130,14 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         
         {(instance.journal || []).some(j => routineTypes.includes(j.activityType || '')) && (
           <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer ml-auto bg-slate-50 dark:bg-slate-800/50 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 whitespace-nowrap">
-            <input type="checkbox" checked={showRoutineCare} onChange={e => setShowRoutineCare(e.target.checked)} className="accent-emerald-600 w-3.5 h-3.5 rounded" />
+            <input type="checkbox" checked={showRoutineCare} onChange={e => setShowRoutineCare(e.target.checked)} className="accent-primary-600 w-3.5 h-3.5 rounded" />
             Show Routine Care
           </label>
         )}
       </div>
 
       {(!isAddingJournal && !editingJournalId) ? null : (
-        <Card className="mb-6 border-emerald-500 shadow-md">
+        <Card className="mb-6 border-primary-500 shadow-md">
           <Subtitle className="!mt-0 mb-4">{editingJournalId ? 'Edit Entry' : 'New Journal Entry'}</Subtitle>
           <form onSubmit={handleSaveJournal} className="flex flex-col gap-3">
             <div>
@@ -159,7 +160,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Growth Stage</label>
-                <select value={journalForm.growthStage || ''} onChange={e => setJournalForm({...journalForm, growthStage: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+                <select value={journalForm.growthStage || ''} onChange={e => setJournalForm({...journalForm, growthStage: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                   <option value="">-- Select --</option>
                   <option value="Seedling">Seedling</option>
                   <option value="Vegetative">Vegetative</option>
@@ -187,7 +188,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Fullness</label>
-                <select value={journalForm.fullness || ''} onChange={e => setJournalForm({...journalForm, fullness: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+                <select value={journalForm.fullness || ''} onChange={e => setJournalForm({...journalForm, fullness: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                   <option value="">-- Select --</option>
                   <option value="Sparse">Sparse</option>
                   <option value="Average">Average</option>
@@ -200,7 +201,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Health / Issues</label>
-                <select value={journalForm.healthIssues || ''} onChange={e => setJournalForm({...journalForm, healthIssues: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
+                <select value={journalForm.healthIssues || ''} onChange={e => setJournalForm({...journalForm, healthIssues: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                   <option value="">-- Select --</option>
                   <option value="None">Healthy (None)</option>
                   <option value="Wilting">Wilting</option>
@@ -218,7 +219,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Note (Optional)</label>
-              <textarea value={journalForm.note || ''} onChange={e => setJournalForm({...journalForm, note: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} placeholder="Observations, measurements, thoughts..." />
+              <textarea value={journalForm.note || ''} onChange={e => setJournalForm({...journalForm, note: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" rows={3} placeholder="Observations, measurements, thoughts..." />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Photo (Optional)</label>
@@ -226,8 +227,8 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                 {journalForm.imageUrl && (
                 <img src={journalForm.imageUrl} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />
                 )}
-                <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                  📸 {journalForm.imageUrl ? 'Change Photo' : 'Add Photo'}
+              <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-300 transition-all cursor-pointer border border-transparent dark:border-primary-800">
+                <Icon name="camera" size={18} /> {journalForm.imageUrl ? 'Change Photo' : 'Add Photo'}
                   <input type="file" accept="image/*" onChange={handleJournalImageCapture} className="hidden" />
                 </label>
                 {journalForm.imageUrl && (
@@ -244,21 +245,21 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
       )}
 
       {visibleJournal.length > 0 ? (
-        <div className="relative border-l-2 border-emerald-200 dark:border-emerald-800 ml-4 pl-6 space-y-6 mb-8 mt-2">
+        <div className="relative border-l-2 border-primary-200 dark:border-primary-800 ml-4 pl-6 space-y-6 mb-8 mt-2">
           {visibleJournal.map(entry => (
             <div key={entry.id} className="relative">
-              <div className="absolute -left-[31px] bg-emerald-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
+              <div className="absolute -left-[31px] bg-primary-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
               <div className="mb-1 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+                  <span className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                     {new Date(entry.timestamp).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' })}
                   </span>
                   {(entry as any).authorName && (
-                    <div className="flex items-center gap-1.5 ml-2 border-l border-emerald-200 dark:border-emerald-800 pl-2">
+                    <div className="flex items-center gap-1.5 ml-2 border-l border-primary-200 dark:border-primary-800 pl-2">
                       {(entry as any).authorImageUrl ? (
                         <img src={(entry as any).authorImageUrl} alt={(entry as any).authorName} className="w-4 h-4 rounded-full object-cover" />
                       ) : (
-                        <div className="w-4 h-4 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-[8px] font-bold text-emerald-700 dark:text-emerald-400">
+                        <div className="w-4 h-4 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-[8px] font-bold text-primary-700 dark:text-primary-400">
                           {(entry as any).authorName.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -267,8 +268,8 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: new Date(entry.timestamp).toISOString().slice(0, 16) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-emerald-600 active:scale-90 transition-transform">✏️</button>
-                  <button onClick={() => handleDeleteJournal(entry.id)} className="text-slate-400 hover:text-red-600 active:scale-90 transition-transform">🗑️</button>
+                <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: new Date(entry.timestamp).toISOString().slice(0, 16) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-primary-600 active:scale-90 transition-transform"><Icon name="edit" size={16} /></button>
+                <button onClick={() => handleDeleteJournal(entry.id)} className="text-slate-400 hover:text-red-600 active:scale-90 transition-transform"><Icon name="delete" size={16} /></button>
                 </div>
               </div>
               {entry.title && <h4 className="text-slate-800 dark:text-slate-100 font-bold text-lg mb-1">{entry.title}</h4>}
@@ -276,23 +277,22 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               {(entry.activityType && entry.activityType !== 'Observation' || entry.harvestAmount || entry.height || entry.fullness || entry.colorAppearance || entry.healthIssues || entry.growthStage || entry.batchScope) && (
                 <div className="flex flex-wrap gap-2 mb-3 mt-1">
                   {entry.activityType && entry.activityType !== 'Observation' && (
-                    <span className="bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 text-xs px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 font-bold inline-flex items-center gap-1.5">
-                      {(() => {
-                        const typeDef = allActivityTypes.find(t => t.value === entry.activityType);
-                        return typeDef?.iconUrl ? (
-                          <><img src={typeDef.iconUrl} alt="" className="w-3.5 h-3.5 object-contain" /> {typeDef.badgeLabel}</>
-                        ) : (typeDef?.badgeLabel || entry.activityType);
-                      })()}
+                  <span className="bg-primary-100 dark:bg-primary-900/50 text-primary-800 dark:text-primary-300 text-xs px-2 py-1 rounded-md border border-primary-200 dark:border-primary-800 font-bold inline-flex items-center gap-1.5">
+                    {entry.activityType === 'Harvest' ? <><Icon name="apple" size={14} /> Harvest</> : 
+                     entry.activityType === 'Pruning' ? <><Icon name="edit" size={14} /> Pruning</> : 
+                     entry.activityType === 'Watered' ? <><Icon name="water" size={14} /> Watered</> :
+                     entry.activityType === 'Fed' ? <><Icon name="feed" size={14} /> Fed</> :
+                     entry.activityType === 'Treatment' ? <><Icon name="alert-circle" size={14} /> Treatment</> : entry.activityType}
                     </span>
                   )}
-                  {entry.harvestAmount && <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800 font-bold">⚖️ {entry.harvestAmount}</span>}
-                  {entry.height && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">📏 {entry.height}"</span>}
-                  {entry.growthStage && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">🌱 {entry.growthStage}</span>}
-                  {entry.fullness && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">🌿 {entry.fullness}</span>}
-                  {entry.colorAppearance && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700">🎨 {entry.colorAppearance}</span>}
-                  {entry.healthIssues && entry.healthIssues !== 'None' && <span className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs px-2 py-1 rounded-md border border-red-200 dark:border-red-800">⚠️ {entry.healthIssues}</span>}
-                  {entry.healthIssues === 'None' && <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs px-2 py-1 rounded-md border border-emerald-200 dark:border-emerald-800">✨ Healthy</span>}
-                  {entry.batchScope && <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs px-2 py-1 rounded-md border border-indigo-200 dark:border-indigo-800 font-semibold">📍 via {entry.batchScope}</span>}
+                  {entry.harvestAmount && <span className="bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 text-xs px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800 font-bold inline-flex items-center gap-1.5"><Icon name="scale" size={14} /> {entry.harvestAmount}</span>}
+                  {entry.height && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5"><Icon name="ruler" size={14} /> {entry.height}"</span>}
+                  {entry.growthStage && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5"><Icon name="sprout" size={14} /> {entry.growthStage}</span>}
+                  {entry.fullness && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5"><Icon name="leaf" size={14} /> {entry.fullness}</span>}
+                  {entry.colorAppearance && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5"><Icon name="palette" size={14} /> {entry.colorAppearance}</span>}
+                  {entry.healthIssues && entry.healthIssues !== 'None' && <span className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs px-2 py-1 rounded-md border border-red-200 dark:border-red-800 inline-flex items-center gap-1.5"><Icon name="alert" size={14} /> {entry.healthIssues}</span>}
+                  {entry.healthIssues === 'None' && <span className="bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs px-2 py-1 rounded-md border border-primary-200 dark:border-primary-800 inline-flex items-center gap-1.5"><Icon name="sparkles" size={14} /> Healthy</span>}
+                  {entry.batchScope && <span className="bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs px-2 py-1 rounded-md border border-indigo-200 dark:border-indigo-800 font-semibold inline-flex items-center gap-1.5"><Icon name="map-pin" size={14} /> via {entry.batchScope}</span>}
                 </div>
               )}
 
@@ -306,7 +306,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                     className="w-full max-h-64 object-cover rounded-xl border border-slate-200 dark:border-slate-700 mb-2 cursor-pointer hover:opacity-90 transition-opacity" 
                     onClick={() => setExpandedImageUrl(entry.imageUrl!)}
                   />
-                  <button onClick={() => handleSetThumbnail(entry.imageUrl!)} className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
+                  <button onClick={() => handleSetThumbnail(entry.imageUrl!)} className="text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline">
                     {instance.imageUrl === entry.imageUrl ? '★ Current Cover Photo' : 'Set as Cover Photo'}
                   </button>
                 </div>

@@ -1,6 +1,7 @@
 import { useState, useMemo, FC, FormEvent, ChangeEvent } from 'react';
 import { PlantArchetype, Location, Zone } from '../../../types';
 import { Button, Input } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -11,7 +12,7 @@ interface PlantRegistrationFormProps {
   zones: Zone[];
   submitLabel: string;
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
-  onCancel: () => void;
+  onCancel?: () => void;
 }
 
 export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefilledQrId, archetypes, locations, zones, submitLabel, onRegister, onCancel }) => {
@@ -92,26 +93,26 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedMode(''); }}>
+      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedCategory} onChange={e => { setSelectedCategory(e.target.value); setSelectedMode(''); }}>
         <option value="" disabled>Select a category...</option>
         {groupedArchetypes.sortedCategories.map(category => (
           <option key={category} value={category}>{category}</option>
         ))}
       </select>
       {selectedCategory && (
-        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
+        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedMode} onChange={e => setSelectedMode(e.target.value)}>
           <option value="" disabled>Select a plant...</option>
           {groupedArchetypes.groups[selectedCategory].map(a => <option key={a.id} value={a.id}>{a.commonName}</option>)}
           <option value="other">+ Other (Add new...)</option>
         </select>
       )}
-      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}>
+      <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedLocation(''); }}>
         <option value="" disabled>Select a zone...</option>
         {sortedZones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
         <option value="other">+ Other (Add new zone...)</option>
       </select>
       {selectedZone && selectedZone !== 'other' && (
-        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)}>
+        <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)}>
           <option value="" disabled>Select a location...</option>
           {locations.filter(l => l.zoneId === selectedZone).map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
           <option value="other">+ Other (Add new location...)</option>
@@ -130,8 +131,8 @@ export const PlantRegistrationForm: FC<PlantRegistrationFormProps> = ({ prefille
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Plant Photo (Optional)</label>
             <div className="flex items-center gap-3">
               {customImage && <img src={customImage} alt="Preview" onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-12 h-12 rounded-lg object-cover border border-slate-200 dark:border-slate-700" />}
-              <label className="py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-all cursor-pointer border border-transparent dark:border-emerald-800">
-                📸 {customImage ? 'Retake Photo' : 'Take Photo'}
+              <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-300 dark:hover:bg-primary-900/50 transition-all cursor-pointer border border-transparent dark:border-primary-800">
+                <Icon name="camera" size={18} /> {customImage ? 'Retake Photo' : 'Take Photo'}
                 <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
               </label>
             </div>

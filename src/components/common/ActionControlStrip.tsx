@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { useGarden } from '../../contexts/GardenContext';
-import { hasPermission } from '../../utils/permissions';
+import { Icon } from './Icon';
 
 interface ActionControlStripProps {
   userPins: string[];
@@ -23,11 +23,11 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
 }) => {
   const { currentUser, printQueue, onQueuePrint } = useGarden();
   
-  if (!hasPermission(currentUser, 'perform_actions') && !hasPermission(currentUser, 'view_print_queue')) {
+  if (currentUser?.workspaceRole === 'viewer' && currentUser?.role !== 'god-admin') {
     return null;
   }
 
-  const isOwnerOrAdmin = hasPermission(currentUser, 'view_print_queue');
+  const isOwnerOrAdmin = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner';
 
   const handleQueueAction = (action: 'none' | 'water' | 'feed') => {
     const isQueued = printQueue?.some(q => q.targetId === targetId && q.action === action);
@@ -47,39 +47,39 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
   };
 
   const getPinClass = (action: string) => {
-    return `px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes(action) ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`;
+    return `flex items-center justify-center gap-1.5 px-2 py-1 rounded text-xs font-semibold transition-colors border ${userPins.includes(action) ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-surface-50 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-slate-600 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-surface-700'}`;
   };
 
   const getPrintClass = (action: 'none' | 'water' | 'feed') => {
-    return `px-2 py-1 rounded text-xs font-semibold transition-colors border ${isQueued(action) ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 hover:border-emerald-200 dark:hover:border-emerald-800'}`;
+    return `flex items-center justify-center gap-1.5 px-2 py-1 rounded text-xs font-semibold transition-colors border ${isQueued(action) ? 'bg-amber-100 border-amber-200 text-amber-800 dark:bg-amber-900/50 dark:border-amber-800 dark:text-amber-400' : 'bg-surface-50 dark:bg-surface-800 border-surface-200 dark:border-surface-700 text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-200 dark:hover:border-primary-800'}`;
   };
 
   return (
     <div className="w-full flex flex-col gap-2 mt-6 px-1">
-      {hasPermission(currentUser, 'perform_actions') && onPinToggle && (
-        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
+      {currentUser?.workspaceRole !== 'viewer' && onPinToggle && (
+        <div className="flex items-center justify-between bg-surface-50 dark:bg-surface-800/40 p-2 rounded-lg border border-surface-100 dark:border-surface-700/50">
           <div className="flex items-start gap-1.5 ml-1 mr-2">
-            <span className="text-[10px] leading-tight mt-[1px]">📌</span>
+            <span className="text-[10px] leading-tight mt-[1px]"><Icon name="pin" size={14} /></span>
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight">Pin to Dash</span>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={() => onPinToggle('water')} className={getPinClass('water')}>💦 Water</button>
-            <button onClick={() => onPinToggle('feed')} className={getPinClass('feed')}>🪴 Feed</button>
-            <button onClick={() => onPinToggle('navigate')} className={getPinClass('navigate')}>👁️ Nav</button>
+            <button onClick={() => onPinToggle('water')} className={getPinClass('water')}><Icon name="water" size={14} /> Water</button>
+            <button onClick={() => onPinToggle('feed')} className={getPinClass('feed')}><Icon name="feed" size={14} /> Feed</button>
+            <button onClick={() => onPinToggle('navigate')} className={getPinClass('navigate')}><Icon name="view" size={14} /> Nav</button>
           </div>
         </div>
       )}
       
       {isOwnerOrAdmin && (
-        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 p-2 rounded-lg border border-slate-100 dark:border-slate-700/50">
+        <div className="flex items-center justify-between bg-surface-50 dark:bg-surface-800/40 p-2 rounded-lg border border-surface-100 dark:border-surface-700/50">
           <div className="flex items-start gap-1.5 ml-1 mr-2">
-            <span className="text-[10px] leading-tight mt-[1px]">🖨️</span>
+            <span className="text-[10px] leading-tight mt-[1px]"><Icon name="print" size={14} /></span>
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight">Print Queue</span>
           </div>
           <div className="flex gap-1.5">
-            <button onClick={() => handleQueueAction('none')} className={getPrintClass('none')}>ℹ️ Info</button>
-            <button onClick={() => handleQueueAction('water')} className={getPrintClass('water')}>💦 Water</button>
-            <button onClick={() => handleQueueAction('feed')} className={getPrintClass('feed')}>🪴 Feed</button>
+            <button onClick={() => handleQueueAction('none')} className={getPrintClass('none')}><Icon name="info" size={14} /> Info</button>
+            <button onClick={() => handleQueueAction('water')} className={getPrintClass('water')}><Icon name="water" size={14} /> Water</button>
+            <button onClick={() => handleQueueAction('feed')} className={getPrintClass('feed')}><Icon name="feed" size={14} /> Feed</button>
           </div>
         </div>
       )}

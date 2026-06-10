@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
+export type ColorTheme = 'default' | 'emerald' | 'ocean' | 'sunset' | 'boho-nature' | 'amethyst';
 
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('florasync_theme') as Theme) || 'system');
+  // Support legacy 'emerald' name, map to 'default'
+  const storedColorTheme = localStorage.getItem('florasync_color_theme') as ColorTheme || 'default';
+  const normalizedColorTheme = storedColorTheme === 'emerald' ? 'default' : storedColorTheme;
+  const [colorTheme, setColorTheme] = useState<ColorTheme>(normalizedColorTheme);
 
   useEffect(() => {
     localStorage.setItem('florasync_theme', theme);
@@ -16,6 +21,11 @@ export function useTheme() {
   }, [theme]);
 
   useEffect(() => {
+    localStorage.setItem('florasync_color_theme', colorTheme);
+    document.documentElement.setAttribute('data-theme', colorTheme);
+  }, [colorTheme]);
+
+  useEffect(() => {
     if (theme !== 'system') return;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
@@ -26,5 +36,5 @@ export function useTheme() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  return { theme, setTheme };
+  return { theme, setTheme, colorTheme, setColorTheme };
 }

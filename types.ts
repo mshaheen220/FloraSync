@@ -29,6 +29,14 @@ export interface AddonAction {
   entryPoint: string;
 }
 
+export interface AddonSettingField {
+  key: string;
+  label: string;
+  type: 'string' | 'number' | 'boolean' | 'select';
+  options?: string[]; // Used if type is 'select'
+  defaultValue: any;
+}
+
 export interface JournalActivityType {
   value: string;
   label: string;
@@ -44,6 +52,22 @@ export interface AddonSettingField {
   type: 'string' | 'number' | 'boolean' | 'select';
   options?: string[]; // Used if type is 'select'
   defaultValue: any;
+  iconUrl?: string;
+}
+
+export interface AddonManifest {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  author?: string;
+  entryPoints?: string[];
+  installScript?: string;
+  uninstallScript: string;
+  executeScript?: string;
+  settingsSchema?: AddonSettingField[];
+  actions?: AddonAction[];
+  journalActivityTypes?: JournalActivityType[];
 }
 
 export interface GardenProfile {

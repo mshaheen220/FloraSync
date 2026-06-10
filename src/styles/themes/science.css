@@ -1,0 +1,75 @@
+[data-theme="science"] {
+  /* Main Theme Colors: Deep Forest Green (#2d5a27) */
+  --color-primary-50: 244 248 243;
+  --color-primary-100: 231 240 228;
+  --color-primary-200: 206 224 199;
+  --color-primary-300: 169 201 159;
+  --color-primary-400: 125 170 112;
+  --color-primary-500: 89 138 77;
+  --color-primary-600: 64 110 54;
+  --color-primary-700: 45 90 39;  /* #2d5a27 */
+  --color-primary-800: 38 72 34;
+  --color-primary-900: 31 59 29;
+  --color-primary-950: 16 32 14;
+
+  /* Foundations & Backgrounds: Pure White to Deep Espresso Brown */
+  --color-surface-50: 255 255 255; /* #ffffff - Pure White for Cards */
+  --color-surface-100: 253 250 242; /* #fdfaf2 - Parchment Cream for App Background */
+  --color-surface-200: 234 223 203;
+  --color-surface-300: 218 201 172;
+  --color-surface-400: 198 174 138;
+  --color-surface-500: 178 149 109;
+  --color-surface-600: 155 125 86;
+  --color-surface-700: 125 99 68;
+  --color-surface-800: 85 75 68; /* Softer Dark for Cards */
+  --color-surface-900: 62 55 52; /* Lighter Espresso App Background */
+  --color-surface-950: 45 40 38;
+
+  /* Muted Cool: Dusty Deep Teal (#3a6073) & Espresso Text */
+  --color-slate-50: 242 245 247;
+  --color-slate-100: 228 234 238;
+  --color-slate-200: 202 214 221;
+  --color-slate-300: 166 186 197;
+  --color-slate-400: 124 151 166;
+  --color-slate-500: 93 124 139;
+  --color-slate-600: 73 100 115;
+  --color-slate-700: 58 96 115; /* #3a6073 */
+  --color-slate-800: 78 88 92; /* Lighter Espresso for Text */
+  --color-slate-900: 58 66 70; /* Soft Espresso for Dark Mode Text */
+
+  /* Accent: Mustard Gold (#e5ad35) */
+  --color-amber-50: 253 249 238;
+  --color-amber-100: 250 240 213;
+  --color-amber-200: 244 225 174;
+  --color-amber-300: 237 203 122;
+  --color-amber-400: 229 173 53; /* #e5ad35 */
+  --color-amber-500: 211 146 31;
+  --color-amber-600: 182 115 22;
+  --color-amber-800: 108 65 18;
+  --color-amber-900: 89 53 17;
+
+  /* Secondary: Terracotta Rust (#c2593f) */
+  --color-red-50: 253 244 242;
+  --color-red-100: 249 229 224;
+  --color-red-200: 243 203 194;
+  --color-red-300: 233 165 149;
+  --color-red-400: 219 119 96;
+  --color-red-500: 194 89 63; /* #c2593f */
+  --color-red-600: 164 65 43;
+  --color-red-800: 112 45 32;
+  --color-red-900: 94 40 29;
+
+  /* Light Accent: Silvery Sage Green (#9caf88) */
+  --color-indigo-500: 156 175 136; /* #9caf88 */
+
+  /* Standard Blues/Purples Fallback */
+  --color-blue-50: 239 246 255;
+  --color-blue-400: 96 165 250;
+  --color-blue-500: 59 130 246;
+  --color-blue-600: 37 99 235;
+  --color-blue-900: 30 58 138;
+
+  --color-purple-50: 250 245 255;
+  --color-purple-500: 168 85 247;
+  --color-purple-900: 88 28 135;
+}

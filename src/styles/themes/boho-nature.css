@@ -1,0 +1,68 @@
+[data-theme="boho-nature"] {
+  --color-primary-50: 245 243 239;
+  --color-primary-100: 235 230 219;
+  --color-primary-200: 218 209 191;
+  --color-primary-300: 197 182 159;
+  --color-primary-400: 174 153 125;
+  --color-primary-500: 152 129 103;
+  --color-primary-600: 129 108 85;
+  --color-primary-700: 102 85 66;
+  --color-primary-800: 76 63 49;
+  --color-primary-900: 54 44 34;
+  --color-primary-950: 27 22 17;
+
+  --color-surface-50: 250 249 247;
+  --color-surface-100: 243 241 237;
+  --color-surface-200: 231 227 221;
+  --color-surface-300: 213 207 199;
+  --color-surface-400: 179 169 157;
+  --color-surface-500: 147 137 125;
+  --color-surface-600: 116 107 95;
+  --color-surface-700: 89 81 71;
+  --color-surface-800: 75 68 58;
+  --color-surface-900: 55 50 42;
+  --color-surface-950: 40 36 30;
+
+  --color-slate-50: 248 250 252;
+  --color-slate-100: 241 245 249;
+  --color-slate-200: 226 232 240;
+  --color-slate-300: 203 213 225;
+  --color-slate-400: 148 163 184;
+  --color-slate-500: 100 116 139;
+  --color-slate-600: 71 85 105;
+  --color-slate-700: 51 65 85;
+  --color-slate-800: 60 70 85;
+  --color-slate-900: 45 52 65;
+
+  --color-amber-50: 255 251 235;
+  --color-amber-100: 254 243 199;
+  --color-amber-200: 253 230 138;
+  --color-amber-300: 252 211 77;
+  --color-amber-400: 251 146 60;
+  --color-amber-500: 249 115 22;
+  --color-amber-600: 217 119 6;
+  --color-amber-800: 146 64 14;
+  --color-amber-900: 120 53 15;
+
+  --color-blue-50: 239 246 255;
+  --color-blue-400: 96 165 250;
+  --color-blue-500: 59 130 246;
+  --color-blue-600: 37 99 235;
+  --color-blue-900: 30 58 138;
+
+  --color-red-50: 254 242 242;
+  --color-red-100: 254 226 226;
+  --color-red-200: 254 202 202;
+  --color-red-300: 252 165 165;
+  --color-red-400: 248 113 113;
+  --color-red-500: 239 68 68;
+  --color-red-600: 220 38 38;
+  --color-red-800: 153 27 27;
+  --color-red-900: 127 29 29;
+
+  --color-indigo-500: 99 102 241;
+
+  --color-purple-50: 250 245 255;
+  --color-purple-500: 168 85 247;
+  --color-purple-900: 88 28 135;
+}

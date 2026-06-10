@@ -1,6 +1,7 @@
 import { useState, FC, useRef } from 'react';
 import { Card, Button } from '../../../styles/StyledElements';
 import JSZip from 'jszip';
+import { Icon } from '../../common/Icon';
 
 interface DataImportProps {
   token?: string | null;
@@ -89,15 +90,15 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plant Package Import</label>
-          <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-            ❓ <span className="underline decoration-dotted underline-offset-2">Package Format</span>
+          <button onClick={() => setShowImportHelp(!showImportHelp)} className="text-sm font-bold text-primary-600 dark:text-primary-400 flex items-center gap-1">
+            <Icon name="help-circle" size={16} /> <span className="underline decoration-dotted underline-offset-2">Package Format</span>
           </button>
         </div>
 
         {showImportHelp && (
-          <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs animate-in fade-in duration-300">
+          <div className="p-3 bg-surface-50 dark:bg-surface-800/50 rounded-lg text-xs animate-in fade-in duration-300">
             <p className="text-slate-500 dark:text-slate-400 mb-2">Upload a <strong>.zip</strong> package containing your plants. The images will automatically be matched and imported.</p>
-            <pre className="bg-slate-200 dark:bg-slate-900 p-2 rounded text-slate-600 dark:text-slate-300 overflow-x-auto text-[10px] leading-relaxed">
+            <pre className="bg-surface-200 dark:bg-surface-900 p-2 rounded text-slate-600 dark:text-slate-300 overflow-x-auto text-[10px] leading-relaxed">
               /any-name.json{'\n'}
               /images/flowers/rose.jpg{'\n'}
               /images/foliage/fern.png
@@ -105,8 +106,10 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
           </div>
         )}
 
-        <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-slate-50 dark:bg-slate-800/50">
-          <span className="text-4xl mb-3">📦</span>
+        <div className="border-2 border-dashed border-surface-300 dark:border-surface-700 rounded-xl p-8 flex flex-col items-center justify-center text-center bg-surface-50 dark:bg-surface-800/50">
+          <div className="mb-3 text-primary-500 dark:text-primary-400">
+            <Icon name="package" size={48} />
+          </div>
           <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Select a Plant Package</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Upload a .zip file containing your .json file and images.</p>
           

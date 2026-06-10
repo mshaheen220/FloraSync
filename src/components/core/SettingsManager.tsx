@@ -1,8 +1,7 @@
 import { useState, FC } from 'react';
 import { Container, Toast, Subtitle } from '../../styles/StyledElements';
-import { Theme, User, GardenProfile } from '../../App';
+import { User, GardenProfile } from '../../App';
 import { DataImport } from '../core/settings/DataImport';
-import { AppearanceSettings } from '../core/settings/AppearanceSettings';
 import { GardenProfileSettings } from '../core/settings/GardenProfileSettings';
 import { AccountSettings } from '../core/settings/AccountSettings';
 import { UserAdministration } from '../core/settings/UserAdministration';
@@ -11,9 +10,9 @@ import { hasPermission } from '../../utils/permissions';
 import { AddonManager } from './settings/AddonManager';
 
 const SettingsSection: FC<{ title: string; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, isExpanded, onToggle, children }) => (
-  <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
+  <div className="border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0">
     <button onClick={onToggle} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
-      <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</Subtitle>
+      <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{title}</Subtitle>
       <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
     </button>
     {isExpanded && children}
@@ -21,8 +20,6 @@ const SettingsSection: FC<{ title: string; isExpanded: boolean; onToggle: () => 
 );
 
 interface SettingsManagerProps {
-  theme: Theme;
-  onThemeChange: (theme: Theme) => void;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
   currentUser?: User;
@@ -34,7 +31,7 @@ interface SettingsManagerProps {
 }
 
 export const SettingsManager: FC<SettingsManagerProps> = ({ 
-  theme, onThemeChange, onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token 
+  onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedSettings, setExpandedSettings] = useState<string[]>([]);
@@ -75,10 +72,6 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
           )}
         </>
       )}
-
-      <SettingsSection title="Appearance" isExpanded={expandedSettings.includes('appearance')} onToggle={() => toggleSetting('appearance')}>
-        <AppearanceSettings theme={theme} onThemeChange={onThemeChange} />
-      </SettingsSection>
 
       {hasPermission(currentUser, 'manage_inventory') && (
         <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>

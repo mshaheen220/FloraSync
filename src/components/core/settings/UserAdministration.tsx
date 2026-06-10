@@ -3,6 +3,7 @@ import { Card, Button, Input, Subtitle } from '../../../styles/StyledElements';
 import { User } from '../../../App';
 import { UserCard } from './UserCard';
 import { hasPermission } from '../../../utils/permissions';
+import { Icon } from '../../common/Icon';
 
 interface UserAdministrationProps {
   currentUser: User;
@@ -214,11 +215,11 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   };
 
   return (
-    <Card className="mb-4 border-emerald-500 dark:border-emerald-500">
+    <Card className="mb-4 border-primary-500 dark:border-primary-500">
       {!isAddingUser ? (
         <Button onClick={() => setIsAddingUser(true)} className="mb-2">+ Add New Account</Button>
       ) : (
-        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-4">
+        <div className="bg-surface-50 dark:bg-surface-800/50 p-4 rounded-xl border border-surface-200 dark:border-surface-700 mb-4">
           <Subtitle className="!mt-0 mb-2 !text-sm">Provision New Account</Subtitle>
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Provision new garden accounts for your friends. They will have their own private gardens but share your global Plant Dictionary.</p>
           <form onSubmit={handleCreateUser} className="flex flex-col gap-3">
@@ -238,7 +239,7 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Garden</label>
-              <select value={selectedGardenId} onChange={e => setSelectedGardenId(e.target.value)} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm mb-1">
+              <select value={selectedGardenId} onChange={e => setSelectedGardenId(e.target.value)} className="w-full border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-2 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-surface-50 dark:bg-surface-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm mb-1">
                 <option value="">🌱 Create New Private Garden</option>
                 {gardensList.map(g => (
                   <option key={g.id} value={g.id}>🤝 Share: {g.name}</option>
@@ -256,7 +257,7 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
       )}
       
       {usersList.length > 0 && (
-        <div className={`${!isAddingUser ? 'mt-4' : 'mt-2'} pt-4 border-t border-emerald-200 dark:border-emerald-800/50`}>
+        <div className={`${!isAddingUser ? 'mt-4' : 'mt-2'} pt-4 border-t border-primary-200 dark:border-primary-800/50`}>
           <Subtitle className="!text-sm mb-3">Existing Accounts</Subtitle>
           <div className="flex flex-col gap-2">
             {usersList.map(u => (
@@ -283,16 +284,16 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
       )}
       
       {gardensList.length > 0 && (
-        <div className="mt-6 pt-4 border-t border-emerald-200 dark:border-emerald-800/50">
+        <div className="mt-6 pt-4 border-t border-primary-200 dark:border-primary-800/50">
           <Subtitle className="!text-sm mb-3">Active Gardens</Subtitle>
           <div className="flex flex-col gap-2">
             {gardensList.map(g => (
-              <div key={g.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+              <div key={g.id} className="flex items-center justify-between bg-surface-50 dark:bg-surface-800/50 p-3 rounded-xl border border-surface-200 dark:border-surface-700">
                 <div>
-                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">🏡 {g.name}</span>
+                  <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block"><Icon name="tree-palm" size={14} className='float-left inline-block mr-1' /> {g.name}</span>
                 </div>
                 <div className="flex gap-1">
-                  <button type="button" onClick={() => handleRenameGarden(g.id, g.name)} title="Rename Garden" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
+                  <button type="button" onClick={() => handleRenameGarden(g.id, g.name)} title="Rename Garden" className="p-1.5 text-base rounded-lg transition-colors text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400 active:scale-90"><Icon name="pencil" size={14} /></button>
                 </div>
               </div>
             ))}

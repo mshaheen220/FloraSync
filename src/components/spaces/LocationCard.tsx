@@ -1,6 +1,7 @@
 import { FC, FormEvent } from 'react';
 import { Location, Zone } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 
 interface LocationCardProps {
   location: Location;
@@ -21,11 +22,11 @@ interface LocationCardProps {
 export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones, plantsInLocation, isEditing, editData, setEditData, onEditStart, onEditCancel, onSave, onDelete, onNavigateLocation, canEdit }) => {
   if (isEditing) {
     return (
-      <Card className="border-emerald-500 dark:border-emerald-500 shadow-md !p-4">
+      <Card className="border-primary-500 dark:border-primary-500 shadow-md !p-4">
         <form onSubmit={onSave} className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
-            <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-emerald-500 dark:focus:border-emerald-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={editData.zoneId || ''} onChange={e => setEditData({...editData, zoneId: e.target.value})} required>
+            <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={editData.zoneId || ''} onChange={e => setEditData({...editData, zoneId: e.target.value})} required>
               <option value="" disabled>Select a zone...</option>
               {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
             </select>
@@ -50,14 +51,14 @@ export const LocationCard: FC<LocationCardProps> = ({ location, zoneName, zones,
           <h3 className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{location.name}</h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{location.id}</p>
           <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide font-semibold mt-0.5">{zoneName}</p>
-          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-2">{plantsInLocation} active plant{plantsInLocation !== 1 && 's'}</p>
+          <p className="text-xs text-primary-600 dark:text-primary-400 font-medium mt-2">{plantsInLocation} active plant{plantsInLocation !== 1 && 's'}</p>
         </div>
         <div className="flex gap-1">
-          <button onClick={onNavigateLocation} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90" title="View Location">👁️</button>
+      <button onClick={onNavigateLocation} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400 active:scale-90" title="View Location"><Icon name="view" size={18} /></button>
           {canEdit && (
             <>
-              <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 active:scale-90">✏️</button>
-              <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}>🗑️</button>
+          <button onClick={onEditStart} className="p-2 rounded-lg transition-colors text-slate-400 hover:text-primary-600 dark:text-slate-500 dark:hover:text-primary-400 active:scale-90"><Icon name="edit" size={18} /></button>
+          <button onClick={onDelete} className={`p-2 rounded-lg transition-colors ${plantsInLocation > 0 ? 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30'}`}><Icon name="delete" size={18} /></button>
             </>
           )}
         </div>

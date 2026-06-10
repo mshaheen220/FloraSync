@@ -5,6 +5,7 @@ import { PageHeader } from '../common/PageHeader';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { hasPermission } from '../../utils/permissions';
+import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -95,11 +96,13 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     if (!hasPermission(currentUser, 'perform_actions')) {
       return (
         <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-          <Card className="text-center py-10 shadow-lg border-emerald-500">
-            <div className="text-5xl mb-4">🌍</div>
+          <Card className="text-center py-10 shadow-lg border-primary-500">
+            <div className="mb-4 flex justify-center text-primary-500 dark:text-primary-400">
+              <Icon name="globe" size={48} />
+            </div>
             <Title>Unassigned Tag</Title>
             <p className="text-slate-500 dark:text-slate-400 text-sm px-2">
-              Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned. Viewers do not have permission to register new zones.
+              Tag <strong className="text-primary-700 dark:text-primary-400 font-semibold">{zoneId}</strong> is unassigned. Viewers do not have permission to register new zones.
             </p>
           </Card>
         </Container>
@@ -107,11 +110,13 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     }
     return (
       <Container className="flex flex-col justify-center animate-in fade-in duration-500">
-        <Card className="text-center py-10 shadow-lg border-emerald-500">
-          <div className="text-5xl mb-4">🌍</div>
+        <Card className="text-center py-10 shadow-lg border-primary-500">
+          <div className="mb-4 flex justify-center text-primary-500 dark:text-primary-400">
+            <Icon name="globe" size={48} />
+          </div>
           <Title>New Zone Tag</Title>
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 px-2">
-            Tag <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">{zoneId}</strong> is unassigned.
+            Tag <strong className="text-primary-700 dark:text-primary-400 font-semibold">{zoneId}</strong> is unassigned.
             What is the name of this macro zone?
           </p>
           <form onSubmit={(e) => {
@@ -148,7 +153,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
         {zone.imageUrl ? (
           <img src={zone.imageUrl} alt={zone.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-48 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
         ) : (
-          <div className="w-full h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 mb-6"></div>
+          <div className="w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 mb-6"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
           {zone.description && (
@@ -158,8 +163,8 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           {currentUser?.workspaceRole !== 'viewer' && (
             <div className="w-full flex flex-col gap-3 px-2">
               <div className="flex gap-3">
-                <Button className="flex-1" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}>💦 Water Zone</Button>
-                <Button className="flex-1" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}>🪴 Feed Zone</Button>
+                <Button className="flex-1 flex items-center justify-center gap-2" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}><Icon name="water" size={18} /> Water Zone</Button>
+                <Button className="flex-1 flex items-center justify-center gap-2" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}><Icon name="feed" size={18} /> Feed Zone</Button>
               </div>
             </div>
           )}
@@ -188,7 +193,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
                 onClick={() => toggleLocation(locName)}
                 className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform"
               >
-                <Subtitle className="!m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                   {locName} <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({groupedInstances.groups[locName].length})</span>
                 </Subtitle>
                 <span className={`text-slate-400 transition-transform duration-200 ${expandedLocations.includes(locName) ? 'rotate-180' : ''}`}>▼</span>

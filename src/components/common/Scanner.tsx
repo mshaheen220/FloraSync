@@ -9,8 +9,8 @@ interface ScannerProps {
 
 export const Scanner: FC<ScannerProps> = ({ onScan, onClose }) => {
   return (
-    <Container className="flex flex-col h-screen animate-in slide-in-from-bottom-4 duration-300 !p-0 bg-slate-900 !max-w-full">
-      <header className="p-6 pt-8 flex items-center justify-between z-10 bg-slate-900 text-white shadow-md">
+    <Container className="flex flex-col h-screen animate-in slide-in-from-bottom-4 duration-300 !p-0 bg-surface-900 !max-w-full">
+      <header className="p-6 pt-8 flex items-center justify-between z-10 bg-surface-900 text-white shadow-md">
         <Title className="!text-white !mb-0">Scan Plant Tag</Title>
         <button onClick={onClose} className="text-slate-300 hover:text-white text-xl p-2 font-bold active:scale-90 transition-transform">✕</button>
       </header>
@@ -27,11 +27,11 @@ export const Scanner: FC<ScannerProps> = ({ onScan, onClose }) => {
         />
         {/* Minimalist target guide overlay */}
         <div className="absolute inset-0 pointer-events-none border-[60px] border-black/60 flex items-center justify-center">
-          <div className="w-full h-64 border-2 border-emerald-500/50 rounded-xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
+          <div className="w-full h-64 border-2 border-primary-500/50 rounded-xl relative shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
         </div>
       </div>
 
-      <div className="p-8 bg-slate-900 pb-16">
+      <div className="p-8 bg-surface-900 pb-16">
         <p className="text-slate-400 text-center text-sm font-medium leading-relaxed">
           Align the QR code within the frame to instantly log care or register a new plant.
         </p>

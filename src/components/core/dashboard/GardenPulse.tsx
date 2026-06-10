@@ -1,6 +1,7 @@
 import { FC, useMemo } from 'react';
 import { PlantInstance, PlantArchetype, Location, Zone } from '../../../../types';
 import { Card, Subtitle } from '../../../styles/StyledElements';
+import { Icon, IconName } from '../../common/Icon';
 
 interface GardenPulseProps {
   instances: PlantInstance[];
@@ -84,7 +85,7 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
 
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-[500ms]">
-      <Subtitle>📖 Garden Pulse</Subtitle>
+      <Subtitle className="flex items-center gap-2"><Icon name="book-open-text" size={20} className="text-primary-500 dark:text-primary-400" /> Garden Pulse</Subtitle>
       <Card className="!p-0 overflow-hidden">
         {recentActivity.map((entry, idx) => {
           const isWater = entry.activityType === 'Watered';
@@ -93,19 +94,19 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
           const isHealth = !!entry.healthIssues;
           
           const actionVerb = isWater ? 'watered' : isFeed ? 'fed' : isHarvest ? `harvested ${entry.harvestAmount ? `(${entry.harvestAmount}) ` : ''}from` : isHealth ? 'flagged a health issue on' : 'logged an entry for';
-          const icon = isWater ? '💦' : isFeed ? '🍽️' : isHarvest ? '🍅' : isHealth ? '🚨' : '📝';
+          const iconName: IconName = isWater ? 'water' : isFeed ? 'feed' : isHarvest ? 'apple' : isHealth ? 'alert' : 'pencil';
 
           const itemClasses = `flex items-start gap-3 p-3 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors ${entry.onClick ? 'hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer active:scale-[0.98]' : ''}`;
 
           return (
             <div key={entry.id || idx} onClick={entry.onClick} className={itemClasses}>
-              <div className="text-2xl mt-0.5">{icon}</div>
+              <div className="mt-1 text-slate-400 dark:text-slate-500"><Icon name={iconName} size={20} /></div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-slate-800 dark:text-slate-200 leading-tight">
                   <strong className="font-bold">{entry.authorName || 'Someone'}</strong> {actionVerb} {entry.isBatch ? (
-                    <strong className="font-bold text-emerald-700 dark:text-emerald-400">{entry.batchScope}</strong>
+                    <strong className="font-bold text-primary-700 dark:text-primary-400">{entry.batchScope}</strong>
                   ) : (
-                    <span>the <strong className="font-bold text-emerald-700 dark:text-emerald-400">{entry.plantName}</strong></span>
+                    <span>the <strong className="font-bold text-primary-700 dark:text-primary-400">{entry.plantName}</strong></span>
                   )}
                 </p>
                 {(entry.note || entry.healthIssues) && (
