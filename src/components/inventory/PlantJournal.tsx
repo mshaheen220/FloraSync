@@ -1,7 +1,6 @@
 import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
 import { PlantInstance, JournalEntry, User, JournalActivityType } from '../../../types';
 import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
-import { useGarden } from '../../contexts/GardenContext';
 import { Icon } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
@@ -15,7 +14,6 @@ interface PlantJournalProps {
 }
 
 export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showToast, currentUser }) => {
-  const { gardenProfile } = useGarden();
   const [isAddingJournal, setIsAddingJournal] = useState(false);
   const [editingJournalId, setEditingJournalId] = useState<string | null>(null);
   const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
@@ -31,14 +29,14 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
       { value: 'Watered', label: '💦 Watered', badgeLabel: '💦 Watered', isRoutine: true },
       { value: 'Fed', label: '🪴 Fed', badgeLabel: '🪴 Fed', isRoutine: true }
     ];
-    const addonTypes = gardenProfile?.activeAddonManifests?.flatMap(m => m.journalActivityTypes || []) || [];
+    const addonTypes = currentUser?.activeAddonManifests?.flatMap(m => m.journalActivityTypes || []) || [];
     
     const typeMap = new Map(baseTypes.map(t => [t.value, t]));
     addonTypes.forEach(t => {
       typeMap.set(t.value, { ...typeMap.get(t.value), ...t });
     });
     return Array.from(typeMap.values());
-  }, [gardenProfile?.activeAddonManifests]);
+  }, [currentUser?.activeAddonManifests]);
 
   const routineTypes = useMemo(() => allActivityTypes.filter(t => t.isRoutine).map(t => t.value), [allActivityTypes]);
 

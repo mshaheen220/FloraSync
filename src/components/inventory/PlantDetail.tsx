@@ -407,7 +407,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
             <Button $variant="secondary" onClick={handleManualFeed} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed</Button>
             
             {/* Dynamic Data-Driven Plugin Buttons */}
-            {gardenProfile?.activeAddonManifests?.map(manifest => 
+            {currentUser?.activeAddonManifests?.map(manifest => 
               manifest.actions?.filter(a => a.entryPoint === 'plant_detail_action').map(action => (
                 <Button key={`${manifest.id}-${action.id}`} $variant="secondary" onClick={() => executePluginAction(manifest.id, action.id)} className="!bg-purple-50 dark:!bg-purple-900/30 !text-purple-700 dark:!text-purple-400 !border-purple-200 dark:!border-purple-800 whitespace-nowrap">
                   {action.label}
