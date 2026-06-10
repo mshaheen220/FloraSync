@@ -265,7 +265,8 @@ async function generatePackage() {
   const safeFirstName = PLANTS_TO_GENERATE[0].toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const packageName = `package-${safeFirstName}-${timestamp}.zip`;
   const outputPath = path.join(PACKAGES_DIR, packageName);
-  console.log(`💾 Compressing and saving package to: ${packageName}`);
+  const relativePath = path.relative(ROOT_DIR, outputPath);
+  console.log(`💾 Compressing and saving package to: ${relativePath}`);
   
   const content = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   fs.writeFileSync(outputPath, content);

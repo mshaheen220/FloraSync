@@ -355,6 +355,10 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     return 'hourglass'; // Infrequent
   };
 
+  const expectedHarvestDate = (instance && archetype?.daysToHarvest)
+    ? new Date(new Date(instance.datePlanted).getTime() + (archetype.daysToHarvest * 86400000))
+    : null;
+
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <header className="mb-6 flex items-start justify-between pt-6">
@@ -397,7 +401,11 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           </StatusBadge>
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
           <p>Planted: {new Date(instance.datePlanted).toLocaleDateString()}</p>
-          {instance.dateHarvested && <p className="text-amber-600 dark:text-amber-400 font-semibold">Harvested: {new Date(instance.dateHarvested).toLocaleDateString()}</p>}
+          {instance.dateHarvested ? (
+            <p className="text-amber-600 dark:text-amber-400 font-semibold">Harvested: {new Date(instance.dateHarvested).toLocaleDateString()}</p>
+          ) : expectedHarvestDate ? (
+            <p className="text-primary-600 dark:text-primary-400 font-semibold">Est. Harvest: {expectedHarvestDate.toLocaleDateString()}</p>
+          ) : null}
             <p>Last watered: {new Date(instance.lastWatered).toLocaleDateString()}</p>
             <p>Last fed: {new Date(instance.lastFed).toLocaleDateString()}</p>
           </div>
