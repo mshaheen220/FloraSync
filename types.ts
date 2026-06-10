@@ -6,6 +6,13 @@ export interface User {
   imageUrl?: string;
   accesses?: { id: string, name: string, role: string }[];
   workspaceRole?: string;
+  theme?: string;
+  colorTheme?: string;
+  iconTheme?: string;
+  installedAddons?: string[];
+  activeAddons?: string[];
+  addonSettings?: Record<string, any>;
+  activeAddonManifests?: AddonManifest[];
 }
 
 export interface AddonAction {
@@ -38,8 +45,9 @@ export interface AddonManifest {
   description: string;
   author?: string;
   entryPoints?: string[];
+  requiresInternet?: boolean;
   installScript?: string;
-  uninstallScript: string;
+  uninstallScript?: string;
   executeScript?: string;
   settingsSchema?: AddonSettingField[];
   actions?: AddonAction[];
@@ -50,10 +58,6 @@ export interface GardenProfile {
   id: string;
   name: string;
   imageUrl?: string;
-  installedAddons?: string[];
-  activeAddons?: string[];
-  addonSettings?: Record<string, any>;
-  activeAddonManifests?: AddonManifest[];
 }
 
 export interface Workspace {

@@ -10,9 +10,10 @@ interface GardenVitalityProps {
   mostPopulatedZone: { name: string; id: string | null };
   onNavigateInventory: () => void;
   onNavigateZone: (zoneId: string) => void;
+  showTopZone?: boolean;
 }
 
-export const GardenVitality: FC<GardenVitalityProps> = ({ averageHydration, averageNutrition, trackedCount, activeCount, mostPopulatedZone, onNavigateInventory, onNavigateZone }) => {
+export const GardenVitality: FC<GardenVitalityProps> = ({ averageHydration, averageNutrition, trackedCount, activeCount, mostPopulatedZone, onNavigateInventory, onNavigateZone, showTopZone = true }) => {
   return (
     <section className="mb-8 animate-in fade-in duration-500 delay-100">
       <Subtitle>Garden Vitality</Subtitle>
@@ -39,18 +40,20 @@ export const GardenVitality: FC<GardenVitalityProps> = ({ averageHydration, aver
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Active Plants</span>
           <span className="text-[9px] font-semibold text-slate-400/70 dark:text-slate-500 mt-1">{activeCount} in inventory</span>
         </Card>
-        <Card 
-          className={`!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between transition-colors ${mostPopulatedZone.id ? 'cursor-pointer hover:border-primary-300 dark:hover:border-primary-700' : ''}`}
-          onClick={() => mostPopulatedZone.id && onNavigateZone(mostPopulatedZone.id)}
-        >
-          <div className="flex items-center gap-4">
-            <div className="text-indigo-500 dark:text-indigo-400"><Icon name="map-pin" size={32} /></div>
-            <div className="text-left">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
-              <span className="text-lg font-bold text-primary-800 dark:text-primary-200">{mostPopulatedZone.name}</span>
+        {showTopZone && (
+          <Card 
+            className={`!p-4 !mb-0 col-span-2 flex flex-row items-center justify-between transition-colors ${mostPopulatedZone.id ? 'cursor-pointer hover:border-primary-300 dark:hover:border-primary-700' : ''}`}
+            onClick={() => mostPopulatedZone.id && onNavigateZone(mostPopulatedZone.id)}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-indigo-500 dark:text-indigo-400"><Icon name="map-pin" size={32} /></div>
+              <div className="text-left">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-0.5">Top Zone</span>
+                <span className="text-lg font-bold text-primary-800 dark:text-primary-200">{mostPopulatedZone.name}</span>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </div>
     </section>
   );

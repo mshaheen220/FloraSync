@@ -5,6 +5,7 @@ export type Permission =
   | 'manage_garden_access'   // Manage users for a specific garden
   | 'manage_garden_settings' // Edit garden profile (name, image)
   | 'manage_dictionary'      // Add/edit/delete plant archetypes
+  | 'manage_addons'          // Add/edit/delete add-ons
   | 'manage_spaces'          // Add/edit/delete locations and zones
   | 'manage_inventory'       // Add/delete plant instances
   | 'perform_actions'        // Water, feed, add journal entries

@@ -1,5 +1,6 @@
-import { useMemo, FC } from 'react';
-import { Container } from '../../styles/StyledElements';
+import { useMemo, FC, useState, useEffect, Suspense } from 'react';
+import { Container, Card } from '../../styles/StyledElements';
+import { Icon } from '../common/Icon';
 import { GardenPulse } from './dashboard/GardenPulse';
 import { HealthWatchlist } from './dashboard/HealthWatchlist';
 import { RandomSpotlight } from './dashboard/RandomSpotlight';
@@ -12,6 +13,49 @@ import { UrgentLocationCare } from './dashboard/UrgentLocationCare';
 import { NeedsWatering } from './dashboard/NeedsWatering';
 import { HungryPlants } from './dashboard/HungryPlants';
 import { useGarden } from '../../contexts/GardenContext';
+import { User } from '../../../types';
+
+const widgetModules = import.meta.glob('../../../addons/*/execute.js');
+
+const DashboardAddonWidget: FC<{ manifest: any; currentUser: User }> = ({ manifest, currentUser }) => {
+  const [Component, setComponent] = useState<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadWidget = async () => {
+      const path = `../../../addons/${manifest.id}/execute.js`;
+      if (widgetModules[path]) {
+        try {
+          const module = (await widgetModules[path]()) as any;
+          if (isMounted && module.components?.dashboard) {
+            setComponent(() => module.components.dashboard);
+          }
+        } catch (e) {
+          console.error(`Failed to load widget for addon: ${manifest.id}`, e);
+        }
+      }
+    };
+    loadWidget();
+    return () => { isMounted = false; };
+  }, [manifest.id]);
+
+  if (!Component) return <Card className="animate-pulse flex items-center justify-center p-6 text-sm font-bold text-slate-400">Loading Widget...</Card>;
+
+  const defaultSettings = manifest.settingsSchema?.reduce((acc: any, field: any) => {
+    acc[field.key] = field.defaultValue;
+    return acc;
+  }, {} as Record<string, any>) || {};
+
+  const settings = { ...defaultSettings, ...(currentUser.addonSettings?.[manifest.id] || {}) };
+
+  return (
+    <div className="mb-4">
+      <Suspense fallback={<Card className="animate-pulse flex items-center justify-center p-6 text-sm font-bold text-slate-400">Loading Widget...</Card>}>
+        <Component settings={settings} />
+      </Suspense>
+    </div>
+  );
+};
 
 interface DashboardProps {
   onNavigate: (qrId: string) => void;
@@ -29,6 +73,106 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
 
   const trackedInstances = useMemo(() => activeInstances.filter(i => !i.untracked), [activeInstances]);
+
+  // Persist dashboard layout preferences per user
+  const [hiddenWidgets, setHiddenWidgets] = useState<string[]>(() => {
+    if (!currentUser?.id) return [];
+    const saved = localStorage.getItem(`florasync_hidden_widgets_${currentUser.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isCustomizing, setIsCustomizing] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      const saved = localStorage.getItem(`florasync_hidden_widgets_${currentUser.id}`);
+      if (saved) setHiddenWidgets(JSON.parse(saved));
+    }
+  }, [currentUser?.id]);
+
+  const toggleWidget = (id: string) => {
+    const updated = hiddenWidgets.includes(id) 
+      ? hiddenWidgets.filter(w => w !== id) 
+      : [...hiddenWidgets, id];
+    setHiddenWidgets(updated);
+    if (currentUser?.id) {
+      localStorage.setItem(`florasync_hidden_widgets_${currentUser.id}`, JSON.stringify(updated));
+    }
+  };
+
+  const defaultWidgets = useMemo(() => {
+    const addons = (currentUser?.activeAddonManifests || [])
+      .filter(m => m.entryPoints?.includes('dashboard'))
+      .map(m => ({ id: `addon_${m.id}`, label: m.name }));
+      
+    return [
+      ...addons,
+      { id: 'spotlight', label: 'Random Spotlight' },
+      { id: 'harvest', label: 'Approaching Harvest' },
+      { id: 'nursery', label: 'The Nursery' },
+      { id: 'health', label: 'Health Watchlist' },
+      { id: 'urgent', label: 'Urgent Location Care' },
+      { id: 'water', label: 'Needs Watering' },
+      { id: 'feed', label: 'Hungry Plants' },
+      { id: 'pulse', label: 'Garden Pulse' }
+    ];
+  }, [currentUser?.activeAddonManifests]);
+
+  const [widgetOrder, setWidgetOrder] = useState<string[]>(() => {
+    if (!currentUser?.id) return [];
+    const saved = localStorage.getItem(`florasync_widget_order_${currentUser.id}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    setWidgetOrder(prevOrder => {
+      const currentIds = defaultWidgets.map(w => w.id);
+      let newOrder = [...prevOrder];
+      currentIds.forEach(id => {
+        if (!newOrder.includes(id)) newOrder.push(id);
+      });
+      newOrder = newOrder.filter(id => currentIds.includes(id));
+      if (JSON.stringify(newOrder) !== JSON.stringify(prevOrder)) {
+        if (currentUser?.id) localStorage.setItem(`florasync_widget_order_${currentUser.id}`, JSON.stringify(newOrder));
+        return newOrder;
+      }
+      return prevOrder;
+    });
+  }, [defaultWidgets, currentUser?.id]);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    if (!draggedId || draggedId === id) return;
+    const draggedIndex = widgetOrder.indexOf(draggedId);
+    const targetIndex = widgetOrder.indexOf(id);
+    if (draggedIndex !== -1 && targetIndex !== -1) {
+      const newOrder = [...widgetOrder];
+      newOrder.splice(draggedIndex, 1);
+      newOrder.splice(targetIndex, 0, draggedId);
+      setWidgetOrder(newOrder);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    if (currentUser?.id) localStorage.setItem(`florasync_widget_order_${currentUser.id}`, JSON.stringify(widgetOrder));
+  };
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const newOrder = [...widgetOrder];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newOrder.length) return;
+    [newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]];
+    setWidgetOrder(newOrder);
+    if (currentUser?.id) localStorage.setItem(`florasync_widget_order_${currentUser.id}`, JSON.stringify(newOrder));
+  };
 
   // Attention Queue sorting engine logic calculating actual time distance against care intervals
   const attentionQueue = useMemo(() => {
@@ -141,45 +285,85 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
         mostPopulatedZone={mostPopulatedZone} 
         onNavigateInventory={onNavigateInventory} 
         onNavigateZone={onNavigateZone} 
+        showTopZone={false}
       />
 
-      <RandomSpotlight activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />
+      {widgetOrder.map(id => {
+        if (hiddenWidgets.includes(id)) return null;
 
-      <ApproachingHarvest 
-        activeInstances={activeInstances} 
-        archetypes={archetypes} 
-        onNavigate={onNavigate} 
-      />
+        if (id.startsWith('addon_')) {
+          const manifestId = id.replace('addon_', '');
+          const manifest = currentUser?.activeAddonManifests?.find(m => m.id === manifestId);
+          if (!manifest) return null;
+          return <DashboardAddonWidget key={id} manifest={manifest} currentUser={currentUser!} />;
+        }
 
-      <Nursery 
-        activeInstances={activeInstances} 
-        archetypes={archetypes} 
-        onNavigate={onNavigate} 
-      />
+        switch (id) {
+          case 'spotlight': return <RandomSpotlight key={id} activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />;
+          case 'harvest': return <ApproachingHarvest key={id} activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />;
+          case 'nursery': return <Nursery key={id} activeInstances={activeInstances} archetypes={archetypes} onNavigate={onNavigate} />;
+          case 'health': return <HealthWatchlist key={id} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />;
+          case 'urgent': return <UrgentLocationCare key={id} overdueLocations={overdueLocations} zones={zones} currentUser={currentUser!} onBatchWater={onBatchWaterLocation} />;
+          case 'water': return <NeedsWatering key={id} overduePlants={overduePlants} onNavigate={onNavigate} />;
+          case 'feed': return <HungryPlants key={id} trackedInstances={trackedInstances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />;
+          case 'pulse': return <GardenPulse key={id} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />;
+          default: return null;
+        }
+      })}
 
-      <HealthWatchlist instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />
-
-      <UrgentLocationCare 
-        overdueLocations={overdueLocations} 
-        zones={zones} 
-        currentUser={currentUser!} 
-        onBatchWater={onBatchWaterLocation} 
-      />
-
-      <NeedsWatering 
-        overduePlants={overduePlants} 
-        onNavigate={onNavigate} 
-      />
-
-      <HungryPlants 
-        trackedInstances={trackedInstances} 
-        archetypes={archetypes} 
-        locations={locations} 
-        zones={zones} 
-        onNavigate={onNavigate} 
-      />
-
-      <GardenPulse instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />
+      {/* Customization Panel */}
+      <div className="mt-8 mb-4 border-t border-surface-200 dark:border-surface-800 pt-4">
+        <button 
+          onClick={() => setIsCustomizing(!isCustomizing)}
+          className="w-full flex items-center justify-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors uppercase tracking-wider py-2"
+        >
+          <Icon name="settings" size={14} /> 
+          {isCustomizing ? 'Done Customizing' : 'Customize Dashboard'}
+        </button>
+        
+        {isCustomizing && (
+          <Card className="mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100 mb-3">Visible Sections</h3>
+            <div className="flex flex-col gap-2">
+              {widgetOrder.map((id, index) => {
+                const widget = defaultWidgets.find(w => w.id === id);
+                if (!widget) return null;
+                return (
+                  <div 
+                    key={id} 
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, id)}
+                    onDragOver={(e) => handleDragOver(e, id)}
+                    onDragEnd={handleDragEnd}
+                    className={`flex items-center gap-3 p-3 rounded-xl border ${draggedId === id ? 'opacity-50 border-primary-500 border-dashed bg-primary-50/50 dark:bg-primary-900/10' : 'border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800/50'} transition-all`}
+                  >
+                    <div className="cursor-grab active:cursor-grabbing text-slate-400 touch-none flex items-center justify-center p-1 -ml-1">
+                      <Icon name="grip-vertical" size={18} />
+                    </div>
+                    <label className="flex flex-1 items-center gap-3 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={!hiddenWidgets.includes(id)} 
+                        onChange={() => toggleWidget(id)}
+                        className="accent-emerald-600 w-5 h-5 cursor-pointer rounded"
+                      />
+                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{widget.label}</span>
+                    </label>
+                    <div className="flex flex-col gap-1">
+                      <button onClick={() => handleMove(index, 'up')} disabled={index === 0} className="text-slate-400 hover:text-primary-500 disabled:opacity-20 disabled:hover:text-slate-400 p-1 bg-white dark:bg-slate-800 rounded-md shadow-sm border border-surface-200 dark:border-surface-700 transition-colors">
+                        <Icon name="chevron-up" size={14} />
+                      </button>
+                      <button onClick={() => handleMove(index, 'down')} disabled={index === widgetOrder.length - 1} className="text-slate-400 hover:text-primary-500 disabled:opacity-20 disabled:hover:text-slate-400 p-1 bg-white dark:bg-slate-800 rounded-md shadow-sm border border-surface-200 dark:border-surface-700 transition-colors">
+                        <Icon name="chevron-down" size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        )}
+      </div>
     </Container>
   );
 };

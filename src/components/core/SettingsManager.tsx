@@ -7,6 +7,7 @@ import { AccountSettings } from '../core/settings/AccountSettings';
 import { UserAdministration } from '../core/settings/UserAdministration';
 import { PageHeader } from '../common/PageHeader';
 import { hasPermission } from '../../utils/permissions';
+import { AddonManager } from './settings/AddonManager';
 
 const SettingsSection: FC<{ title: string; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, isExpanded, onToggle, children }) => (
   <div className="border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0">
@@ -77,6 +78,13 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
           <DataImport token={token} showToast={showToast} />
         </SettingsSection>
       )}
+
+      <SettingsSection title="Add-ons & Plugins" isExpanded={expandedSettings.includes('addons')} onToggle={() => toggleSetting('addons')}>
+        <AddonManager 
+          currentUser={currentUser || null} 
+          token={token}
+        />
+      </SettingsSection>
 
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>

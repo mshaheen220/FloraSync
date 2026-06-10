@@ -1,0 +1,18 @@
+{
+  "id": "health-and-pruning",
+  "name": "Health & Pruning Tracker",
+  "version": "1.0.7",
+  "description": "Advanced logging for plant condition, pruning sessions, and rescue plans.",
+  "author": "Michael Shaheen",
+  "entryPoints": ["plant_detail_action", "journal_entry_type"],
+  "installScript": "setup.js",
+  "uninstallScript": "uninstall.js",
+  "executeScript": "execute.js",
+  "settingsSchema": [
+    { "key": "enableRescuePlans", "label": "Enable Rescue Plans", "type": "boolean", "defaultValue": true },
+    { "key": "defaultCondition", "label": "Default Condition Score", "type": "number", "defaultValue": 5 }
+  ],
+  "actions": [
+    { "id": "log-pruning", "label": "✂️ Prune", "entryPoint": "plant_detail_action" }
+  ]
+}
