@@ -79,14 +79,12 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
         </SettingsSection>
       )}
 
-      {hasPermission(currentUser, 'manage_addons') && (
-        <SettingsSection title="Add-ons & Plugins" isExpanded={expandedSettings.includes('addons')} onToggle={() => toggleSetting('addons')}>
-          <AddonManager 
-            gardenProfile={gardenProfile || null} 
-            token={token}
-          />
-        </SettingsSection>
-      )}
+      <SettingsSection title="Add-ons & Plugins" isExpanded={expandedSettings.includes('addons')} onToggle={() => toggleSetting('addons')}>
+        <AddonManager 
+          currentUser={currentUser || null} 
+          token={token}
+        />
+      </SettingsSection>
 
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>

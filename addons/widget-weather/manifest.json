@@ -1,0 +1,26 @@
+{
+  "id": "widget-weather",
+  "name": "Weather Widget",
+  "version": "1.5.0",
+  "description": "Provides hyper-local, garden-specific weather insights, alerts, and soil metrics using data from Open-Meteo.",
+  "author": "Michael Shaheen",
+  "entryPoints": [
+    "dashboard"
+  ],
+  "requiresInternet": true,
+  "executeScript": "execute.js",
+  "settingsSchema": [
+    {
+      "key": "latitude",
+      "label": "Latitude",
+      "type": "number",
+      "defaultValue": 40.689156
+    },
+    {
+      "key": "longitude",
+      "label": "Longitude",
+      "type": "number",
+      "defaultValue": -80.041077
+    }
+  ]
+}

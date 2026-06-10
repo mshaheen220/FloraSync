@@ -6,21 +6,13 @@ export interface User {
   imageUrl?: string;
   accesses?: { id: string, name: string, role: string }[];
   workspaceRole?: string;
-}
-
-export interface AddonManifest {
-  id: string;
-  name: string;
-  version: string;
-  description: string;
-  author?: string;
-  entryPoints?: string[]; // e.g. ['plant_detail_action', 'dashboard_widget']
-  installScript?: string; // e.g. 'installHealthTracker'
-  uninstallScript: string; // e.g. 'uninstallHealthTracker' (Required for cleanup)
-  executeScript?: string; // e.g. 'execute.js' (Handles dynamic actions)
-  settingsSchema?: AddonSettingField[];
-  actions?: AddonAction[];
-  journalActivityTypes?: JournalActivityType[];
+  theme?: string;
+  colorTheme?: string;
+  iconTheme?: string;
+  installedAddons?: string[];
+  activeAddons?: string[];
+  addonSettings?: Record<string, any>;
+  activeAddonManifests?: AddonManifest[];
 }
 
 export interface AddonAction {
@@ -43,15 +35,6 @@ export interface JournalActivityType {
   badgeLabel: string;
   isRoutine?: boolean;
   isHidden?: boolean;
-  iconUrl?: string; // Optional path to a custom image/SVG
-}
-
-export interface AddonSettingField {
-  key: string;
-  label: string;
-  type: 'string' | 'number' | 'boolean' | 'select';
-  options?: string[]; // Used if type is 'select'
-  defaultValue: any;
   iconUrl?: string;
 }
 
@@ -62,8 +45,9 @@ export interface AddonManifest {
   description: string;
   author?: string;
   entryPoints?: string[];
+  requiresInternet?: boolean;
   installScript?: string;
-  uninstallScript: string;
+  uninstallScript?: string;
   executeScript?: string;
   settingsSchema?: AddonSettingField[];
   actions?: AddonAction[];
@@ -74,10 +58,6 @@ export interface GardenProfile {
   id: string;
   name: string;
   imageUrl?: string;
-  installedAddons?: string[];
-  activeAddons?: string[];
-  addonSettings?: Record<string, any>;
-  activeAddonManifests?: AddonManifest[];
 }
 
 export interface Workspace {

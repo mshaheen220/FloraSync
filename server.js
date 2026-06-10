@@ -102,6 +102,11 @@ try {
 try {
   db.exec('ALTER TABLE users ADD COLUMN icon_theme TEXT;');
 } catch (err) {}
+try {
+  db.exec("ALTER TABLE users ADD COLUMN installed_addons TEXT DEFAULT '[]';");
+  db.exec("ALTER TABLE users ADD COLUMN active_addons TEXT DEFAULT '[]';");
+  db.exec("ALTER TABLE users ADD COLUMN addon_settings TEXT DEFAULT '{}';");
+} catch (err) {}
 
 // Auto-create shared dictionary row if missing
 const dictStmt = db.prepare('SELECT id FROM shared_dictionary WHERE id = 1');
@@ -560,21 +565,24 @@ app.get('/api/state', authenticateToken, (req, res) => {
       if (!access && req.user.role === 'god-admin') access = { role: 'admin' };
     }
 
-    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id, theme, color_theme, icon_theme FROM users WHERE id = ?').get(req.user.id);
+    const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id, theme, color_theme, icon_theme, installed_addons, active_addons, addon_settings FROM users WHERE id = ?').get(req.user.id);
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
-    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue, installed_addons, active_addons, addon_settings FROM gardens WHERE id = ?').get(requestedGardenId);
+    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue FROM gardens WHERE id = ?').get(requestedGardenId);
 
     const safeParse = (str, fallback) => {
       if (!str || str === 'undefined') return fallback;
       try { return JSON.parse(str); } catch (e) { return fallback; }
     };
 
-    const activeAddonsIds = safeParse(garden?.active_addons, []);
+    const activeAddonsIds = safeParse(userRow?.active_addons, []);
     const activeAddonsManifests = [];
     for (const addonId of activeAddonsIds) {
       const manifestPath = path.join(PLUGINS_DIR, addonId, 'manifest.json');
+      const builtInPath = path.join(ROOT_DIR, 'addons', addonId, 'manifest.json');
       if (fs.existsSync(manifestPath)) {
          try { activeAddonsManifests.push(JSON.parse(fs.readFileSync(manifestPath, 'utf8'))); } catch (e) {}
+      } else if (fs.existsSync(builtInPath)) {
+         try { activeAddonsManifests.push(JSON.parse(fs.readFileSync(builtInPath, 'utf8'))); } catch (e) {}
       }
     }
 
@@ -588,16 +596,16 @@ app.get('/api/state', authenticateToken, (req, res) => {
         workspaceRole: access?.role || 'viewer',
         theme: userRow.theme,
         colorTheme: userRow.color_theme,
-        iconTheme: userRow.icon_theme
+        iconTheme: userRow.icon_theme,
+        installedAddons: safeParse(userRow.installed_addons, []),
+        activeAddons: activeAddonsIds,
+        addonSettings: safeParse(userRow.addon_settings, {}),
+        activeAddonManifests: activeAddonsManifests
       } : null,
       garden: garden ? {
         id: garden.id,
         name: garden.name,
-        imageUrl: garden.image_url || '',
-        installedAddons: safeParse(garden.installed_addons, []),
-        activeAddons: activeAddonsIds,
-        addonSettings: safeParse(garden.addon_settings, {}),
-        activeAddonManifests: activeAddonsManifests
+        imageUrl: garden.image_url || ''
       } : null,
       archetypes: safeParse(dict?.archetypes, []), 
       instances: safeParse(garden?.instances, []), 
@@ -653,10 +661,22 @@ const validatePluginManifest = (manifest) => {
 };
 
 app.post('/api/addons/install', authenticateToken, async (req, res) => {
-  const { zipData } = req.body;
-  if (!zipData) return res.status(400).json({ error: 'No plugin package provided.' });
+  const { zipData, manifest: providedManifest } = req.body;
+  if (!zipData && !providedManifest) return res.status(400).json({ error: 'No plugin package provided.' });
   
   try {
+    const userRow = db.prepare('SELECT installed_addons FROM users WHERE id = ?').get(req.user.id);
+    const addons = JSON.parse(userRow?.installed_addons || '[]');
+
+    // Handle official/built-in plugins that don't require ZIP extraction
+    if (!zipData && providedManifest) {
+      if (!addons.includes(providedManifest.id)) {
+        addons.push(providedManifest.id);
+        db.prepare('UPDATE users SET installed_addons = ? WHERE id = ?').run(JSON.stringify(addons), req.user.id);
+      }
+      return res.json({ success: true, installedAddons: addons, manifest: providedManifest });
+    }
+
     // 1. Unpack the ZIP in memory and locate the manifest
     const buffer = Buffer.from(zipData, 'base64');
     const zip = new AdmZip(buffer);
@@ -673,15 +693,6 @@ app.post('/api/addons/install', authenticateToken, async (req, res) => {
     if (!validation.valid) return res.status(400).json({ error: validation.error });
 
     const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
-    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
-    
-    if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
-      return res.status(403).json({ error: 'Only owners can manage add-ons.' });
-    }
-
-    const garden = db.prepare('SELECT installed_addons FROM gardens WHERE id = ?').get(gardenId);
-    const addons = JSON.parse(garden?.installed_addons || '[]');
     
     // 2. Smartly extract the plugin files (Flattens top-level folders if the user zipped a folder)
     const targetDir = path.join(PLUGINS_DIR, manifest.id);
@@ -700,7 +711,7 @@ app.post('/api/addons/install', authenticateToken, async (req, res) => {
 
     if (!addons.includes(manifest.id)) {
       addons.push(manifest.id);
-      db.prepare('UPDATE gardens SET installed_addons = ? WHERE id = ?').run(JSON.stringify(addons), gardenId);
+      db.prepare('UPDATE users SET installed_addons = ? WHERE id = ?').run(JSON.stringify(addons), req.user.id);
     }
 
     // 3. Always run the install script on upload so developers can test logic without uninstalling
@@ -730,21 +741,15 @@ app.post('/api/addons/uninstall', authenticateToken, async (req, res) => {
 
   try {
     const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
-    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
-    
-    if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
-      return res.status(403).json({ error: 'Only owners can manage add-ons.' });
-    }
 
-    const garden = db.prepare('SELECT installed_addons, active_addons FROM gardens WHERE id = ?').get(gardenId);
-    let installed = JSON.parse(garden?.installed_addons || '[]');
-    let active = JSON.parse(garden?.active_addons || '[]');
+    const userRow = db.prepare('SELECT installed_addons, active_addons FROM users WHERE id = ?').get(req.user.id);
+    let installed = JSON.parse(userRow?.installed_addons || '[]');
+    let active = JSON.parse(userRow?.active_addons || '[]');
     
     if (installed.includes(addonId)) {
       installed = installed.filter(id => id !== addonId);
       active = active.filter(id => id !== addonId);
-      db.prepare('UPDATE gardens SET installed_addons = ?, active_addons = ? WHERE id = ?').run(JSON.stringify(installed), JSON.stringify(active), gardenId);
+      db.prepare('UPDATE users SET installed_addons = ?, active_addons = ? WHERE id = ?').run(JSON.stringify(installed), JSON.stringify(active), req.user.id);
       
       const targetDir = path.join(PLUGINS_DIR, manifest.id);
       if (manifest.uninstallScript) {
@@ -771,12 +776,11 @@ app.post('/api/addons/uninstall', authenticateToken, async (req, res) => {
 app.post('/api/addons/activate', authenticateToken, (req, res) => {
   const { addonId } = req.body;
   try {
-    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const garden = db.prepare('SELECT active_addons FROM gardens WHERE id = ?').get(gardenId);
-    const active = JSON.parse(garden?.active_addons || '[]');
+    const userRow = db.prepare('SELECT active_addons FROM users WHERE id = ?').get(req.user.id);
+    const active = JSON.parse(userRow?.active_addons || '[]');
     if (!active.includes(addonId)) {
       active.push(addonId);
-      db.prepare('UPDATE gardens SET active_addons = ? WHERE id = ?').run(JSON.stringify(active), gardenId);
+      db.prepare('UPDATE users SET active_addons = ? WHERE id = ?').run(JSON.stringify(active), req.user.id);
     }
     res.json({ success: true, activeAddons: active });
   } catch (err) {
@@ -787,11 +791,10 @@ app.post('/api/addons/activate', authenticateToken, (req, res) => {
 app.post('/api/addons/deactivate', authenticateToken, (req, res) => {
   const { addonId } = req.body;
   try {
-    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const garden = db.prepare('SELECT active_addons FROM gardens WHERE id = ?').get(gardenId);
-    let active = JSON.parse(garden?.active_addons || '[]');
+    const userRow = db.prepare('SELECT active_addons FROM users WHERE id = ?').get(req.user.id);
+    let active = JSON.parse(userRow?.active_addons || '[]');
     active = active.filter(id => id !== addonId);
-    db.prepare('UPDATE gardens SET active_addons = ? WHERE id = ?').run(JSON.stringify(active), gardenId);
+    db.prepare('UPDATE users SET active_addons = ? WHERE id = ?').run(JSON.stringify(active), req.user.id);
     res.json({ success: true, activeAddons: active });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error.' });
@@ -802,9 +805,13 @@ app.post('/api/addons/execute', authenticateToken, async (req, res) => {
   const { addonId, actionId, contextData } = req.body;
   try {
     const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const targetDir = path.join(PLUGINS_DIR, addonId);
+    let targetDir = path.join(PLUGINS_DIR, addonId);
     
-    const manifestPath = path.join(targetDir, 'manifest.json');
+    let manifestPath = path.join(targetDir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+      targetDir = path.join(ROOT_DIR, 'addons', addonId);
+      manifestPath = path.join(targetDir, 'manifest.json');
+    }
     if (!fs.existsSync(manifestPath)) return res.status(404).json({ error: 'Plugin not found.' });
     
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
@@ -829,11 +836,10 @@ app.post('/api/addons/execute', authenticateToken, async (req, res) => {
 app.post('/api/addons/settings', authenticateToken, (req, res) => {
   const { addonId, settings } = req.body;
   try {
-    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
-    const garden = db.prepare('SELECT addon_settings FROM gardens WHERE id = ?').get(gardenId);
-    const allSettings = JSON.parse(garden?.addon_settings || '{}');
+    const userRow = db.prepare('SELECT addon_settings FROM users WHERE id = ?').get(req.user.id);
+    const allSettings = JSON.parse(userRow?.addon_settings || '{}');
     allSettings[addonId] = settings;
-    db.prepare('UPDATE gardens SET addon_settings = ? WHERE id = ?').run(JSON.stringify(allSettings), gardenId);
+    db.prepare('UPDATE users SET addon_settings = ? WHERE id = ?').run(JSON.stringify(allSettings), req.user.id);
     res.json({ success: true, addonSettings: allSettings });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error.' });
