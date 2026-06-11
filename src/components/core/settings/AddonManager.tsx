@@ -2,6 +2,7 @@ import { FC, useState, FormEvent, useRef, ReactNode } from 'react';
 import { Card, Button, Input, Toast } from '../../../styles/StyledElements';
 import { AddonManifest, User } from '../../../../types';
 import { Icon } from '../../common/Icon';
+import JSZip from 'jszip';
 
 // Local registry for the MVP. Later, this could be fetched from the server.
 const AVAILABLE_ADDONS: AddonManifest[] = [
@@ -145,7 +146,6 @@ export const AddonManager: FC<AddonManagerProps> = ({
 
     // Pre-validate the ZIP to ensure it doesn't overwrite an official system package
     try {
-      const JSZip = (await import('jszip')).default;
       const zip = await JSZip.loadAsync(file);
       const manifestFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith('manifest.json') && !f.name.includes('__MACOSX'));
       if (manifestFile) {

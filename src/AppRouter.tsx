@@ -12,6 +12,7 @@ import { InventoryManager } from './components/inventory/InventoryManager';
 import { LocationDetail } from './components/spaces/LocationDetail';
 import { ZoneDetail } from './components/spaces/ZoneDetail';
 import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
+import { GlobalJournal } from './components/inventory/GlobalJournal';
 import { LoginScreen } from './components/core/LoginScreen';
 import { HelpCenter } from './components/core/HelpCenter';
 import { PrintCenter } from './components/core/settings/PrintCenter';
@@ -62,7 +63,7 @@ export const AppRouter: FC<AppRouterProps> = ({
 }) => {
   const { locations } = useGarden();
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print' | 'journal'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -102,7 +103,7 @@ export const AppRouter: FC<AppRouterProps> = ({
       setActiveZone(decodeURIComponent(id));
       setInitialAction(action || null);
       setCurrentView('zoneDetail');
-    } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print'].includes(type)) {
+    } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print', 'journal'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
@@ -266,6 +267,10 @@ export const AppRouter: FC<AppRouterProps> = ({
       if (isAdminOrOwner) {
         return <PrintCenter token={token} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
       }
+    }
+
+    if (currentView === 'journal') {
+      return <GlobalJournal onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} onNavigatePlant={handleNavigate} />;
     }
 
     return (

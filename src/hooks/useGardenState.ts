@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, User } from '../../types';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, User, JournalEntry } from '../../types';
 
 export function useGardenState(currentUser: User | null) {
   const [instances, setInstances] = useState<PlantInstance[]>([]);
@@ -7,6 +7,7 @@ export function useGardenState(currentUser: User | null) {
   const [locations, setLocations] = useState<Location[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [printQueue, setPrintQueue] = useState<PrintQueueItem[]>([]);
+  const [gardenJournal, setGardenJournal] = useState<JournalEntry[]>([]);
 
   const handleQueuePrint = useCallback((targetId: string, type: 'plant' | 'location' | 'zone', title: string, subtitle: string, action: 'none' | 'water' | 'feed' = 'none') => {
     setPrintQueue(prev => {
@@ -292,6 +293,7 @@ export function useGardenState(currentUser: User | null) {
     locations, setLocations,
     zones, setZones,
     printQueue, setPrintQueue,
+    gardenJournal, setGardenJournal,
     
     handleQueuePrint,
     handleBatchWater,

@@ -118,6 +118,8 @@ export interface JournalEntry {
   authorName?: string;
   authorImageUrl?: string;
   batchScope?: string;
+  targetId?: string;
+  targetType?: 'plant' | 'location' | 'zone' | 'garden';
 }
 
 export interface PlantInstance {

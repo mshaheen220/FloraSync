@@ -25,7 +25,8 @@ export const App: FC = () => {
     gardenState.archetypes, gardenState.setArchetypes,
     gardenState.locations, gardenState.setLocations,
     gardenState.zones, gardenState.setZones,
-    gardenState.printQueue, gardenState.setPrintQueue
+    gardenState.printQueue, gardenState.setPrintQueue,
+    gardenState.gardenJournal, gardenState.setGardenJournal
   );
 
   // Track the active icon theme and persist it between sessions
@@ -111,6 +112,8 @@ export const App: FC = () => {
     zones: gardenState.zones,
     printQueue: gardenState.printQueue,
     setPrintQueue: gardenState.setPrintQueue,
+    gardenJournal: gardenState.gardenJournal,
+    setGardenJournal: gardenState.setGardenJournal,
     currentUser: auth.currentUser,
     gardenProfile: sync.gardenProfile,
     

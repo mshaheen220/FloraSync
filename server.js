@@ -70,6 +70,7 @@ db.exec(`
     locations TEXT,
     zones TEXT,
     print_queue TEXT,
+    journal TEXT,
     image_url TEXT
   );
 `);
@@ -106,6 +107,9 @@ try {
   db.exec("ALTER TABLE users ADD COLUMN installed_addons TEXT DEFAULT '[]';");
   db.exec("ALTER TABLE users ADD COLUMN active_addons TEXT DEFAULT '[]';");
   db.exec("ALTER TABLE users ADD COLUMN addon_settings TEXT DEFAULT '{}';");
+} catch (err) {}
+try {
+  db.exec("ALTER TABLE gardens ADD COLUMN journal TEXT DEFAULT '[]';");
 } catch (err) {}
 
 // Auto-create shared dictionary row if missing
@@ -567,7 +571,7 @@ app.get('/api/state', authenticateToken, (req, res) => {
 
     const userRow = db.prepare('SELECT id, username, role, name, image_url, garden_id, theme, color_theme, icon_theme, installed_addons, active_addons, addon_settings FROM users WHERE id = ?').get(req.user.id);
     const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
-    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue FROM gardens WHERE id = ?').get(requestedGardenId);
+    const garden = db.prepare('SELECT id, name, image_url, instances, locations, zones, print_queue, journal FROM gardens WHERE id = ?').get(requestedGardenId);
 
     const safeParse = (str, fallback) => {
       if (!str || str === 'undefined') return fallback;
@@ -611,7 +615,8 @@ app.get('/api/state', authenticateToken, (req, res) => {
       instances: safeParse(garden?.instances, []), 
       locations: safeParse(garden?.locations, []), 
       zones: safeParse(garden?.zones, []),
-      printQueue: safeParse(garden?.print_queue, [])
+      printQueue: safeParse(garden?.print_queue, []),
+      gardenJournal: safeParse(garden?.journal, [])
     });
   } catch (err) {
     console.error('Error fetching state:', err);
@@ -630,8 +635,8 @@ app.post('/api/state', authenticateToken, (req, res) => {
       return res.status(403).json({ error: 'Viewers cannot modify the garden state.' });
     }
     
-    db.prepare('UPDATE gardens SET instances = ?, locations = ?, zones = ?, print_queue = ? WHERE id = ?')
-      .run(JSON.stringify(req.body.instances || []), JSON.stringify(req.body.locations || []), JSON.stringify(req.body.zones || []), JSON.stringify(req.body.printQueue || []), gardenId);
+    db.prepare('UPDATE gardens SET instances = ?, locations = ?, zones = ?, print_queue = ?, journal = ? WHERE id = ?')
+      .run(JSON.stringify(req.body.instances || []), JSON.stringify(req.body.locations || []), JSON.stringify(req.body.zones || []), JSON.stringify(req.body.printQueue || []), JSON.stringify(req.body.gardenJournal || []), gardenId);
 
     // 2. Only god-admin and owners can update the shared global dictionary
     if ((req.user.role === 'god-admin' || effectiveRole === 'owner') && req.body.archetypes) {

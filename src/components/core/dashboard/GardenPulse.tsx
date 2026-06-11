@@ -91,7 +91,7 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
           const isWater = entry.activityType === 'Watered';
           const isFeed = entry.activityType === 'Fed';
           const isHarvest = entry.activityType === 'Harvest' || entry.harvestAmount;
-          const isHealth = !!entry.healthIssues;
+          const isHealth = !!entry.healthIssues && entry.healthIssues !== 'None';
           
           const actionVerb = isWater ? 'watered' : isFeed ? 'fed' : isHarvest ? `harvested ${entry.harvestAmount ? `(${entry.harvestAmount}) ` : ''}from` : isHealth ? 'flagged a health issue on' : 'logged an entry for';
           const iconName: IconName = isWater ? 'water' : isFeed ? 'feed' : isHarvest ? 'apple' : isHealth ? 'alert' : 'pencil';
@@ -109,9 +109,9 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
                     <span>the <strong className="font-bold text-primary-700 dark:text-primary-400">{entry.plantName}</strong></span>
                   )}
                 </p>
-                {(entry.note || entry.healthIssues) && (
+                {(entry.note || isHealth) && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-1 italic">
-                    "{entry.healthIssues ? `Issue: ${entry.healthIssues}` : entry.note}"
+                    "{isHealth ? `Issue: ${entry.healthIssues}` : entry.note}"
                   </p>
                 )}
               </div>

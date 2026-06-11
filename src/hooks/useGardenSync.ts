@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, GardenProfile, Workspace, PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem } from '../../types';
+import { User, GardenProfile, Workspace, PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, JournalEntry } from '../../types';
 
 export function useGardenSync(
   token: string | null,
@@ -9,7 +9,8 @@ export function useGardenSync(
   archetypes: PlantArchetype[], setArchetypes: React.Dispatch<React.SetStateAction<PlantArchetype[]>>,
   locations: Location[], setLocations: React.Dispatch<React.SetStateAction<Location[]>>,
   zones: Zone[], setZones: React.Dispatch<React.SetStateAction<Zone[]>>,
-  printQueue: PrintQueueItem[], setPrintQueue: React.Dispatch<React.SetStateAction<PrintQueueItem[]>>
+  printQueue: PrintQueueItem[], setPrintQueue: React.Dispatch<React.SetStateAction<PrintQueueItem[]>>,
+  gardenJournal: JournalEntry[], setGardenJournal: React.Dispatch<React.SetStateAction<JournalEntry[]>>
 ) {
   const [isDbLoaded, setIsDbLoaded] = useState(false);
   const [initialLoadSuccess, setInitialLoadSuccess] = useState<boolean | null>(null);
@@ -25,6 +26,8 @@ export function useGardenSync(
       setArchetypes([]);
       setLocations([]);
       setZones([]);
+      setPrintQueue([]);
+      setGardenJournal([]);
       setIsDbLoaded(false);
       setGardenProfile(null);
       setInitialLoadSuccess(null);
@@ -89,6 +92,7 @@ export function useGardenSync(
         setZones(loadedZones);
         setLocations(loadedLocations);
         setPrintQueue(data.printQueue || []);
+        setGardenJournal(data.gardenJournal || []);
         
         setIsDbLoaded(true);
         setInitialLoadSuccess(true);
@@ -128,7 +132,7 @@ export function useGardenSync(
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ instances, archetypes, locations, zones, printQueue })
+        body: JSON.stringify({ instances, archetypes, locations, zones, printQueue, gardenJournal })
       })
       .then(res => {
         if (!res.ok) {
@@ -141,7 +145,7 @@ export function useGardenSync(
     }, 1500);
 
     return () => clearTimeout(syncTimeout);
-  }, [instances, archetypes, locations, zones, printQueue, isDbLoaded, currentUser, token, initialLoadSuccess]);
+  }, [instances, archetypes, locations, zones, printQueue, gardenJournal, isDbLoaded, currentUser, token, initialLoadSuccess]);
 
   const handleSwitchGarden = (gardenId: string) => {
     if (!token) return;
@@ -163,6 +167,7 @@ export function useGardenSync(
         setZones(data.zones || []);
         setLocations(data.locations || []);
         setPrintQueue(data.printQueue || []);
+        setGardenJournal(data.gardenJournal || []);
         setIsDbLoaded(true);
         setSyncStatus('synced');
       })

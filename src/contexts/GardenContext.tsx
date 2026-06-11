@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, User, GardenProfile } from '../../types';
+import { PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, User, GardenProfile, JournalEntry } from '../../types';
 
 export interface GardenContextType {
   // State Data
@@ -9,6 +9,8 @@ export interface GardenContextType {
   zones: Zone[];
   printQueue: PrintQueueItem[];
   setPrintQueue: React.Dispatch<React.SetStateAction<PrintQueueItem[]>>;
+  gardenJournal: JournalEntry[];
+  setGardenJournal: React.Dispatch<React.SetStateAction<JournalEntry[]>>;
   currentUser?: User | null;
   gardenProfile?: GardenProfile | null;
   

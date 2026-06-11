@@ -19,6 +19,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
   const [journalForm, setJournalForm] = useState<Partial<JournalEntry>>({});
   const [showRoutineCare, setShowRoutineCare] = useState(false);
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
+  const [displayLimit, setDisplayLimit] = useState(25);
 
   const allActivityTypes = useMemo(() => {
     const baseTypes: JournalActivityType[] = [
@@ -244,7 +245,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
 
       {visibleJournal.length > 0 ? (
         <div className="relative border-l-2 border-primary-200 dark:border-primary-800 ml-4 pl-6 space-y-6 mb-8 mt-2">
-          {visibleJournal.map(entry => (
+          {visibleJournal.slice(0, displayLimit).map(entry => (
             <div key={entry.id} className="relative">
               <div className="absolute -left-[31px] bg-primary-500 rounded-full w-4 h-4 ring-4 ring-slate-50 dark:ring-slate-900"></div>
               <div className="mb-1 flex items-center justify-between">
@@ -311,6 +312,14 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
               )}
             </div>
           ))}
+
+          {visibleJournal.length > displayLimit && (
+            <div className="flex justify-center mt-8 mb-2">
+              <Button $variant="secondary" onClick={() => setDisplayLimit(p => p + 25)} className="w-full sm:w-auto shadow-sm text-xs">
+                Load Older Entries
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <p className="text-sm text-slate-500 italic mt-2 mb-8">No journal entries to display.</p>
