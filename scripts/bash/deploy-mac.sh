@@ -2,8 +2,21 @@
 
 echo "🌿 FloraSync - Local Build & Transfer"
 
-# Allow a custom commit message as the first argument, or fallback to a default
-COMMIT_MSG=${1:-"Automated build and deployment"}
+# Handle commit message and version flags
+COMMIT_MSG="$1"
+if [[ "$COMMIT_MSG" == "--minor" || "$COMMIT_MSG" == "--major" || -z "$COMMIT_MSG" ]]; then
+  COMMIT_MSG="Automated build and deployment"
+fi
+
+VERSION_FLAG=""
+if [[ "$*" == *"--major"* ]]; then
+  VERSION_FLAG="--major"
+elif [[ "$*" == *"--minor"* ]]; then
+  VERSION_FLAG="--minor"
+fi
+
+# Bump the version BEFORE building the UI so the new version number is compiled into React
+node scripts/node/bump-app-version.js $VERSION_FLAG
 
 echo "1️⃣ Building the production UI..."
 npm run build

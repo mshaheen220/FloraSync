@@ -21,6 +21,8 @@ import { Theme } from './App';
 import { ColorTheme } from './hooks/useTheme';
 import { FloatingScannerButton } from './components/common/FloatingScannerButton';
 import { Icon, IconProvider, ELEGANT_THEME, MINIMALIST_THEME, BOHO_NATURE_THEME, SCIENCE_THEME, EMOJI_THEME } from './components/common/Icon';
+// @ts-ignore
+import packageJson from '../package.json';
 
 export interface AppRouterProps {
   currentUser: User | null;
@@ -333,6 +335,16 @@ export const AppRouter: FC<AppRouterProps> = ({
       {renderView()}
       {currentUser && token && isDbLoaded && initialLoadSuccess === true && currentView !== 'scanner' && (
         <FloatingScannerButton onClick={() => navigateTo('/scanner')} />
+      )}
+      {currentUser && token && currentView !== 'scanner' && (
+        <footer className="w-full pb-8 pt-4 flex flex-col items-center justify-center text-center opacity-70 hover:opacity-100 transition-opacity">
+          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+            <Icon name="sprout" size={12} /> FloraSync v{packageJson.version}
+          </p>
+          <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">
+            Built by <a href="https://michaelshaheen.com" target="_blank" rel="noopener noreferrer" className="text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 font-bold transition-colors">Michael Shaheen</a>
+          </p>
+        </footer>
       )}
     </IconProvider>
   );
