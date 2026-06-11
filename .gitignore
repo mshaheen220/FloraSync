@@ -34,3 +34,4 @@ dist.tar.gz
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
