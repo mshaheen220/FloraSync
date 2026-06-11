@@ -37,6 +37,11 @@ interface WeatherData {
     precipitation_probability: number[];
     weather_code: number[];
   };
+  daily?: {
+    time: string[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+  };
 }
 
 interface StatInfo {
@@ -85,7 +90,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       setLoading(true);
       setError(null);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.latitude}&longitude=${settings.longitude}&current=temperature_2m,weather_code,precipitation,shortwave_radiation,et0_fao_evapotranspiration,soil_temperature_6cm,soil_moisture_3_to_9cm,relative_humidity_2m,wind_speed_10m&hourly=precipitation,precipitation_probability,weather_code&past_hours=6&forecast_hours=12&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.latitude}&longitude=${settings.longitude}&current=temperature_2m,weather_code,precipitation,shortwave_radiation,et0_fao_evapotranspiration,soil_temperature_6cm,soil_moisture_3_to_9cm,relative_humidity_2m,wind_speed_10m&hourly=precipitation,precipitation_probability,weather_code&past_hours=6&forecast_hours=12&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
           const errorData = await res.json();
@@ -140,8 +145,11 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       } else if (heavyRainComing || futurePrecip > 0.3) {
         out_v = 'Heavy Rain'; out_t = 'Alert'; out_c = 'text-blue-500'; out_i = 'cloud-rain';
         descParts.push('Heavy rain expected later.');
-      } else if (futureMaxProb >= 30) {
+      } else if (futureMaxProb >= 60) {
         out_v = 'Rain Likely'; out_t = 'Watch'; out_c = 'text-blue-400'; out_i = 'cloud-drizzle';
+        descParts.push(`${Math.round(futureMaxProb)}% chance of rain later.`);
+      } else if (futureMaxProb >= 30) {
+        out_v = 'Chance of Rain'; out_t = 'Notice'; out_c = 'text-blue-400'; out_i = 'cloud-drizzle';
         descParts.push(`${Math.round(futureMaxProb)}% chance of rain later.`);
       } else if (pastPrecip > 0.05) {
         out_v = 'Recent Rain'; out_t = 'Wet'; out_c = 'text-blue-500'; out_i = 'droplets';
@@ -183,6 +191,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
     if (interp.soilT?.t === 'Cold') alerts.push({ text: "Soil temperatures are cold. Seed germination will be slow.", severity: 1, icon: "snowflake", color: "text-blue-500" });
     
     // Info Level (0)
+    if (interp.outlook?.v === 'Chance of Rain') alerts.push({ text: "There is a chance of rain later today. Check conditions before watering.", severity: 0, icon: "cloud-drizzle", color: "text-blue-400" });
     if (interp.outlook?.v === 'Recent Rain') alerts.push({ text: "Recent rainfall detected. Check soil moisture before adding more water.", severity: 0, icon: "droplet", color: "text-emerald-500" });
 
     if (alerts.length === 0) {
@@ -219,12 +228,37 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
 
       {weather && weatherInfo && (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-around text-center px-4 pt-4 pb-2">
+          <div className="flex items-center justify-between px-6 pt-4 pb-2">
             <div className="flex flex-col items-center gap-1">
               <Icon name={weatherInfo.icon} size={48} className="text-amber-500" />
-              <p className="text-xs text-slate-500 dark:text-slate-400">{weatherInfo.description}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">{weatherInfo.description}</p>
             </div>
-            <div className="text-5xl font-light text-slate-800 dark:text-slate-100">{Math.round(weather.current.temperature_2m)}°</div>
+            <div className="flex items-center gap-4">
+              <div className="text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tighter">
+                {Math.round(weather.current.temperature_2m)}°
+              </div>
+              {weather.daily && (
+                <div className="flex flex-col items-start gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 border-l border-surface-200 dark:border-surface-700 pl-4 py-1">
+                  <div className="flex items-center gap-1">
+                    <Icon name="up" size={12} className="text-red-400" /> <span className="w-5 text-left">{Math.round(weather.daily.temperature_2m_max[0])}°</span>
+                    <Icon name="down" size={12} className="text-blue-400 ml-1" /> <span className="w-5 text-left">{Math.round(weather.daily.temperature_2m_min[0])}°</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Icon name="cloud-rain" size={12} className="text-blue-400" /> 
+                    <span>{weather.hourly ? Math.max(...weather.hourly.precipitation_probability.slice(6)) : 0}% Rain</span>
+                  </div>
+                  {(weather.daily.temperature_2m_min[0] <= 32 || weather.current.temperature_2m <= 32) ? (
+                    <div className="flex items-center gap-1.5 text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded w-full">
+                      <Icon name="snowflake" size={10} /> Freeze Alert
+                    </div>
+                  ) : weather.daily.temperature_2m_max[0] >= 90 && (
+                    <div className="flex items-center gap-1.5 text-red-500 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded w-full">
+                      <Icon name="sun" size={10} /> Heat Alert
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
           <div 
