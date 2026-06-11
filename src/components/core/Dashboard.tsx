@@ -1,4 +1,4 @@
-import { useMemo, FC, useState, useEffect, Suspense } from 'react';
+import { useMemo, FC, useState, useEffect, Suspense, useRef } from 'react';
 import { Container, Card, Toast } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
 import { GardenPulse } from './dashboard/GardenPulse';
@@ -70,9 +70,11 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
   const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
 
   const [toastMessage, setToastMessage] = useState('');
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => setToastMessage(''), 3000);
   };
 
   // Filter out any plants that have already completed their lifecycle
@@ -273,6 +275,7 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
         onBatchWaterAll={onBatchWaterAll} 
         onBatchFeedAll={onBatchFeedAll} 
         onLogRain={onLogRain ? async () => {
+          showToast('🌧️ Logging natural rain...');
           const count = await onLogRain();
           if (count !== undefined && count > 0) {
             showToast(`🌧️ Logged natural rain for ${count} outdoor plants!`);
