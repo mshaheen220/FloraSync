@@ -1,4 +1,4 @@
-import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
+import { FC, useState, FormEvent, useMemo } from 'react';
 import { PlantInstance, JournalEntry, User, JournalActivityType } from '../../../types';
 import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';

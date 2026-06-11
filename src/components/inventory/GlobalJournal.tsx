@@ -1,4 +1,4 @@
-import { FC, useState, FormEvent, ChangeEvent, useMemo, useEffect } from 'react';
+import { FC, useState, FormEvent, useMemo, useEffect } from 'react';
 import { JournalEntry } from '../../../types';
 import { Container, Card, Button, Input, Subtitle, Toast } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';

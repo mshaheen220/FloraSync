@@ -1,4 +1,4 @@
-import { useState, useMemo, FC, FormEvent, ChangeEvent } from 'react';
+import { useState, useMemo, FC, FormEvent } from 'react';
 import { PlantArchetype, Location, Zone } from '../../../types';
 import { Button, Input } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';

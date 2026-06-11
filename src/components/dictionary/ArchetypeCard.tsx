@@ -1,4 +1,4 @@
-import { FC, FormEvent, ChangeEvent, useState } from 'react';
+import { FC, FormEvent, useState } from 'react';
 import { PlantArchetype, FunFact } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
 import { Icon, IconName } from '../common/Icon';
