@@ -2,6 +2,7 @@ import { useState, FC, useRef } from 'react';
 import { Card, Button } from '../../../styles/StyledElements';
 import JSZip from 'jszip';
 import { Icon } from '../../common/Icon';
+import { compressBase64Image } from '../../../utils/imageCompression';
 
 interface DataImportProps {
   token?: string | null;
@@ -85,8 +86,64 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleOptimizeImages = async () => {
+    if (!window.confirm('This will safely scan your entire database and permanently compress any oversized photos to speed up syncing. Proceed?')) return;
+    setIsImporting(true);
+    try {
+      const res = await fetch(`${apiBase}/api/state`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      
+      let compressedCount = 0;
+      let savedBytes = 0;
+
+      const processImage = async (imgStr?: string) => {
+        // Only process if it's an image data URI and larger than ~75KB (approx 100,000 chars)
+        if (!imgStr || !imgStr.startsWith('data:image') || imgStr.length < 100000) return imgStr;
+        const before = imgStr.length;
+        const afterStr = await compressBase64Image(imgStr, 800, 0.7);
+        const after = afterStr.length;
+        if (after < before) {
+          compressedCount++;
+          savedBytes += (before - after);
+          return afterStr;
+        }
+        return imgStr;
+      };
+
+      if (data.instances) {
+        for (const inst of data.instances) {
+          inst.imageUrl = await processImage(inst.imageUrl);
+          if (inst.journal) for (const j of inst.journal) j.imageUrl = await processImage(j.imageUrl);
+        }
+      }
+      if (data.archetypes) {
+        for (const arch of data.archetypes) {
+          arch.imageUrl = await processImage(arch.imageUrl);
+          if (arch.funFacts) for (const f of arch.funFacts) f.imageUrl = await processImage(f.imageUrl);
+        }
+      }
+      if (data.gardenJournal) {
+        for (const j of data.gardenJournal) j.imageUrl = await processImage(j.imageUrl);
+      }
+
+      if (compressedCount > 0) {
+        await fetch(`${apiBase}/api/state`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        const mbSaved = (savedBytes * (3/4) / 1024 / 1024).toFixed(2); // Convert base64 string length back to actual file size bytes
+        showToast(`✅ Compressed ${compressedCount} images! Saved ~${mbSaved} MB.`);
+        setTimeout(() => window.location.reload(), 2500);
+      } else {
+        showToast('✅ All images in the database are already optimized!');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('❌ Failed to optimize database.');
+    }
+    setIsImporting(false);
+  };
+
   return (
-    <Card className="mb-4">
+    <>
+      <Card className="mb-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Plant Package Import</label>
@@ -130,6 +187,24 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
           </Button>
         </div>
       </div>
-    </Card>
+      </Card>
+
+      <Card className="mb-4 border-primary-200 dark:border-primary-800">
+        <div className="flex flex-col gap-4">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Database Optimization</label>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed -mt-2">
+            If your app is running slowly, you likely have large uncompressed photos saved in your history. This tool will scan your entire database and automatically shrink any oversized images.
+          </p>
+          <Button 
+            onClick={handleOptimizeImages} 
+            disabled={isImporting}
+            $variant="secondary"
+            className="flex justify-center items-center gap-2 !bg-primary-50 dark:!bg-primary-900/30 !text-primary-700 dark:!text-primary-400"
+          >
+            {isImporting ? 'Processing...' : <><Icon name="sparkles" size={18} /> Compress Existing Images</>}
+          </Button>
+        </div>
+      </Card>
+    </>
   );
 };

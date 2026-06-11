@@ -2,6 +2,7 @@ import { FC, useState, FormEvent, ChangeEvent, useMemo } from 'react';
 import { PlantInstance, JournalEntry, User, JournalActivityType } from '../../../types';
 import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
+import { ImageUploadInput } from '../common/ImageUploadInput';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -46,15 +47,6 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
       showRoutineCare ? true : !routineTypes.includes(entry.activityType || '')
     );
   }, [instance.journal, showRoutineCare, routineTypes]);
-
-  const handleJournalImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setJournalForm({...journalForm, imageUrl: reader.result as string});
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleSaveJournal = (e: FormEvent) => {
     e.preventDefault();
@@ -228,7 +220,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                 )}
               <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-primary-50 text-primary-700 hover:bg-primary-100 dark:bg-primary-900/30 dark:text-primary-300 transition-all cursor-pointer border border-transparent dark:border-primary-800">
                 <Icon name="camera" size={18} /> {journalForm.imageUrl ? 'Change Photo' : 'Add Photo'}
-                  <input type="file" accept="image/*" onChange={handleJournalImageCapture} className="hidden" />
+                  <ImageUploadInput onUpload={(base64) => setJournalForm({...journalForm, imageUrl: base64})} />
                 </label>
                 {journalForm.imageUrl && (
                   <button type="button" onClick={() => setJournalForm({...journalForm, imageUrl: ''})} className="text-red-500 text-sm font-semibold">Remove</button>

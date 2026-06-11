@@ -2,6 +2,7 @@ import { FC } from 'react';
 import { Card, Input } from '../../../styles/StyledElements';
 import { GardenProfile } from '../../../App';
 import { Icon } from '../../common/Icon';
+import { ImageUploadInput } from '../../common/ImageUploadInput';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -24,14 +25,7 @@ export const GardenProfileSettings: FC<GardenProfileSettingsProps> = ({ gardenPr
           )}
           <label className="absolute bottom-[-8px] right-[-8px] bg-primary-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors shadow-md text-xs leading-none flex items-center justify-center">
             <Icon name="camera" size={14} />
-            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => onUpdateGarden(gardenProfile.name || 'My Garden', reader.result as string);
-                reader.readAsDataURL(file);
-              }
-            }} />
+            <ImageUploadInput onUpload={(base64) => onUpdateGarden(gardenProfile.name || 'My Garden', base64)} maxWidth={400} />
           </label>
         </div>
         <div className="flex-1">

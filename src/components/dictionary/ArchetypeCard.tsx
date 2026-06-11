@@ -2,6 +2,7 @@ import { FC, FormEvent, ChangeEvent, useState } from 'react';
 import { PlantArchetype, FunFact } from '../../../types';
 import { Card, Button, Input } from '../../styles/StyledElements';
 import { Icon, IconName } from '../common/Icon';
+import { ImageUploadInput } from '../common/ImageUploadInput';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -51,35 +52,6 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
 }) => {
   const [editingFactIndex, setEditingFactIndex] = useState<number | null>(null);
   const [expandedEditSections, setExpandedEditSections] = useState<string[]>(['basic']);
-
-  // Compresses massive phone photos down to a lightweight 800px JPEG to protect the database
-  const compressAndSaveImage = (file: File, callback: (base64: string) => void) => {
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_DIM = 800; 
-        let { width, height } = img;
-        if (width > height && width > MAX_DIM) { height *= MAX_DIM / width; width = MAX_DIM; } 
-        else if (height > MAX_DIM) { width *= MAX_DIM / height; height = MAX_DIM; }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL('image/jpeg', 0.8)); 
-      };
-      img.src = event.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleImageCapture = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      compressAndSaveImage(file, (base64) => setEditData({...editData, imageUrl: base64}));
-    }
-  };
 
   if (isEditing) {
     const sectionClass = "bg-slate-50 dark:bg-slate-800/30 p-5 rounded-xl border border-slate-100 dark:border-slate-700/50 transition-all";
@@ -137,7 +109,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                     )}
                   <label className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
                     <Icon name="camera" size={18} /> {editData.imageUrl ? 'Change Photo' : 'Upload Photo'}
-                      <input type="file" accept="image/*" onChange={handleImageCapture} className="hidden" />
+                      <ImageUploadInput onUpload={(base64) => setEditData({...editData, imageUrl: base64})} />
                     </label>
                     {editData.imageUrl && (
                       <button type="button" onClick={() => setEditData({...editData, imageUrl: ''})} className="text-red-500 hover:text-red-600 text-sm font-bold transition-colors">Remove</button>
@@ -304,12 +276,7 @@ export const ArchetypeCard: FC<ArchetypeCardProps> = ({
                           )}
                         <label className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700/50 transition-all cursor-pointer shadow-sm">
                           <Icon name="camera" size={16} /> {fact.imageUrl ? 'Change Photo' : 'Upload Photo'}
-                            <input type="file" accept="image/*" onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                compressAndSaveImage(file, (base64) => handleFactChange('imageUrl', base64));
-                              }
-                            }} className="hidden" />
+                              <ImageUploadInput onUpload={(base64) => handleFactChange('imageUrl', base64)} />
                           </label>
                           {fact.imageUrl && (
                             <button type="button" onClick={() => handleFactChange('imageUrl', '')} className="text-red-500 hover:text-red-600 text-xs font-bold transition-colors">Remove</button>
