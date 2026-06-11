@@ -5,8 +5,8 @@ echo "🌿 FloraSync - TheForge Deployment"
 cd /Users/michael/Documents/dev/FloraSync || { echo "❌ Directory not found!"; exit 1; }
 
 echo "1️⃣ Pulling latest code from GitHub..."
-git restore .
-git pull
+git fetch --all
+git reset --hard origin/main
 
 echo "2️⃣ Moving and extracting the UI..."
 mv ~/dist.tar.gz .
