@@ -1,5 +1,5 @@
 import { useState, useEffect, FC, useMemo } from 'react';
-import { Container, Card, Subtitle } from '../../styles/StyledElements';
+import { Container, Card, Subtitle, Input } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
 import { hasPermission } from '../../utils/permissions';
@@ -86,7 +86,11 @@ const renderMarkdownToHTML = (md: string) => {
     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
     .replace(/`([^`]+)`/gim, '<code class="bg-surface-200 dark:bg-surface-800 px-1.5 py-0.5 rounded text-sm text-primary-700 dark:text-primary-300 font-mono">$1</code>')
     .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-primary-400 pl-3 py-2 my-3 bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 italic rounded-r-lg">$1</blockquote>')
-    .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" class="my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm max-w-full h-auto" />')
+    .replace(/!\[(.*?)\]\((.*?)\)/gim, (_match, alt, src) => {
+      // Rewrite local relative paths meant for IDE preview into absolute web paths for production
+      const cleanSrc = src.replace(/^(\.\.\/)+public\//, '/');
+      return `<img src="${cleanSrc}" alt="${alt}" class="my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm max-w-full h-auto" />`;
+    })
     .replace(/\*!Screenshot: (.*?)\*/gim, '<div class="text-xs text-slate-500 dark:text-slate-400 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 my-2">📸 $1</div>');
 
   // Handle Lists
@@ -125,6 +129,7 @@ interface HelpCenterProps {
 
 export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, onOpenMenu, onOpenWorkspaceMenu }) => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isWelcomeExpanded, setIsWelcomeExpanded] = useState(() => {
     const hasVisited = localStorage.getItem('florasync_help_welcome_seen');
     return !hasVisited;
@@ -149,22 +154,33 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
   // Dynamically load, filter, and structure the tree
   const groupedDocs = useMemo(() => {
     const allDocs = loadHelpDocuments();
+    const isSearching = searchTerm.trim().length > 0;
+    const term = searchTerm.toLowerCase();
+
     const filtered = allDocs.filter(doc => {
       if (doc.id === 'feature-bulk-import' && !isAdminOrOwner) return false;
+      if (isSearching) {
+        return doc.title.toLowerCase().includes(term) || 
+               doc.tags.some(t => t.toLowerCase().includes(term)) ||
+               doc.content.toLowerCase().includes(term);
+      }
       return true;
     });
 
     // Extract children to nest them later
     const childrenMap: Record<string, HelpDocument[]> = {};
-    filtered.filter(d => d.parent).forEach(doc => {
-      if (doc.parent) {
-        if (!childrenMap[doc.parent]) childrenMap[doc.parent] = [];
-        childrenMap[doc.parent].push(doc);
-      }
-    });
+    if (!isSearching) {
+      filtered.filter(d => d.parent).forEach(doc => {
+        if (doc.parent) {
+          if (!childrenMap[doc.parent]) childrenMap[doc.parent] = [];
+          childrenMap[doc.parent].push(doc);
+        }
+      });
+    }
 
     // Group root-level guides into specific manual ordering
-    const rootDocs = filtered.filter(d => !d.parent);
+    // If searching, we flatten the hierarchy so matching children aren't hidden inside collapsed parents!
+    const rootDocs = isSearching ? filtered : filtered.filter(d => !d.parent);
     const unsortedGrouped = rootDocs.reduce((acc, doc) => {
       if (!acc[doc.category]) acc[doc.category] = [];
       acc[doc.category].push(doc);
@@ -172,13 +188,13 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     }, {} as Record<string, HelpDocument[]>);
 
     // Force a specific order for the main categories
-    const orderedCategories = ['Views', 'Features', 'Settings', 'Tips'];
+    const orderedCategories = ['Views', 'Features', 'Dashboard Widgets', 'Settings', 'Tips'];
     const grouped: Record<string, HelpDocument[]> = {};
     orderedCategories.forEach(cat => { if (unsortedGrouped[cat]) grouped[cat] = unsortedGrouped[cat] });
     Object.keys(unsortedGrouped).forEach(cat => { if (!grouped[cat]) grouped[cat] = unsortedGrouped[cat] }); // Catch stragglers
 
     return { grouped, childrenMap };
-  }, [isAdminOrOwner]);
+  }, [isAdminOrOwner, searchTerm]);
 
   const categoryIcons: Record<string, string> = {
     'Views': 'layout',
@@ -214,8 +230,19 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         )}
       </Card>
 
+      <div className="mb-8">
+        <Input 
+          placeholder="🔍 Search guides, features, or tags..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+        />
+      </div>
+
       {/* Dynamically Map all Markdown Categories and Documents */}
-      {Object.entries(groupedDocs.grouped).map(([category, categoryDocs]) => (
+      {Object.entries(groupedDocs.grouped).length === 0 ? (
+        <p className="text-slate-500 dark:text-slate-400 text-sm text-center py-8">No matching guides found.</p>
+      ) : (
+        Object.entries(groupedDocs.grouped).map(([category, categoryDocs]) => (
         <div key={category} className="mb-8">
           <h3 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2 px-2">
             <Icon name={categoryIcons[category] || 'book-open'} size={18} /> {category}
@@ -255,7 +282,8 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
             ))}
           </div>
         </div>
-      ))}
+        ))
+      )}
 
     </Container>
   );
