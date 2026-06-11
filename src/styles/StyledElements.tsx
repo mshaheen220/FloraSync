@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 // Global Application Container using Tailwind for structure and earthy background
 export const Container = styled.div.attrs({
-  className: 'min-h-screen bg-surface-100 dark:bg-surface-900 text-slate-800 dark:text-slate-100 font-sans p-4 pb-20 max-w-md mx-auto relative overflow-hidden transition-colors duration-300',
+  className: 'min-h-screen bg-surface-100 dark:bg-surface-900 text-slate-800 dark:text-slate-100 font-sans p-4 pb-1 max-w-md mx-auto relative overflow-hidden transition-colors duration-300',
 })``;
 
 export const Card = styled.div.attrs({
