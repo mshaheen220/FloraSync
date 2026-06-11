@@ -2,6 +2,7 @@
 id: "widget-quick-actions"
 title: "Widget: Quick Actions"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["quick actions", "dashboard", "water all", "feed all", "pinning", "shortcuts"]
 ---
 

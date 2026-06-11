@@ -2,6 +2,7 @@
 id: "widget-nursery"
 title: "Widget: The Nursery"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["nursery", "dashboard", "seedlings", "transplants", "planted"]
 ---
 

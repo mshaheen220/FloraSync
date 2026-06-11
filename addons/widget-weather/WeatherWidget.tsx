@@ -72,6 +72,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
   const [error, setError] = useState<string | null>(null);
   const [selectedStat, setSelectedStat] = useState<StatInfo | null>(null);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
+  const [locationName, setLocationName] = useState<string | null>(null);
 
   useEffect(() => {
     if (!settings || !settings.latitude || !settings.longitude) {
@@ -79,6 +80,14 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       setLoading(false);
       return;
     }
+
+    // Attempt to reverse-geocode the coordinates to a city name for display
+    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${settings.latitude}&longitude=${settings.longitude}&localityLanguage=en`)
+      .then(res => res.json())
+      .then(data => {
+        setLocationName(data.city || data.locality || data.principalSubdivision || null);
+      })
+      .catch(err => console.error("Failed to fetch location name", err));
 
     const fetchWeather = async () => {
       if (!navigator.onLine) {
@@ -213,7 +222,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-base text-slate-700 dark:text-slate-200 flex items-center gap-2">
           <Icon name="cloud-sun" size={18} />
-          Local Weather
+          {locationName ? `${locationName} Weather` : 'Local Weather'}
         </h3>
         {loading && <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin"></div>}
       </div>

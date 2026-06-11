@@ -5,17 +5,21 @@ import { GardenProfile, User } from '../../../types';
 import { hasPermission } from '../../utils/permissions';
 import { Icon } from '../common/Icon';
 
-const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, children }) => (
-  <div className="border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0">
-    <button onClick={onToggle} className="w-full flex items-center justify-between text-left group py-3 mb-2 active:scale-[0.98] transition-transform">
+const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; level?: number; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, level = 0, children }) => (
+  <div className={level === 0 ? 'border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0' : 'bg-surface-100/50 dark:bg-surface-800/30 rounded-xl p-3 mb-3 border border-surface-200 dark:border-surface-700'}>
+    <button onClick={onToggle} className={`w-full flex items-center justify-between text-left group transition-transform ${level === 0 ? 'py-3 mb-2 active:scale-[0.98]' : 'py-1 mb-1 active:scale-[0.99]'}`}>
       <div className="flex items-center gap-3">
-        <span className="text-2xl">{icon}</span>
-        <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{title}</Subtitle>
+        <span className={level === 0 ? "text-2xl" : "text-lg text-primary-500/70"}>{icon}</span>
+        {level === 0 ? (
+          <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{title}</Subtitle>
+        ) : (
+          <span className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{title}</span>
+        )}
       </div>
       <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
     </button>
     {isExpanded && (
-      <div className="mb-4 animate-in slide-in-from-top-2 fade-in duration-200 text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed px-2">
+      <div className={`animate-in slide-in-from-top-2 fade-in duration-200 text-sm text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed ${level === 0 ? 'mb-4 px-2' : 'mt-3 px-1'}`}>
         {children}
       </div>
     )}
@@ -30,6 +34,8 @@ interface HelpDocument {
   tags: string[];
   content: string;
   filepath: string;
+  parent?: string;
+  order?: number;
 }
 
 const loadHelpDocuments = (): HelpDocument[] => {
@@ -51,6 +57,8 @@ const loadHelpDocuments = (): HelpDocument[] => {
       const categoryMatch = frontmatter.match(/category:\n?\s*"([^"]+)"/);
       const idMatch = frontmatter.match(/id:\n?\s*"([^"]+)"/);
       const tagsMatch = frontmatter.match(/tags:\n?\s*\[(.*?)\]/);
+      const parentMatch = frontmatter.match(/parent:\n?\s*"([^"]+)"/);
+      const orderMatch = frontmatter.match(/order:\n?\s*([0-9]+)/);
 
       docs.push({
         id: idMatch ? idMatch[1] : path,
@@ -58,13 +66,15 @@ const loadHelpDocuments = (): HelpDocument[] => {
         category: categoryMatch ? categoryMatch[1] : 'Uncategorized',
         tags: tagsMatch ? tagsMatch[1].split(',').map(t => t.replace(/"/g, '').trim()) : [],
         content: body.trim(),
-        filepath: path
+        filepath: path,
+        parent: parentMatch ? parentMatch[1] : undefined,
+        order: orderMatch ? parseInt(orderMatch[1], 10) : 999
       });
     }
   }
 
-  // Sort by filepath so numbered prefixes (01-, 02-) determine the order naturally
-  return docs.sort((a, b) => a.filepath.localeCompare(b.filepath));
+  // Sort explicitly by order first, then fallback to natural filepath numbering
+  return docs.sort((a, b) => (a.order || 999) - (b.order || 999) || a.filepath.localeCompare(b.filepath));
 };
 
 // Lightweight regex-based Markdown to HTML Converter for safe internal rendering
@@ -136,7 +146,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
 
   const isAdminOrOwner = hasPermission(currentUser, 'manage_dictionary');
 
-  // Dynamically load, filter, and group the markdown files
+  // Dynamically load, filter, and structure the tree
   const groupedDocs = useMemo(() => {
     const allDocs = loadHelpDocuments();
     const filtered = allDocs.filter(doc => {
@@ -144,11 +154,30 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
       return true;
     });
 
-    return filtered.reduce((acc, doc) => {
+    // Extract children to nest them later
+    const childrenMap: Record<string, HelpDocument[]> = {};
+    filtered.filter(d => d.parent).forEach(doc => {
+      if (doc.parent) {
+        if (!childrenMap[doc.parent]) childrenMap[doc.parent] = [];
+        childrenMap[doc.parent].push(doc);
+      }
+    });
+
+    // Group root-level guides into specific manual ordering
+    const rootDocs = filtered.filter(d => !d.parent);
+    const unsortedGrouped = rootDocs.reduce((acc, doc) => {
       if (!acc[doc.category]) acc[doc.category] = [];
       acc[doc.category].push(doc);
       return acc;
     }, {} as Record<string, HelpDocument[]>);
+
+    // Force a specific order for the main categories
+    const orderedCategories = ['Views', 'Features', 'Settings', 'Tips'];
+    const grouped: Record<string, HelpDocument[]> = {};
+    orderedCategories.forEach(cat => { if (unsortedGrouped[cat]) grouped[cat] = unsortedGrouped[cat] });
+    Object.keys(unsortedGrouped).forEach(cat => { if (!grouped[cat]) grouped[cat] = unsortedGrouped[cat] }); // Catch stragglers
+
+    return { grouped, childrenMap };
   }, [isAdminOrOwner]);
 
   const categoryIcons: Record<string, string> = {
@@ -186,7 +215,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
       </Card>
 
       {/* Dynamically Map all Markdown Categories and Documents */}
-      {Object.entries(groupedDocs).map(([category, categoryDocs]) => (
+      {Object.entries(groupedDocs.grouped).map(([category, categoryDocs]) => (
         <div key={category} className="mb-8">
           <h3 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2 px-2">
             <Icon name={categoryIcons[category] || 'book-open'} size={18} /> {category}
@@ -203,6 +232,25 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
               >
                 {/* Our custom lightweight HTML renderer */}
                 <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(doc.content) }} />
+                
+                {/* Nest Sub-Pages Inside */}
+                {groupedDocs.childrenMap[doc.id] && groupedDocs.childrenMap[doc.id].length > 0 && (
+                  <div className="mt-6 border-t border-surface-200 dark:border-surface-700 pt-5">
+                    <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 px-2">Related Topics</h4>
+                    {groupedDocs.childrenMap[doc.id].map(child => (
+                      <HelpSection
+                        key={child.id}
+                        title={child.title}
+                        icon={<Icon name="layers" size={18} />}
+                        isExpanded={expandedSections.includes(child.id)}
+                        onToggle={() => toggleSection(child.id)}
+                        level={1}
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(child.content) }} />
+                      </HelpSection>
+                    ))}
+                  </div>
+                )}
               </HelpSection>
             ))}
           </div>

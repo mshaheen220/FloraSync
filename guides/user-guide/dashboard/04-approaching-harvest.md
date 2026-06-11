@@ -2,6 +2,7 @@
 id: "widget-approaching-harvest"
 title: "Widget: Approaching Harvest"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["harvest", "dashboard", "ripe", "picking", "countdown"]
 ---
 

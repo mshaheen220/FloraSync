@@ -2,6 +2,7 @@
 id: "widget-random-spotlight"
 title: "Widget: Random Spotlight"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["spotlight", "dashboard", "tips", "fun facts", "shuffle", "insights"]
 ---
 

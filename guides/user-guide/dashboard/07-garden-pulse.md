@@ -2,6 +2,7 @@
 id: "widget-garden-pulse"
 title: "Widget: Garden Pulse"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["pulse", "dashboard", "feed", "history", "activity", "batching"]
 ---
 

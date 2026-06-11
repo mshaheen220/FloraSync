@@ -2,6 +2,7 @@
 id: "widget-garden-vitality"
 title: "Widget: Garden Vitality"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["vitality", "dashboard", "hydration", "nutrition", "stats", "zones"]
 ---
 

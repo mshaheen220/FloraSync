@@ -2,6 +2,7 @@
 id: "widget-health-watchlist"
 title: "Widget: Health Watchlist"
 category: "Dashboard Widgets"
+parent: "view-dashboard"
 tags: ["health", "watchlist", "dashboard", "sick", "pest", "disease", "issues"]
 ---
 
