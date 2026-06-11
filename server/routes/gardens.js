@@ -205,7 +205,17 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
     instances = instances.map(inst => {
       if (!coveredLocationIds.has(inst.locationId) && !inst.untracked) {
         wateredCount++;
-        return { ...inst, lastWatered: now };
+        const plantJournal = Array.isArray(inst.journal) ? [...inst.journal] : [];
+        plantJournal.push({
+          id: `jnl-rain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Heavy Rain',
+          title: 'Natural Rain 🌧️',
+          note: 'This plant was naturally watered by rainfall.',
+          authorName: req.user.name || req.user.username,
+          batchScope: 'Natural Rain'
+        });
+        return { ...inst, lastWatered: now, journal: plantJournal };
       }
       return inst;
     });
@@ -215,7 +225,7 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
       journal.push({
         id: `jnl-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: now,
-        activityType: 'water',
+        activityType: 'Heavy Rain',
         title: 'Garden received rain 🌧️',
         note: `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'}.`,
         authorName: req.user.name || req.user.username,

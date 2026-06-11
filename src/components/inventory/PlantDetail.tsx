@@ -8,6 +8,13 @@ import { Icon, IconName } from '../common/Icon';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
+const getLocalDatetimeString = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
 interface PlantDetailProps {
   qrId: string;
   initialAction: string | null;
@@ -66,11 +73,10 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     if (instance) {
       setEditData({
         locationId: instance.locationId,
-        // Converts ISO string to the "YYYY-MM-DDTHH:mm" format required by native datetime-local inputs
-        lastWatered: new Date(instance.lastWatered).toISOString().slice(0, 16),
-          lastFed: new Date(instance.lastFed).toISOString().slice(0, 16),
-          datePlanted: instance.datePlanted ? new Date(instance.datePlanted).toISOString().slice(0, 16) : '',
-        dateHarvested: instance.dateHarvested ? new Date(instance.dateHarvested).toISOString().slice(0, 16) : '',
+        lastWatered: getLocalDatetimeString(instance.lastWatered),
+        lastFed: getLocalDatetimeString(instance.lastFed),
+        datePlanted: getLocalDatetimeString(instance.datePlanted),
+        dateHarvested: getLocalDatetimeString(instance.dateHarvested),
         untracked: instance.untracked || false
       });
     }

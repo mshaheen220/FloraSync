@@ -6,6 +6,12 @@ import { ImageUploadInput } from '../common/ImageUploadInput';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
+const getLocalDatetimeString = (dateStr?: string) => {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  if (isNaN(d.getTime())) return '';
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
 // TODO: Add ability to add journal entries to a zone or loc. it would simply save to each plant's individual journal but would be a nice shortcut for users who want to make a general note about a zone or location that applies to all plants within it. Maybe add a "Apply to all plants in this zone/location" checkbox when creating the entry that only shows if there are multiple plants in the same zone/location?
 interface PlantJournalProps {
   instance: PlantInstance;
@@ -116,7 +122,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
     <div className="mt-2">
       <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
         {!isAddingJournal && !editingJournalId && (
-          <Button onClick={() => { setIsAddingJournal(true); setJournalForm({ timestamp: new Date().toISOString().slice(0, 16) }); }} className="w-auto flex-shrink-0">+ Add Journal Entry</Button>
+          <Button onClick={() => { setIsAddingJournal(true); setJournalForm({ timestamp: getLocalDatetimeString() }); }} className="w-auto flex-shrink-0">+ Add Journal Entry</Button>
         )}
         
         {(instance.journal || []).some(j => routineTypes.includes(j.activityType || '')) && (
@@ -259,7 +265,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   )}
                 </div>
                 <div className="flex gap-2">
-                <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: new Date(entry.timestamp).toISOString().slice(0, 16) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-primary-600 active:scale-90 transition-transform"><Icon name="edit" size={16} /></button>
+                <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: getLocalDatetimeString(entry.timestamp) }); setIsAddingJournal(false); }} className="text-slate-400 hover:text-primary-600 active:scale-90 transition-transform"><Icon name="edit" size={16} /></button>
                 <button onClick={() => handleDeleteJournal(entry.id)} className="text-slate-400 hover:text-red-600 active:scale-90 transition-transform"><Icon name="delete" size={16} /></button>
                 </div>
               </div>
