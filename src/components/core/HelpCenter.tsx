@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC, useMemo } from 'react';
 import { Container, Card, Subtitle } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
@@ -22,6 +22,90 @@ const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolea
   </div>
 );
 
+// --- Markdown & Frontmatter Engine ---
+interface HelpDocument {
+  id: string;
+  title: string;
+  category: string;
+  tags: string[];
+  content: string;
+  filepath: string;
+}
+
+const loadHelpDocuments = (): HelpDocument[] => {
+  // Dynamically load all markdown files in the user-guide directory using Vite
+  const rawFiles = import.meta.glob('../../../guides/user-guide/**/*.md', { eager: true, query: '?raw', import: 'default' });
+  
+  const docs: HelpDocument[] = [];
+
+  for (const [path, content] of Object.entries(rawFiles)) {
+    const fileContent = content as string;
+    // Extract Frontmatter and Body
+    const match = fileContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+    
+    if (match) {
+      const frontmatter = match[1];
+      const body = match[2];
+
+      const titleMatch = frontmatter.match(/title:\n?\s*"([^"]+)"/);
+      const categoryMatch = frontmatter.match(/category:\n?\s*"([^"]+)"/);
+      const idMatch = frontmatter.match(/id:\n?\s*"([^"]+)"/);
+      const tagsMatch = frontmatter.match(/tags:\n?\s*\[(.*?)\]/);
+
+      docs.push({
+        id: idMatch ? idMatch[1] : path,
+        title: titleMatch ? titleMatch[1] : 'Untitled',
+        category: categoryMatch ? categoryMatch[1] : 'Uncategorized',
+        tags: tagsMatch ? tagsMatch[1].split(',').map(t => t.replace(/"/g, '').trim()) : [],
+        content: body.trim(),
+        filepath: path
+      });
+    }
+  }
+
+  // Sort by filepath so numbered prefixes (01-, 02-) determine the order naturally
+  return docs.sort((a, b) => a.filepath.localeCompare(b.filepath));
+};
+
+// Lightweight regex-based Markdown to HTML Converter for safe internal rendering
+const renderMarkdownToHTML = (md: string) => {
+  let html = md
+    .replace(/^# (.*$)/gim, '') // Remove the H1 since we use the accordion title for it
+    .replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold mt-5 mb-2 text-primary-800 dark:text-primary-300">$1</h3>')
+    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    .replace(/`([^`]+)`/gim, '<code class="bg-surface-200 dark:bg-surface-800 px-1.5 py-0.5 rounded text-sm text-primary-700 dark:text-primary-300 font-mono">$1</code>')
+    .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-primary-400 pl-3 py-2 my-3 bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 italic rounded-r-lg">$1</blockquote>')
+    .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1" class="my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm max-w-full h-auto" />')
+    .replace(/\*!Screenshot: (.*?)\*/gim, '<div class="text-xs text-slate-500 dark:text-slate-400 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 my-2">📸 $1</div>');
+
+  // Handle Lists
+  const listItems = html.split('\n');
+  let inList = false;
+  html = listItems.map(line => {
+    if (line.match(/^\* (.*)/)) {
+      const li = line.replace(/^\* (.*)/, '<li class="ml-5 list-disc mb-1 marker:text-primary-400">$1</li>');
+      if (!inList) { inList = true; return `<ul class="mb-3 space-y-1">\n${li}`; }
+      return li;
+    } else if (line.match(/^[0-9]+\. (.*)/)) {
+      const li = line.replace(/^[0-9]+\. (.*)/, '<li class="ml-5 list-decimal mb-1 marker:text-primary-400">$1</li>');
+      if (!inList) { inList = true; return `<ol class="mb-3 space-y-1">\n${li}`; }
+      return li;
+    } else {
+      if (inList) { inList = false; return `</ul>\n${line}`; }
+      return line;
+    }
+  }).join('\n');
+  if (inList) html += '</ul>';
+
+  // Wrap paragraphs
+  return html.split('\n\n').map(p => {
+    if (!p.trim()) return '';
+    if (p.startsWith('<') && !p.startsWith('<strong>') && !p.startsWith('<em>')) return p;
+    return `<p class="mb-3 leading-relaxed text-slate-600 dark:text-slate-300">${p}</p>`;
+  }).join('\n');
+};
+
 interface HelpCenterProps {
   gardenProfile?: GardenProfile | null;
   currentUser?: User | null;
@@ -31,7 +115,6 @@ interface HelpCenterProps {
 
 export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, onOpenMenu, onOpenWorkspaceMenu }) => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
-  const [showPrintExamples, setShowPrintExamples] = useState(false);
   const [isWelcomeExpanded, setIsWelcomeExpanded] = useState(() => {
     const hasVisited = localStorage.getItem('florasync_help_welcome_seen');
     return !hasVisited;
@@ -52,6 +135,29 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
   };
 
   const isAdminOrOwner = hasPermission(currentUser, 'manage_dictionary');
+
+  // Dynamically load, filter, and group the markdown files
+  const groupedDocs = useMemo(() => {
+    const allDocs = loadHelpDocuments();
+    const filtered = allDocs.filter(doc => {
+      if (doc.id === 'feature-bulk-import' && !isAdminOrOwner) return false;
+      return true;
+    });
+
+    return filtered.reduce((acc, doc) => {
+      if (!acc[doc.category]) acc[doc.category] = [];
+      acc[doc.category].push(doc);
+      return acc;
+    }, {} as Record<string, HelpDocument[]>);
+  }, [isAdminOrOwner]);
+
+  const categoryIcons: Record<string, string> = {
+    'Views': 'layout',
+    'Features': 'star',
+    'Dashboard Widgets': 'dashboard',
+    'Settings': 'settings',
+    'Tips': 'lightbulb'
+  };
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
@@ -79,164 +185,29 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
         )}
       </Card>
 
-      <HelpSection title="Understanding the Dashboard" icon={<Icon name="dashboard" size={24} />} isExpanded={expandedSections.includes('dashboard')} onToggle={() => toggleSection('dashboard')}>
-        <p>The Dashboard is your dynamic command center. Instead of a standard static list, it acts as a sorting engine that floats the most urgent tasks and relevant insights to the top of your screen!</p>
-        <ul className="list-disc pl-5 space-y-2 mt-2">
-          <li><strong className="text-slate-800 dark:text-slate-100">Garden Vitality & Quick Actions:</strong> Monitor your overall hydration and nutrition percentages. You can instantly water or feed your entire garden, or customize the dashboard by <strong>Pinning (📌)</strong> specific Zones to create your own Quick Action buttons.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Needs Watering & Hungry Plants:</strong> Plants only drop into these queues when they are actually overdue. This is calculated dynamically using their specific dictionary intervals and the evaporation modifier of the zone they live in.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Health Watchlist:</strong> Instantly flags any plant whose most recent journal entry reported a pest or disease issue, keeping it front-and-center until you log a healthy update.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Approaching Harvest:</strong> A smart carousel that magically appears when any plant is within 14 days of being ready to pick.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">The Nursery:</strong> Highlights vulnerable seedlings and fresh transplants that were planted within the last two weeks.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Urgent Location Care:</strong> If multiple plants in the exact same location (e.g., "Left Bed") are thirsty, a shortcut button appears to water that entire area at once.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Random Spotlight:</strong> A dynamically rotating card featuring insights about the plants currently in your inventory. Tap the <strong>Shuffle (🔀)</strong> button to cycle through them! The engine gives a 65% priority to custom Fun Facts and Jokes (look for icons like 💡, 😂, 🤔, ☠️, ❗, 🤷, ❤️, 🪲), while the remaining 35% of the time it will serve up practical generated garden tips (🌟) like companion planting rules, pruning reminders, or culinary ideas.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Garden Pulse:</strong> A running feed of recent activity across your garden.</li>
-        </ul>
-      </HelpSection>
-
-      <HelpSection title="The Plant Journal & Harvests" icon={<Icon name="book-open-text" size={24} />} isExpanded={expandedSections.includes('journal')} onToggle={() => toggleSection('journal')}>
-        <p>Clicking on any plant in your inventory opens its detail view, where you'll find its <strong>Plant Journal</strong> at the bottom. This is where your garden's history comes alive.</p>
-        <ul className="list-disc pl-5 space-y-2 mt-2">
-          <li><strong>Rich Media:</strong> Add photos to track growth, and click "Set as Cover Photo" to override the dictionary image with a picture of your actual living plant!</li>
-          <li><strong>Harvest Tracking:</strong> Select "Harvest" as the Activity Type and log the exact weight or quantity you picked (e.g., "12 oz" or "3 Tomatoes").</li>
-          <li><strong>Smart Bulk Logging:</strong> When you use a bulk Quick Action (like watering an entire Zone), FloraSync automatically generates a detailed journal entry for every single plant in that area, marking exactly who did it and where the action originated!</li>
-        </ul>
-      </HelpSection>
-
-      <HelpSection title="The Global Plant Dictionary" icon={<Icon name="book-open-text" size={24} />} isExpanded={expandedSections.includes('dictionary')} onToggle={() => toggleSection('dictionary')}>
-        <p>The Plant Dictionary acts as the master reference for your entire FloraSync system. It contains the baseline rules for every plant, such as watering intervals, sunlight requirements, and harvest times.</p>
-        <ul className="list-disc pl-5 space-y-2 mt-2">
-          <li><strong className="text-slate-800 dark:text-slate-100">Shared by Everyone:</strong> The dictionary is global and shared across all gardens and workspaces on your server. When you create a physical plant instance in your garden, it inherits its rules from this shared master dictionary.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Restricted Editing:</strong> To keep this master reference clean and accurate, only users with the <strong>Owner</strong> or <strong>God-Admin</strong> role can add new plants or edit existing entries. Helpers and Viewers can view the dictionary and plant from it, but cannot alter the global rules.</li>
-        </ul>
-      </HelpSection>
-
-      <HelpSection title="Privacy & Your Data" icon={<Icon name="shield" size={24} />} isExpanded={expandedSections.includes('privacy')} onToggle={() => toggleSection('privacy')}>
-        <p>FloraSync is a local, privacy-first command center. It <strong>does not use the internet</strong> to 'research' plants or pull from public databases.</p>
-        <p>The Plant Dictionary is built entirely from your own private data. When you add a plant and define its rules (like watering intervals and sunlight), you are teaching your local server exactly how you want your garden managed. Your data never leaves this network.</p>
-      </HelpSection>
-
-      <HelpSection title="Unmonitored / Rain-Fed Plants" icon={<Icon name="cloud-rain" size={24} />} isExpanded={expandedSections.includes('unmonitored')} onToggle={() => toggleSection('unmonitored')}>
-        <p>Got a mature shrub in the yard that relies entirely on the rain, but you still want it in your inventory?</p>
-        <p>When viewing a plant, tap the <strong>Edit (✏️)</strong> icon and check the <strong>'Unmonitored / Rain-fed'</strong> box. </p>
-        <p>The plant will drop out of all your daily care queues (like Needs Watering) and will no longer negatively affect your Garden Vitality percentages. However, you can still use its journal to track blooms, photos, and harvests!</p>
-      </HelpSection>
-
-      <HelpSection title="Switching Gardens" icon={<Icon name="globe" size={24} />} isExpanded={expandedSections.includes('switching')} onToggle={() => toggleSection('switching')}>
-        <p>If you help manage multiple gardens (like a community greenhouse and your home patio), you can easily jump between them.</p>
-        <p>Tap your current garden's name (or logo) at the top left of the <strong>Dashboard</strong> or <strong>Settings</strong> screen to open the Workspace Switcher, then tap the garden you want to switch to.</p>
-      </HelpSection>
-
-      <HelpSection title="Understanding User Roles" icon={<Icon name="handshake" size={24} />} isExpanded={expandedSections.includes('roles')} onToggle={() => toggleSection('roles')}>
-        <p>FloraSync utilizes different roles to keep your garden safe if you invite friends or family to help:</p>
-        <ul className="list-disc pl-5 space-y-2 mt-2">
-          <li><strong className="text-slate-800 dark:text-slate-100">Owner:</strong> Has full control over the garden, including the ability to permanently delete it or manage its members.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Helper:</strong> Perfect for a garden-sitter. They can log watering, feeding, and add journal entries, but cannot delete plants or change structural rules.</li>
-          <li><strong className="text-slate-800 dark:text-slate-100">Viewer:</strong> Read-only access. They can look at your beautiful plants and journals, but cannot make any changes.</li>
-        </ul>
-        <p className="mt-2 text-xs italic opacity-80">*Note: A "God-Admin" is a special system-level role that has ultimate administrative power over the entire server.*</p>
-      </HelpSection>
-
-      <HelpSection title="Scanning Tags" icon={<Icon name="camera" size={24} />} isExpanded={expandedSections.includes('scanning')} onToggle={() => toggleSection('scanning')}>
-        <p>Use the floating camera button in the bottom corner of the app to scan the physical QR tags in your garden.</p>
-        <p>You can generate QR codes for <strong>all items</strong> in your garden: individual plants, specific locations, and entire zones. Scanning a tag instantly brings up the details for that specific item. From there, you can log individual care or take bulk actions—like watering an entire zone with a single tap!</p>
-        <p>If you scan an unassigned blank tag, the app will instantly launch a "Just-In-Time" registration form so you can tell the system what you just planted or created.</p>
-        <p><strong>Action Tags vs. Navigation Tags:</strong> A standard Navigation tag simply loads up the details of a plant or zone (requiring you to click once more to log care). However, you can print special Action tags for Water (💧) or Feed (🍽️). Scanning an Action tag instantly logs the care for that specific plant or an entire zone—no buttons required, saving you a tap!</p>
-      </HelpSection>
-
-      {isAdminOrOwner && (
-        <HelpSection title="Print Center & QR Tags" icon={<Icon name="print" size={24} />} isExpanded={expandedSections.includes('print')} onToggle={() => toggleSection('print')}>
-          <p>As a garden Owner, you can generate perfectly formatted, printable sheets of QR codes directly from the app.</p>
-          <p>Open the main menu and tap <strong>Print Center</strong>. From there, you can choose your desired label layout and preview the sheets before sending them to your printer.</p>
-          <ul className="list-disc pl-5 space-y-2 mt-2">
-            <li><strong>Print Queue & Smart Fill:</strong> Tap the 🖨️ buttons on any Plant, Location, or Zone detail screen to add specific tags to your Print Queue. When you print your queue, turn on <strong>Smart Fill Sheet</strong> to automatically generate blank tags for any remaining empty spaces on the paper so nothing goes to waste!</li>
-            <li><strong>Different Styles & Layouts:</strong> We offer several print sizes to fit your needs. The popular <strong>6cm x 3cm Labels</strong> are perfectly sized to fit the standard white plastic garden stakes found at any dollar store or on Amazon!</li>
-            <li><strong>Database Export:</strong> Select which categories (Plants, Locations, Zones) you want to print. FloraSync will generate tags with specific names and colorful icons for everything currently in your system.</li>
-            <li><strong>Blank Tags:</strong> Prints a sequence of unassigned stickers. Stick them in new pots, scan them, and FloraSync will instantly launch a "Just-In-Time" registration form! (You can also apply Actions to blank tags for instant care logging).</li>
-          </ul>
-          <div className="mt-4 p-3 bg-primary-100/50 dark:bg-primary-900/30 rounded-xl border border-primary-200 dark:border-primary-800/50">
-            <p className="font-bold text-primary-800 dark:text-primary-300 mb-1">DIY Weatherproofing Tip 🌧️</p>
-            <p className="text-sm text-primary-700 dark:text-primary-400 leading-relaxed">To make your labels survive the elements, print them onto <strong>full-sheet vinyl sticker paper</strong>, then laminate the entire printed sheet. The laminating plastic will adhere to both sides. When you cut out your individual tags, simply peel the back lamination layer off to expose the vinyl's sticky back and apply it to your stakes!<br/><br/><span className="text-xs opacity-80 italic">*Note: Standard inkjet ink will eventually fade in the sun over time, but you can always quickly print a fresh batch when they do!</span></p>
-          </div>
-          <button
-            onClick={() => setShowPrintExamples(true)}
-            className="mt-4 bg-primary-100 hover:bg-primary-200 dark:bg-primary-900/40 dark:hover:bg-primary-800/60 text-primary-800 dark:text-primary-300 px-4 py-2 rounded-xl text-sm font-bold active:scale-95 transition-all flex items-center gap-2"
-          >
-            📷 View Label Examples
-          </button>
-        </HelpSection>
-      )}
-
-      {isAdminOrOwner && (
-        <HelpSection title="Bulk Data Import" icon={<Icon name="package" size={24} />} isExpanded={expandedSections.includes('import')} onToggle={() => toggleSection('import')}>
-          <p>If you have a lot of existing garden data or want to share a customized plant dictionary with a friend, use the bulk Data Import tool.</p>
-          <p>Navigate to General Settings and scroll to <strong>Data Import</strong>. Select your data type, paste a formatted JSON array, and click Import. FloraSync will automatically skip items with duplicate IDs to protect your existing garden.</p>
-        </HelpSection>
-      )}
-
-      {showPrintExamples && (
-        <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-surface-900/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowPrintExamples(false)}
-        >
-          <div 
-            className="bg-surface-50 dark:bg-surface-900 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl flex flex-col gap-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Label Examples</h3>
-              <button onClick={() => setShowPrintExamples(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-2xl font-bold p-2 -mr-2 leading-none">✕</button>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">6cm x 3cm Labels</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/6x3%20Plant.png" alt="Plant" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-xs font-bold text-slate-500">Standard Plant Tag</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/6x3%20Zone.png" alt="Zone" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-xs font-bold text-slate-500">Standard Zone Tag</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/6x3%20location.png" alt="Location" className="w-full max-w-[240px] rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-xs font-bold text-slate-500">Standard Location Tag</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <div className="flex gap-2 w-full max-w-[240px]">
-                    <img src="/images/examples/qr/6x3%20water%20zone.png" alt="Water Action" className="w-1/2 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                    <img src="/images/examples/qr/6x3%20feed%20zone.png" alt="Feed Action" className="w-1/2 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  </div>
-                  <span className="text-xs font-bold text-slate-500">Water / Feed Action Tags</span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">1-inch Square Labels</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/1x1%20plant.png" alt="Plant" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Plant</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/1x1%20location.png" alt="Location" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Location</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/1x1%20zone.png" alt="Zone" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Zone</span>
-                </div>
-                <div className="flex flex-col gap-2 items-center justify-center bg-surface-50 dark:bg-surface-800/50 p-4 rounded-2xl border border-surface-100 dark:border-surface-800">
-                  <img src="/images/examples/qr/1x1%20feed%20location.png" alt="Action" className="w-16 h-16 rounded border border-surface-200 dark:border-surface-700 shadow-sm object-contain" />
-                  <span className="text-[10px] font-bold text-slate-500 text-center uppercase tracking-wider">Action</span>
-                </div>
-              </div>
-            </div>
-
+      {/* Dynamically Map all Markdown Categories and Documents */}
+      {Object.entries(groupedDocs).map(([category, categoryDocs]) => (
+        <div key={category} className="mb-8">
+          <h3 className="text-sm font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2 px-2">
+            <Icon name={categoryIcons[category] || 'book-open'} size={18} /> {category}
+          </h3>
+          
+          <div className="space-y-1">
+            {categoryDocs.map(doc => (
+              <HelpSection 
+                key={doc.id} 
+                title={doc.title} 
+                icon={<Icon name="file-text" size={24} />} 
+                isExpanded={expandedSections.includes(doc.id)} 
+                onToggle={() => toggleSection(doc.id)}
+              >
+                {/* Our custom lightweight HTML renderer */}
+                <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(doc.content) }} />
+              </HelpSection>
+            ))}
           </div>
         </div>
-      )}
+      ))}
 
     </Container>
   );
