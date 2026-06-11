@@ -1,5 +1,5 @@
 import { useMemo, FC, useState, useEffect, Suspense } from 'react';
-import { Container, Card } from '../../styles/StyledElements';
+import { Container, Card, Toast } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
 import { GardenPulse } from './dashboard/GardenPulse';
 import { HealthWatchlist } from './dashboard/HealthWatchlist';
@@ -67,7 +67,13 @@ interface DashboardProps {
 }
 
 export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu }) => {
-  const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
+  const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
+
+  const [toastMessage, setToastMessage] = useState('');
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(''), 3000);
+  };
 
   // Filter out any plants that have already completed their lifecycle
   const activeInstances = useMemo(() => instances.filter(i => !i.dateHarvested), [instances]);
@@ -266,6 +272,14 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
         currentUser={currentUser!} 
         onBatchWaterAll={onBatchWaterAll} 
         onBatchFeedAll={onBatchFeedAll} 
+        onLogRain={onLogRain ? async () => {
+          const count = await onLogRain();
+          if (count !== undefined && count > 0) {
+            showToast(`🌧️ Logged natural rain for ${count} outdoor plants!`);
+          } else if (count === 0) {
+            showToast(`🌧️ No outdoor tracked plants were found, or all your plants are in covered zones!`);
+          }
+        } : undefined}
         onBatchWaterZone={onBatchWaterZone} 
         onBatchFeedZone={onBatchFeedZone}
         onBatchWaterLocation={onBatchWaterLocation} 
@@ -364,6 +378,7 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
           </Card>
         )}
       </div>
+      <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );
 };

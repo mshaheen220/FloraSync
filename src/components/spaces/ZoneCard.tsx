@@ -50,6 +50,15 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
               </div>
             </div>
           </div>
+          <label className="flex items-center gap-2 cursor-pointer mt-1 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <input 
+              type="checkbox" 
+              checked={!!editZoneData.isCovered} 
+              onChange={e => setEditZoneData({...editZoneData, isCovered: e.target.checked})}
+              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+            />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Covered Area (No Natural Rain)</span>
+          </label>
           <div className="flex gap-2 mt-2">
           <Button type="button" $variant="secondary" onClick={onEditCancel}>Cancel</Button>
             <Button type="submit">Save</Button>
@@ -69,6 +78,11 @@ export const ZoneCard: FC<ZoneCardProps> = ({ zone, locationsInZone, isEditing, 
           <span className="text-primary-500 mt-0.5" title="Has actions pinned to the Dashboard">
             <Icon name="pin" size={14} />
           </span>
+            )}
+            {zone.isCovered && (
+              <span className="text-amber-500 mt-0.5" title="Covered Area (No Natural Rain)">
+                <Icon name="umbrella" size={14} />
+              </span>
             )}
           </h3>
           <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-all">{zone.id}</p>

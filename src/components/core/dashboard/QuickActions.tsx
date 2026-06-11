@@ -13,6 +13,7 @@ interface QuickActionsProps {
   currentUser: User;
   onBatchWaterAll: () => void;
   onBatchFeedAll: () => void;
+  onLogRain?: () => void;
   onBatchWaterZone: (zoneId: string) => void;
   onBatchFeedZone?: (zoneId: string) => void;
   onBatchWaterLocation?: (locId: string) => void;
@@ -26,7 +27,7 @@ interface QuickActionsProps {
 
 export const QuickActions: FC<QuickActionsProps> = ({ 
   zones, locations, instances, archetypes, currentUser, 
-  onBatchWaterAll, onBatchFeedAll, onBatchWaterZone, onBatchFeedZone, 
+  onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, 
   onBatchWaterLocation, onBatchFeedLocation, onWater, onFeed, 
   onNavigateZone, onNavigateLocation, onNavigate 
 }) => {
@@ -88,6 +89,12 @@ export const QuickActions: FC<QuickActionsProps> = ({
           <div className="mb-1 text-blue-500 dark:text-blue-400"><Icon name="water" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
         </Card>
+        {onLogRain && (
+          <Card onClick={onLogRain} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors active:scale-95 shadow-sm">
+            <div className="mb-1 text-blue-400 dark:text-blue-300"><Icon name="cloud-rain" size={28} /></div>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Log<br/>Rain</span>
+          </Card>
+        )}
         <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
           <div className="mb-1 text-amber-500 dark:text-amber-400"><Icon name="feed" size={28} /></div>
           <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>

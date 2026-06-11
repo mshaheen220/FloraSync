@@ -159,7 +159,10 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           {zone.description && (
             <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-6 italic text-center leading-relaxed">"{zone.description}"</p>
           )}
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{zoneInstances.length} active plant{zoneInstances.length !== 1 ? 's' : ''} across {zoneLocations.length} locations.</p>
+          <div className="flex flex-col items-center gap-1 mb-6">
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{zoneInstances.length} active plant{zoneInstances.length !== 1 ? 's' : ''} across {zoneLocations.length} locations.</p>
+            {zone.isCovered && <span className="text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1"><Icon name="umbrella" size={12} /> Covered Area</span>}
+          </div>
           {currentUser?.workspaceRole !== 'viewer' && (
             <div className="w-full flex flex-col gap-3 px-2">
               <div className="flex gap-3">

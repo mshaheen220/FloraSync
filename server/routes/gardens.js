@@ -175,4 +175,64 @@ router.post('/api/state', authenticateToken, (req, res) => {
   }
 });
 
+// Bulk Action Endpoint: Log Rain
+router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
+  try {
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+    
+    if (effectiveRole === 'viewer') {
+      return res.status(403).json({ error: 'Viewers cannot modify the garden state.' });
+    }
+
+    const garden = db.prepare('SELECT instances, locations, zones, journal FROM gardens WHERE id = ?').get(gardenId);
+    if (!garden) return res.status(404).json({ error: 'Garden not found.' });
+
+    const zones = JSON.parse(garden.zones || '[]');
+    const locations = JSON.parse(garden.locations || '[]');
+    let instances = JSON.parse(garden.instances || '[]');
+    const journal = JSON.parse(garden.journal || '[]');
+
+    // 1. Map hierarchy to find covered plants (exclusion list is safer)
+    const coveredZoneIds = new Set(zones.filter(z => z.isCovered === true || z.isCovered === 'true').map(z => z.id));
+    const coveredLocationIds = new Set(locations.filter(l => coveredZoneIds.has(l.zoneId)).map(l => l.id));
+
+    // 2. Update all affected instances
+    const now = new Date().toISOString();
+    let wateredCount = 0;
+
+    instances = instances.map(inst => {
+      if (!coveredLocationIds.has(inst.locationId) && !inst.untracked) {
+        wateredCount++;
+        return { ...inst, lastWatered: now };
+      }
+      return inst;
+    });
+
+    // 3. Create a single, clean batch journal entry
+    if (wateredCount > 0) {
+      journal.push({
+        id: `jnl-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: now,
+        activityType: 'water',
+        title: 'Garden received rain 🌧️',
+        note: `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'}.`,
+        authorName: req.user.name || req.user.username,
+        targetType: 'garden',
+        targetId: gardenId
+      });
+    }
+
+    // 4. Save and return
+    db.prepare('UPDATE gardens SET instances = ?, journal = ? WHERE id = ?')
+      .run(JSON.stringify(instances), JSON.stringify(journal), gardenId);
+
+    res.json({ success: true, wateredCount, instances, journal });
+  } catch (err) {
+    console.error('Error logging rain:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 export default router;

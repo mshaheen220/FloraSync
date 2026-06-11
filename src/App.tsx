@@ -105,6 +105,29 @@ export const App: FC = () => {
     }
   };
 
+  const handleLogRain = async () => {
+    if (!auth.token) return 0;
+    try {
+      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
+      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
+      
+      const res = await fetch(`${apiBase}/api/gardens/action/rain`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${auth.token}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Instantly update the local React state so the UI reflects the rain!
+        gardenState.setInstances(data.instances);
+        gardenState.setGardenJournal(data.journal);
+        return data.wateredCount;
+      }
+    } catch (err) {
+      console.error('Error logging rain:', err);
+    }
+    return 0;
+  };
+
   const gardenContextValue = useMemo(() => ({
     instances: gardenState.instances,
     archetypes: gardenState.archetypes,
@@ -130,6 +153,7 @@ export const App: FC = () => {
     onBatchFeedZone: gardenState.handleBatchFeedZone,
     onBatchWaterAll: gardenState.handleBatchWaterAll,
     onBatchFeedAll: gardenState.handleBatchFeedAll,
+    onLogRain: handleLogRain,
     
     onRegisterLocation: gardenState.handleRegisterLocation,
     onAddLocation: gardenState.handleAddLocation,

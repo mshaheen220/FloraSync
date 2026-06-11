@@ -150,6 +150,7 @@ export interface Zone {
   description?: string;
   imageUrl?: string;
   evaporationModifier?: number;
+  isCovered?: boolean;
   isPinned?: boolean;
   pinnedActions?: Record<string, string[]>;
 }

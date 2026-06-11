@@ -28,6 +28,7 @@ export interface GardenContextType {
   onBatchFeedZone: (zoneId: string) => void;
   onBatchWaterAll: () => void;
   onBatchFeedAll: () => void;
+  onLogRain?: () => Promise<number | void>;
 
   // Environment Actions
   onRegisterLocation: (id: string, name: string, zoneId: string) => void;
@@ -35,7 +36,7 @@ export interface GardenContextType {
   onUpdateLocation: (id: string, updates: Partial<Location>) => void;
   onDeleteLocation: (id: string) => void;
   onRegisterZone: (id: string, name: string) => void;
-  onAddZone: (name: string) => void;
+  onAddZone: (name: string, isCovered?: boolean) => void;
   onUpdateZone: (id: string, updates: Partial<Zone>) => void;
   onDeleteZone: (id: string) => void;
   onAddArchetype: (newArchetype: PlantArchetype) => void;

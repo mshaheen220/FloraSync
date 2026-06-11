@@ -15,6 +15,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
   const { gardenProfile, currentUser, zones, locations, onAddZone, onUpdateZone, onDeleteZone } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [newZoneName, setNewZoneName] = useState('');
+  const [newZoneIsCovered, setNewZoneIsCovered] = useState(false);
   const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [editZoneData, setEditZoneData] = useState<Partial<Zone>>({});
 
@@ -26,8 +27,9 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
   const handleAddZone = (e: FormEvent) => {
     e.preventDefault();
     if (!newZoneName.trim()) return;
-    onAddZone(newZoneName);
+    onAddZone(newZoneName, newZoneIsCovered);
     setNewZoneName('');
+    setNewZoneIsCovered(false);
     showToast('📍 Zone added successfully!');
   };
 
@@ -43,6 +45,15 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">New Macro Zone</label>
             <Input placeholder="Zone Name (e.g. Greenhouse)" value={newZoneName} onChange={e => setNewZoneName(e.target.value)} className="!mb-0 py-2.5" />
           </div>
+          <label className="flex items-center gap-2 cursor-pointer mt-1 p-2 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-700">
+            <input 
+              type="checkbox" 
+              checked={newZoneIsCovered} 
+              onChange={e => setNewZoneIsCovered(e.target.checked)}
+              className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500 border-slate-300 dark:border-slate-600 dark:bg-slate-800"
+            />
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Covered Area (No Natural Rain)</span>
+          </label>
           <Button type="submit" className="mt-2">Add Zone</Button>
         </form>
       </Card>
