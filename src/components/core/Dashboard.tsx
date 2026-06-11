@@ -70,7 +70,7 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
   const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
 
   const [toastMessage, setToastMessage] = useState('');
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = (msg: string) => {
     setToastMessage(msg);
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
