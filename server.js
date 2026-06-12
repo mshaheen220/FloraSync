@@ -3,6 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import compression from 'compression';
 
 import authRoutes from './server/routes/auth.js';
 import usersRoutes from './server/routes/users.js';
@@ -29,6 +30,10 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
+
+// Compress all JSON responses (shrinks payload size by ~80% for blazing fast syncs)
+app.use(compression());
+
 app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ limit: '200mb', extended: true }));
 
