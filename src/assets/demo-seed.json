@@ -1,0 +1,584 @@
+{
+  "users": [
+    {
+      "id": "usr-admin-001",
+      "username": "admin",
+      "password_hash": "$2b$10$qJRT3RFYwoMjsVGLG2RbpufmmJYWsCrKXF/29dv07uxjPmkfS8lF2",
+      "role": "god-admin",
+      "name": "Michael",
+      "image_url": "/uploads/img-1781290335691-728966269.jpg",
+      "garden_id": "gdn-demo-001",
+      "theme": "light",
+      "color_theme": "default",
+      "icon_theme": "default",
+      "installed_addons": "[\"widget-weather\"]",
+      "active_addons": "[\"widget-weather\"]",
+      "addon_settings": "{}"
+    },
+    {
+      "id": "usr-demo-001",
+      "username": "demo",
+      "password_hash": "$2b$10$j8OE0zmN4xlLe20z/BWHzu.PfgUqa57TjlRejpsKaSy5lxl4lUoPe",
+      "role": "demo",
+      "name": "Demo User",
+      "image_url": null,
+      "garden_id": "gdn-demo-001",
+      "theme": null,
+      "color_theme": null,
+      "icon_theme": null,
+      "installed_addons": "[]",
+      "active_addons": "[]",
+      "addon_settings": "{}"
+    }
+  ],
+  "gardens": [
+    {
+      "id": "gdn-demo-001",
+      "name": "FloraSync Sandbox",
+      "instances": [
+        {
+          "qrId": "qr-1781281654117",
+          "archetypeId": "basil",
+          "locationId": "loc-1781281605575",
+          "datePlanted": "2026-06-12T16:27:34.117Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:27:34.117Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-gmd7qcpw9",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281680096",
+          "archetypeId": "oregano",
+          "locationId": "loc-1781281605575",
+          "datePlanted": "2026-06-12T16:28:00.096Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:28:00.096Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-nksv6uo3r",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281707046",
+          "archetypeId": "garden-sage",
+          "locationId": "loc-1781281605575",
+          "datePlanted": "2026-06-12T16:28:27.046Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:28:27.046Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-u4f4xmpsj",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281725620",
+          "archetypeId": "tarragon-french",
+          "locationId": "loc-1781281605575",
+          "datePlanted": "2026-06-12T16:28:45.620Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:28:45.620Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-g3zds2m3q",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281750366",
+          "archetypeId": "catnip",
+          "locationId": "loc-1781281605575",
+          "datePlanted": "2026-06-12T16:29:10.366Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:29:10.366Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-dgzuj0yew",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281772808",
+          "archetypeId": "red-bell-pepper",
+          "locationId": "loc-1781281626824",
+          "datePlanted": "2026-06-12T16:29:32.808Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:29:32.808Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-7o7s6ai9w",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281794563",
+          "archetypeId": "lettuce-romaine",
+          "locationId": "loc-1781281626824",
+          "datePlanted": "2026-06-12T16:29:54.563Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:29:54.563Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-sjpyz5ddx",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281827267",
+          "archetypeId": "cabbage-napa",
+          "locationId": "loc-1781281626824",
+          "datePlanted": "2026-06-12T16:30:27.267Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:30:27.267Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-8b6425xpp",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281855130",
+          "archetypeId": "zucchini",
+          "locationId": "loc-1781281626824",
+          "datePlanted": "2026-06-12T16:30:55.130Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:30:55.130Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-skczmp4e9",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281912729",
+          "archetypeId": "cherry-tomato",
+          "locationId": "loc-demo-1",
+          "datePlanted": "2026-06-12T16:31:52.729Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:31:52.729Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-2ykir751p",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281929203",
+          "archetypeId": "roma-tomato",
+          "locationId": "loc-demo-1",
+          "datePlanted": "2026-06-12T16:32:09.203Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:32:09.203Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-ck4edvsgv",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281946135",
+          "archetypeId": "slicing-cucumber",
+          "locationId": "loc-demo-1",
+          "datePlanted": "2026-06-12T16:32:26.135Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:32:26.135Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-h79d8daa9",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781281971980",
+          "archetypeId": "eggplant-globe",
+          "locationId": "loc-demo-1",
+          "datePlanted": "2026-06-12T16:32:51.980Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:32:51.980Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-jfqtdad61",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781282310963",
+          "archetypeId": "begonia-red",
+          "locationId": "loc-1781282053163",
+          "datePlanted": "2026-06-12T16:38:30.963Z",
+          "lastWatered": "2026-06-12T16:38:30.963Z",
+          "lastFed": "2026-06-12T16:38:30.963Z"
+        },
+        {
+          "qrId": "qr-1781282327780",
+          "archetypeId": "sunflower-standard",
+          "locationId": "loc-1781282087648",
+          "datePlanted": "2026-06-12T16:38:47.780Z",
+          "lastWatered": "2026-06-12T16:38:47.780Z",
+          "lastFed": "2026-06-12T16:38:47.780Z"
+        },
+        {
+          "qrId": "qr-1781282344776",
+          "archetypeId": "arrowhead-plant",
+          "locationId": "loc-1781282107882",
+          "datePlanted": "2026-06-12T16:39:04.776Z",
+          "lastWatered": "2026-06-12T16:39:04.776Z",
+          "lastFed": "2026-06-12T16:39:04.776Z"
+        },
+        {
+          "qrId": "qr-1781282451351",
+          "archetypeId": "clematis",
+          "locationId": "loc-1781282241038",
+          "datePlanted": "2026-06-12T16:40:51.351Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:40:51.351Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-ttd0lan8w",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781282483989",
+          "archetypeId": "kalanchoe-blossfeldiana",
+          "locationId": "loc-1781282256704",
+          "datePlanted": "2026-06-12T16:41:23.989Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:41:23.989Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-9f4yy7hl9",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        },
+        {
+          "qrId": "qr-1781282619874",
+          "archetypeId": "birds-nest-spruce",
+          "locationId": "loc-1781282577806",
+          "datePlanted": "2023-03-12T16:43:00.000Z",
+          "lastWatered": "2026-06-12T16:43:00.000Z",
+          "lastFed": "2026-06-12T16:43:00.000Z",
+          "dateHarvested": "2023-03-12T16:45:00.000Z",
+          "untracked": true
+        },
+        {
+          "qrId": "qr-1781282645606",
+          "archetypeId": "burning-bush",
+          "locationId": "loc-1781282564648",
+          "datePlanted": "2026-06-12T16:44:00.000Z",
+          "lastWatered": "2023-03-12T16:44:00.000Z",
+          "lastFed": "2026-06-12T16:44:00.000Z",
+          "untracked": true
+        },
+        {
+          "qrId": "qr-1781282657998",
+          "archetypeId": "rhododendron",
+          "locationId": "loc-1781282564648",
+          "datePlanted": "2026-06-12T16:44:00.000Z",
+          "lastWatered": "2023-03-12T16:44:00.000Z",
+          "lastFed": "2026-06-12T16:44:00.000Z",
+          "untracked": true
+        },
+        {
+          "qrId": "qr-1781282671570",
+          "archetypeId": "daffodil-yellow",
+          "locationId": "loc-1781282600910",
+          "datePlanted": "2026-06-12T16:44:31.570Z",
+          "lastWatered": "2026-06-12T16:49:14.285Z",
+          "lastFed": "2026-06-12T16:44:31.570Z",
+          "journal": [
+            {
+              "id": "jnl-rain-1781282954285-311howdaj",
+              "timestamp": "2026-06-12T16:49:14.285Z",
+              "activityType": "Heavy Rain",
+              "title": "Natural Rain 🌧️",
+              "note": "This plant was naturally watered by rainfall.",
+              "authorName": "Michael",
+              "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+              "batchScope": "Natural Rain"
+            }
+          ]
+        }
+      ],
+      "locations": [
+        {
+          "id": "loc-demo-1",
+          "name": "Main Bed",
+          "zoneId": "zone-demo-1"
+        },
+        {
+          "id": "loc-1781281605575",
+          "name": "Herbs Raised Bed",
+          "zoneId": "zone-demo-1"
+        },
+        {
+          "id": "loc-1781281626824",
+          "name": "Veggies Raised Bed",
+          "zoneId": "zone-demo-1"
+        },
+        {
+          "id": "loc-1781282039688",
+          "name": "Left Lower Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282047129",
+          "name": "Left Middle Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282053163",
+          "name": "Left Top Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282067558",
+          "name": "Right Lower Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282075662",
+          "name": "Right Middle Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282087648",
+          "name": "Right Top Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282101278",
+          "name": "Rear Lower Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282107882",
+          "name": "Rear Middle Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282113316",
+          "name": "Rear Top Shelf",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282120436",
+          "name": "Hanging",
+          "zoneId": "zn-1781282008009"
+        },
+        {
+          "id": "loc-1781282241038",
+          "name": "Left Side Rail",
+          "zoneId": "zn-1781282146992"
+        },
+        {
+          "id": "loc-1781282249763",
+          "name": "Right Side Rail",
+          "zoneId": "zn-1781282146992"
+        },
+        {
+          "id": "loc-1781282256704",
+          "name": "Rear Side Rail",
+          "zoneId": "zn-1781282146992"
+        },
+        {
+          "id": "loc-1781282279254",
+          "name": "Deck Floor",
+          "zoneId": "zn-1781282146992"
+        },
+        {
+          "id": "loc-1781282564648",
+          "name": "Left of Steps",
+          "zoneId": "zn-1781282509389"
+        },
+        {
+          "id": "loc-1781282577806",
+          "name": "Right of Steps",
+          "zoneId": "zn-1781282509389"
+        },
+        {
+          "id": "loc-1781282600910",
+          "name": "Around Mailbox",
+          "zoneId": "zn-1781282509389"
+        }
+      ],
+      "zones": [
+        {
+          "id": "zone-demo-1",
+          "name": "Side Patio",
+          "isCovered": false,
+          "evaporationModifier": 1,
+          "description": "The patio area to the side of the back deck."
+        },
+        {
+          "id": "zn-1781282008009",
+          "name": "Large Greenhouse",
+          "evaporationModifier": 0.6,
+          "description": "18x18 Greenhouse out back",
+          "isCovered": true
+        },
+        {
+          "id": "zn-1781282146992",
+          "name": "Back Deck",
+          "evaporationModifier": 1.4,
+          "description": "The deck in back of house in full sun."
+        },
+        {
+          "id": "zn-1781282509389",
+          "name": "House Front",
+          "evaporationModifier": 1.1,
+          "description": "Mulched area around sidewalk with shrubs etc"
+        }
+      ],
+      "image_url": "https://res.cloudinary.com/dq9gsanyf/image/upload/v1781289591/florasync_uploads/ccs6ffswieyehboagub4.jpg",
+      "print_queue": [],
+      "installed_addons": "[]",
+      "active_addons": "[]",
+      "addon_settings": "{}",
+      "journal": [
+        {
+          "id": "j-gdn-1781282931278-qaj8ezc9h",
+          "timestamp": "2026-06-12T16:47:00.000Z",
+          "title": "Weather is great today",
+          "note": "Look how lovely the raised beds look in the sunshine",
+          "imageUrl": "https://res.cloudinary.com/dq9gsanyf/image/upload/v1781296941/florasync_uploads/tj7hqgopyqsrmfv1gyat.jpg",
+          "activityType": "Weather",
+          "authorName": "Michael",
+          "authorImageUrl": "https://res.cloudinary.com/dq9gsanyf/image/upload/q_auto/f_auto/v1781294049/florasync_migrated/hmkuosud0liazpdmbewa.jpg"
+        },
+        {
+          "id": "jnl-1781282954285-x4snow4j1",
+          "timestamp": "2026-06-12T16:49:14.285Z",
+          "activityType": "Heavy Rain",
+          "title": "Garden received rain 🌧️",
+          "note": "Mother Nature naturally watered 16 outdoor plants.",
+          "authorName": "Michael",
+          "authorImageUrl": "/uploads/img-1781290335691-728966269.jpg",
+          "targetType": "garden",
+          "targetId": "gdn-demo-001"
+        }
+      ]
+    }
+  ],
+  "garden_members": [
+    {
+      "user_id": "usr-demo-001",
+      "garden_id": "gdn-demo-001",
+      "role": "demo"
+    },
+    {
+      "user_id": "usr-admin-001",
+      "garden_id": "gdn-demo-001",
+      "role": "owner"
+    }
+  ]
+}

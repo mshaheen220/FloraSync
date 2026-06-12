@@ -140,13 +140,17 @@ router.post('/api/system/reset-demo', authenticateToken, (req, res) => {
     let zones = JSON.stringify([{ id: 'zone-demo-1', name: 'Sandbox Area', isCovered: false, evaporationModifier: 1.0 }]);
     let journal = '[]';
 
-    const seedPath = path.join(ROOT_DIR, 'src/data/demo-seed.json');
+    const seedPath = path.join(ROOT_DIR, 'src/assets/demo-seed.json');
     if (fs.existsSync(seedPath)) {
       const seedData = JSON.parse(fs.readFileSync(seedPath, 'utf8'));
-      if (seedData.instances) instances = JSON.stringify(seedData.instances);
-      if (seedData.locations) locations = JSON.stringify(seedData.locations);
-      if (seedData.zones) zones = JSON.stringify(seedData.zones);
-      if (seedData.journal) journal = JSON.stringify(seedData.journal);
+      
+      // Support both the direct garden object format and our new targeted backup format
+      const gardenData = (seedData.gardens && seedData.gardens.length > 0) ? seedData.gardens[0] : seedData;
+
+      if (gardenData.instances) instances = typeof gardenData.instances === 'string' ? gardenData.instances : JSON.stringify(gardenData.instances);
+      if (gardenData.locations) locations = typeof gardenData.locations === 'string' ? gardenData.locations : JSON.stringify(gardenData.locations);
+      if (gardenData.zones) zones = typeof gardenData.zones === 'string' ? gardenData.zones : JSON.stringify(gardenData.zones);
+      if (gardenData.journal) journal = typeof gardenData.journal === 'string' ? gardenData.journal : JSON.stringify(gardenData.journal);
     }
 
     // 3. Upsert the demo garden
