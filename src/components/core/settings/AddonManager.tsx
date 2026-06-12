@@ -54,6 +54,10 @@ export const AddonManager: FC<AddonManagerProps> = ({
   const activeAddons = currentUser?.activeAddons || [];
   const addonSettings = currentUser?.addonSettings || {};
 
+  const isSystemAdmin = currentUser?.role === 'god-admin';
+  const isOwner = currentUser?.workspaceRole === 'owner';
+  const canManageAddons = isSystemAdmin || isOwner;
+
   const apiCall = async (endpoint: string, payload: any) => {
     const res = await fetch(`${apiBase}/api/addons/${endpoint}`, {
       method: 'POST',
@@ -226,14 +230,18 @@ export const AddonManager: FC<AddonManagerProps> = ({
           <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
             Extend your garden with optional modules. Installing an add-on may unlock new UI features and data tracking.
           </p>
-          <Button onClick={() => fileInputRef.current?.click()} disabled={loadingId === 'upload'} $variant="secondary" className="whitespace-nowrap text-xs py-1.5 px-3 flex items-center gap-2">
-            {loadingId === 'upload' ? 'Validating...' : <><Icon name="package" size={14} /> Upload Package (.zip)</>}
-          </Button>
-          <input type="file" accept=".zip,application/zip" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+        {isSystemAdmin && (
+          <>
+            <Button onClick={() => fileInputRef.current?.click()} disabled={loadingId === 'upload'} $variant="secondary" className="whitespace-nowrap text-xs py-1.5 px-3 flex items-center gap-2">
+              {loadingId === 'upload' ? 'Validating...' : <><Icon name="package" size={14} /> Upload Package (.zip)</>}
+            </Button>
+            <input type="file" accept=".zip,application/zip" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
+          </>
+        )}
         </div>
 
       <div className="space-y-4">
-        {ALL_ADDONS.map(addon => {
+        {ALL_ADDONS.filter(addon => isSystemAdmin || installedAddons.includes(addon.id)).map(addon => {
           const isInstalled = installedAddons.includes(addon.id);
           const isActive = activeAddons.includes(addon.id);
           const isLoading = loadingId === addon.id;
@@ -270,11 +278,13 @@ export const AddonManager: FC<AddonManagerProps> = ({
               <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center gap-2">
                   {!isInstalled ? (
+                  isSystemAdmin && (
                     <Button onClick={() => handleInstall(addon)} disabled={isLoading} className="!text-[10px] !py-1 !px-2 !h-auto !min-h-0 w-max">
                       {isLoading ? '...' : 'Install'}
                     </Button>
-                  ) : (
-                    <>
+                  )
+                ) : canManageAddons ? (
+                  <div className="flex gap-2">
                       <Button 
                         $variant={isActive ? 'secondary' : 'primary'} 
                         onClick={() => handleToggleActive(addon, !isActive)} 
@@ -288,16 +298,21 @@ export const AddonManager: FC<AddonManagerProps> = ({
                           <Icon name="settings" size={12} /> Settings
                         </Button>
                       )}
-                    </>
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-bold text-slate-400 italic flex items-center gap-1">
+                    <Icon name="lock" size={10} /> Owners & Admins only
+                  </span>
                   )}
                 </div>
                 {!isInstalled ? (
-                  isCustom && (
+                isCustom && isSystemAdmin && (
                     <button onClick={() => removeCustomAddon(addon.id)} disabled={isLoading} className="text-[10px] font-bold text-slate-400 hover:text-red-500">
                       Discard
                     </button>
                   )
                 ) : (
+                isSystemAdmin && (
                   <button 
                     onClick={() => handleUninstall(addon)} 
                     disabled={isLoading}
@@ -305,6 +320,7 @@ export const AddonManager: FC<AddonManagerProps> = ({
                   >
                     Remove
                   </button>
+                )
                 )}
               </div>
             </Card>

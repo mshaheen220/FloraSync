@@ -139,6 +139,14 @@ router.post('/api/addons/uninstall', authenticateToken, async (req, res) => {
 router.post('/api/addons/activate', authenticateToken, (req, res) => {
   const { addonId } = req.body;
   try {
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+    
+    if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
+      return res.status(403).json({ error: 'Only admins and owners can activate add-ons.' });
+    }
+
     const userRow = db.prepare('SELECT active_addons FROM users WHERE id = ?').get(req.user.id);
     const active = JSON.parse(userRow?.active_addons || '[]');
     if (!active.includes(addonId)) {
@@ -154,6 +162,14 @@ router.post('/api/addons/activate', authenticateToken, (req, res) => {
 router.post('/api/addons/deactivate', authenticateToken, (req, res) => {
   const { addonId } = req.body;
   try {
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+    
+    if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
+      return res.status(403).json({ error: 'Only admins and owners can deactivate add-ons.' });
+    }
+
     const userRow = db.prepare('SELECT active_addons FROM users WHERE id = ?').get(req.user.id);
     let active = JSON.parse(userRow?.active_addons || '[]');
     active = active.filter(id => id !== addonId);
@@ -199,6 +215,14 @@ router.post('/api/addons/execute', authenticateToken, async (req, res) => {
 router.post('/api/addons/settings', authenticateToken, (req, res) => {
   const { addonId, settings } = req.body;
   try {
+    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
+    const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
+    
+    if (req.user.role !== 'god-admin' && effectiveRole !== 'owner') {
+      return res.status(403).json({ error: 'Only admins and owners can modify add-on settings.' });
+    }
+
     const userRow = db.prepare('SELECT addon_settings FROM users WHERE id = ?').get(req.user.id);
     const allSettings = JSON.parse(userRow?.addon_settings || '{}');
     allSettings[addonId] = settings;
