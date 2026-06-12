@@ -22,14 +22,23 @@ fi
 node scripts/node/bump-app-version.js $VERSION_FLAG
 
 echo "1️⃣ Building the production UI..."
-npm run build
+if ! npm run build; then
+  echo -e "\033[1;31m❌ Build failed! Please fix the TypeScript/Vite errors above and try again.\033[0m"
+  exit 1
+fi
 
 echo "2️⃣ Compressing the build folder..."
-tar -czf dist.tar.gz dist
+if ! tar -czf dist.tar.gz dist; then
+  echo -e "\033[1;31m❌ Failed to compress the build folder.\033[0m"
+  exit 1
+fi
 
 echo "3️⃣ Sending to TheForge's home folder..."
 echo -e "\033[1;5;91m🔑 HEADS UP: Please enter your password for TheForge below...\033[0m"
-scp dist.tar.gz michael@theforge.local:~
+if ! scp dist.tar.gz michael@theforge.local:~; then
+  echo -e "\033[1;31m❌ File transfer failed! Check your password and network connection.\033[0m"
+  exit 1
+fi
 
 echo "4️⃣ Committing and pushing to GitHub..."
 git add .
