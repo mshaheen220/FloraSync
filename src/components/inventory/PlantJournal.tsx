@@ -79,8 +79,7 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
         growthStage: journalForm.growthStage || '',
         activityType: journalForm.activityType || 'Observation',
         harvestAmount: journalForm.harvestAmount || '',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorName: currentUser?.name || ''
       } as JournalEntry;
       updatedJournal = [newEntry, ...currentJournal].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }
@@ -253,7 +252,9 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
                   </span>
                   {(entry as any).authorName && (
                     <div className="flex items-center gap-1.5 ml-2 border-l border-primary-200 dark:border-primary-800 pl-2">
-                      {(entry as any).authorImageUrl ? (
+                      {(entry as any).authorName === currentUser?.name && currentUser?.imageUrl ? (
+                        <img src={currentUser.imageUrl} alt={(entry as any).authorName} className="w-4 h-4 rounded-full object-cover" />
+                      ) : (entry as any).authorImageUrl ? (
                         <img src={(entry as any).authorImageUrl} alt={(entry as any).authorName} className="w-4 h-4 rounded-full object-cover" />
                       ) : (
                         <div className="w-4 h-4 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center text-[8px] font-bold text-primary-700 dark:text-primary-400">

@@ -152,8 +152,7 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
         note: journalForm.note || '',
         imageUrl: journalForm.imageUrl || '',
         activityType: journalForm.activityType || 'Garden Note',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || ''
+        authorName: currentUser?.name || ''
       } as JournalEntry;
       
       setGardenJournal(prev => [newEntry, ...prev].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
@@ -413,7 +412,9 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
 
                   {entry.authorName && (
                     <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                      {entry.authorImageUrl ? (
+                      {entry.authorName === currentUser?.name && currentUser?.imageUrl ? (
+                        <img src={currentUser.imageUrl} alt={entry.authorName} className="w-4 h-4 rounded-full object-cover" />
+                      ) : entry.authorImageUrl ? (
                         <img src={entry.authorImageUrl} alt={entry.authorName} className="w-4 h-4 rounded-full object-cover" />
                       ) : (
                         <div className="w-4 h-4 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-[8px] font-bold text-slate-600 dark:text-slate-400">
