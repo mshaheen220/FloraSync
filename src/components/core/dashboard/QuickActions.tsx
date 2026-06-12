@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { Subtitle, Card } from '../../../styles/StyledElements';
 import { Zone, Location, PlantInstance, PlantArchetype } from '../../../../types';
 import { User } from '../../../App';
@@ -24,6 +24,20 @@ interface QuickActionsProps {
   onNavigateLocation: (locId: string) => void;
   onNavigate: (qrId: string) => void;
 }
+
+interface ActionCardProps {
+  onClick: () => void;
+  icon: IconName;
+  colorClass: string;
+  label: React.ReactNode;
+}
+
+const ActionCard: FC<ActionCardProps> = ({ onClick, icon, colorClass, label }) => (
+  <Card onClick={onClick} className="flex-shrink-0 w-[72px] h-[72px] !p-1.5 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
+    <div className={`mb-0.5 ${colorClass}`}><Icon name={icon} size={22} /></div>
+    <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-2 whitespace-pre-wrap">{label}</span>
+  </Card>
+);
 
 export const QuickActions: FC<QuickActionsProps> = ({ 
   zones, locations, instances, archetypes, currentUser, 
@@ -85,25 +99,13 @@ export const QuickActions: FC<QuickActionsProps> = ({
     <section className="mb-8 animate-in fade-in duration-500">
       <Subtitle>Quick Actions</Subtitle>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        <Card onClick={onBatchWaterAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
-          <div className="mb-1 text-blue-500 dark:text-blue-400"><Icon name="water" size={28} /></div>
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Water<br/>All</span>
-        </Card>
+        <ActionCard onClick={onBatchWaterAll} icon="water" colorClass="text-blue-500 dark:text-blue-400" label={<>Water<br/>All</>} />
         {onLogRain && (
-          <Card onClick={onLogRain} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-blue-300 dark:hover:border-blue-700 transition-colors active:scale-95 shadow-sm">
-            <div className="mb-1 text-blue-400 dark:text-blue-300"><Icon name="cloud-rain" size={28} /></div>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Log<br/>Rain</span>
-          </Card>
+          <ActionCard onClick={onLogRain} icon="cloud-rain" colorClass="text-blue-400 dark:text-blue-300" label={<>Log<br/>Rain</>} />
         )}
-        <Card onClick={onBatchFeedAll} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
-          <div className="mb-1 text-amber-500 dark:text-amber-400"><Icon name="feed" size={28} /></div>
-          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight">Feed<br/>All</span>
-        </Card>
+        <ActionCard onClick={onBatchFeedAll} icon="feed" colorClass="text-amber-500 dark:text-amber-400" label={<>Feed<br/>All</>} />
         {pinnedItems.map(item => (
-          <Card key={item.id} onClick={item.onClick} className="flex-shrink-0 w-24 !p-3 !mb-0 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 transition-colors active:scale-95 shadow-sm">
-            <div className="mb-1 text-primary-600 dark:text-primary-400"><Icon name={item.icon} size={28} /></div>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider leading-tight overflow-hidden text-ellipsis w-full line-clamp-3 whitespace-pre-wrap">{item.name}</span>
-          </Card>
+          <ActionCard key={item.id} onClick={item.onClick} icon={item.icon} colorClass="text-primary-600 dark:text-primary-400" label={item.name} />
         ))}
       </div>
     </section>
