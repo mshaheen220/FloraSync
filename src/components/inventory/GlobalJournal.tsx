@@ -28,6 +28,7 @@ interface ExtendedJournalEntry extends JournalEntry {
   zoneId?: string;
   locationId?: string;
   category?: string;
+  isSynthetic?: boolean;
 }
 
 export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, onOpenWorkspaceMenu, onNavigatePlant }) => {
@@ -61,28 +62,57 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
 
   // Core Aggregation Engine - Base filters (everything except activity)
   const baseFilteredEntries = useMemo(() => {
-    const gardenArr: ExtendedJournalEntry[] = (gardenJournal || []).map(e => ({ 
-      ...e, 
-      sourceName: 'Garden Note', 
-      sourceType: 'garden' as 'garden' | 'plant',
-      sourceId: 'garden' 
-    }));
-
-    const plantArr: ExtendedJournalEntry[] = instances.flatMap(inst => {
-      const archetype = archetypes.find(a => a.id === inst.archetypeId);
-      const location = locations.find(l => l.id === inst.locationId);
-      return (inst.journal || []).map(e => ({
-        ...e,
-        sourceName: archetype?.commonName || 'Unknown Plant',
-        sourceType: 'plant',
-        sourceId: inst.qrId,
-        zoneId: location?.zoneId,
-        locationId: inst.locationId,
-        category: archetype?.category || 'Uncategorized'
-      }));
+    const gardenArr: ExtendedJournalEntry[] = (gardenJournal || []).map(e => {
+      const isMacroEvent = e.activityType === 'Heavy Rain' || (e.activityType && routineTypes.includes(e.activityType));
+      return { 
+        ...e, 
+        batchScope: e.batchScope || (isMacroEvent ? 'Entire Garden' : undefined),
+        sourceName: e.batchScope ? e.batchScope : (isMacroEvent ? 'Entire Garden' : 'Garden Note'), 
+        sourceType: 'garden' as 'garden' | 'plant',
+        sourceId: 'garden' 
+      };
     });
 
-    let filtered = [...gardenArr, ...plantArr].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const plantArr: ExtendedJournalEntry[] = [];
+    const syntheticBatchMap = new Map<string, ExtendedJournalEntry>();
+
+    instances.forEach(inst => {
+      const archetype = archetypes.find(a => a.id === inst.archetypeId);
+      const location = locations.find(l => l.id === inst.locationId);
+      
+      (inst.journal || []).forEach(e => {
+        const isBatchOrRain = e.batchScope || e.activityType === 'Heavy Rain';
+        
+        if (isBatchOrRain) {
+          const scope = e.batchScope || 'Entire Garden';
+          const batchKey = `${e.activityType}-${scope}-${e.timestamp}`;
+          
+          if (!syntheticBatchMap.has(batchKey)) {
+            syntheticBatchMap.set(batchKey, {
+              ...e,
+              id: `batch-${batchKey}`,
+              sourceName: scope,
+              sourceType: 'garden',
+              sourceId: 'garden',
+              batchScope: scope,
+              isSynthetic: true
+            });
+          }
+        } else {
+          plantArr.push({
+            ...e,
+            sourceName: archetype?.commonName || 'Unknown Plant',
+            sourceType: 'plant',
+            sourceId: inst.qrId,
+            zoneId: location?.zoneId,
+            locationId: inst.locationId,
+            category: archetype?.category || 'Uncategorized'
+          });
+        }
+      });
+    });
+
+    let filtered = [...gardenArr, ...plantArr, ...Array.from(syntheticBatchMap.values())].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     if (filterType === 'garden') filtered = filtered.filter(e => e.sourceType === 'garden');
     if (filterType === 'plant') filtered = filtered.filter(e => e.sourceType === 'plant');
@@ -355,15 +385,19 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
                   </div>
                   
                   {/* Only allow editing/deleting of Garden-level notes from the master view. Plant notes must be edited from the plant detail view to prevent context confusion. */}
-                  {isGardenNote ? (
+                  {isGardenNote && !entry.isSynthetic ? (
                     <div className="flex gap-2 bg-surface-50 dark:bg-surface-800 p-1 rounded-lg border border-surface-200 dark:border-surface-700 shadow-sm">
                       <button onClick={() => { setEditingJournalId(entry.id); setJournalForm({ ...entry, timestamp: getLocalDatetimeString(entry.timestamp) }); setIsAddingEntry(false); window.scrollTo(0,0); }} className="text-slate-400 hover:text-primary-600 p-1 active:scale-90 transition-transform"><Icon name="edit" size={14} /></button>
                       <button onClick={() => handleDeleteGardenEntry(entry.id)} className="text-slate-400 hover:text-red-600 p-1 active:scale-90 transition-transform"><Icon name="delete" size={14} /></button>
                     </div>
-                  ) : (
+                  ) : entry.sourceType === 'plant' ? (
                     <button onClick={() => entry.sourceId && onNavigatePlant(entry.sourceId)} className="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded-lg">
                       View Plant <Icon name="view" size={12} />
                     </button>
+                  ) : (
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                      <Icon name="layers" size={12} /> Batch Action
+                    </span>
                   )}
                 </div>
 
