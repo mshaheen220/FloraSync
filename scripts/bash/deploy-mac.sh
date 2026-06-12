@@ -34,7 +34,7 @@ if ! tar -czf dist.tar.gz dist; then
 fi
 
 echo "3️⃣ Sending to TheForge's home folder..."
-echo -e "\033[1;5;91m🔑 HEADS UP: Please enter your password for TheForge below...\033[0m"
+echo -e "\033[1;5;95m🔑 HEADS UP: Please enter your password for TheForge below...\033[0m"
 if ! scp dist.tar.gz michael@theforge.local:~; then
   echo -e "\033[1;31m❌ File transfer failed! Check your password and network connection.\033[0m"
   exit 1
