@@ -110,7 +110,7 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
         </>
       )}
 
-      {hasPermission(currentUser, 'manage_inventory') && (
+      {hasPermission(currentUser, 'manage_dictionary') && (
         <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>
           <DataImport token={token} showToast={showToast} />
         </SettingsSection>
