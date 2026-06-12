@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, FC } from 'react';
+import { useState, useMemo, useEffect, FC } from 'react';
 import { PlantArchetype } from '../../../types';
 import { Container, Input, Toast, Subtitle, Button } from '../../styles/StyledElements';
 import { ArchetypeCard } from './ArchetypeCard';
@@ -9,24 +9,14 @@ import { hasPermission } from '../../utils/permissions';
 interface ArchetypeManagerProps {
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
+  onNavigateArchetype: (id: string) => void;
 }
 
-export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpenWorkspaceMenu }) => {
-  const { gardenProfile, currentUser, archetypes, instances, onAddArchetype, onUpdateArchetype, onDeleteArchetype } = useGarden();
+export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpenWorkspaceMenu, onNavigateArchetype }) => {
+  const { gardenProfile, currentUser, archetypes, instances, onDeleteArchetype } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [viewingId, setViewingId] = useState<string | null>(null);
-  const [editData, setEditData] = useState<Partial<PlantArchetype>>({});
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
-  const [newData, setNewData] = useState<Partial<PlantArchetype>>({
-    waterIntervalDays: 4,
-    feedingIntervalDays: 14,
-    sunRequirement: 'Full Sun',
-    lifecycle: 'Unknown',
-    funFacts: []
-  });
 
   const groupedData = useMemo(() => {
     const filtered = archetypes.filter(a => 
@@ -63,60 +53,6 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleSave = (e: React.FormEvent, id: string) => {
-    e.preventDefault();
-    onUpdateArchetype(id, editData);
-    setEditingId(null);
-    showToast('📖 Plant reference updated!');
-  };
-
-  const handleAddSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newData.commonName?.trim()) {
-      showToast('⚠️ Common Name is required!');
-      return;
-    }
-
-    const newId = newData.commonName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    if (archetypes.some(a => a.id === newId)) {
-      showToast('⚠️ A plant with this name already exists!');
-      return;
-    }
-
-    const newArchetype: PlantArchetype = {
-      id: newId,
-      commonName: newData.commonName.trim(),
-      scientificName: newData.scientificName || 'Unknown',
-      category: newData.category || 'Uncategorized',
-      sunRequirement: newData.sunRequirement || 'Full Sun',
-      waterIntervalDays: newData.waterIntervalDays || 4,
-      feedingIntervalDays: newData.feedingIntervalDays || 14,
-      whatToFeed: newData.whatToFeed || 'Unknown',
-      pruningTips: newData.pruningTips || 'Unknown',
-      flavorProfile: newData.flavorProfile || 'Unknown',
-      companionPlants: newData.companionPlants || [],
-      combativePlants: newData.combativePlants || [],
-      growthHabit: newData.growthHabit || 'Unknown',
-      daysToHarvest: newData.daysToHarvest || 0,
-      imageUrl: newData.imageUrl || '',
-      whenToPlant: newData.whenToPlant || 'Unknown',
-      whenToHarvest: newData.whenToHarvest || 'Unknown',
-      usesForLargeHarvests: newData.usesForLargeHarvests || 'Unknown',
-      hardinessZones: newData.hardinessZones || [],
-      hardinessNote: newData.hardinessNote || '',
-      plantingInstructions: newData.plantingInstructions || 'Unknown',
-      growthRequirements: newData.growthRequirements || 'Unknown',
-      lifecycle: newData.lifecycle || 'Unknown',
-      funFacts: newData.funFacts || [],
-      ...newData
-    };
-
-    onAddArchetype(newArchetype);
-    setIsAdding(false);
-    setNewData({ waterIntervalDays: 4, feedingIntervalDays: 14, sunRequirement: 'Full Sun', lifecycle: 'Unknown', funFacts: [] });
-    showToast('✅ New plant added successfully!');
-  };
-
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => 
       prev.includes(category)
@@ -133,26 +69,8 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
         Manage the baseline care requirements for your garden. Changes here will apply to all tracked plants of this type.
       </p>
 
-      {!isAdding && hasPermission(currentUser, 'manage_dictionary') && (
-        <Button onClick={() => setIsAdding(true)} className="mb-6">+ Add New Plant</Button>
-      )}
-      {isAdding && hasPermission(currentUser, 'manage_dictionary') && (
-        <div className="mb-8">
-          <Subtitle>Add New Plant</Subtitle>
-          <ArchetypeCard
-            arch={{} as PlantArchetype}
-            inUseCount={0}
-            isEditing={true}
-            isViewing={false}
-            editData={newData}
-            setEditData={setNewData}
-            onViewToggle={() => {}}
-            onEditStart={() => {}}
-            onEditCancel={() => setIsAdding(false)}
-            onSave={handleAddSubmit}
-            onDelete={() => {}}
-          />
-        </div>
+      {hasPermission(currentUser, 'manage_dictionary') && (
+        <Button onClick={() => onNavigateArchetype('new')} className="mb-6">+ Add New Plant</Button>
       )}
 
       <Input 
@@ -183,8 +101,6 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
                 <div className="space-y-4 mb-4">
                   {groupedData.groups[category].map(arch => {
                     const inUseCount = instances.filter(i => i.archetypeId === arch.id).length;
-                    const isEditing = editingId === arch.id;
-                    const isViewing = viewingId === arch.id;
 
                     return (
                       <ArchetypeCard
@@ -192,14 +108,7 @@ export const ArchetypeManager: FC<ArchetypeManagerProps> = ({ onOpenMenu, onOpen
                         key={arch.id}
                         arch={arch}
                         inUseCount={inUseCount}
-                        isEditing={isEditing}
-                        isViewing={isViewing}
-                        editData={editData}
-                        setEditData={setEditData}
-                        onViewToggle={() => { setViewingId(isViewing ? null : arch.id); setEditingId(null); }}
-                        onEditStart={() => { setEditingId(arch.id); setEditData(arch); setViewingId(null); }}
-                        onEditCancel={() => setEditingId(null)}
-                        onSave={(e) => handleSave(e, arch.id)}
+                        onNavigate={() => onNavigateArchetype(arch.id)}
                         onDelete={() => { 
                           if (inUseCount > 0) {
                             showToast(`⚠️ Cannot delete this plant because ${inUseCount} instances are still growing!`);

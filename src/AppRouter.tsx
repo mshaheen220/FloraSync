@@ -5,6 +5,7 @@ import { PlantDetail } from './components/inventory/PlantDetail';
 import { Scanner } from './components/common/Scanner';
 import { LocationManager } from './components/spaces/LocationManager';
 import { ArchetypeManager } from './components/dictionary/ArchetypeManager';
+import { ArchetypeDetail } from './components/dictionary/ArchetypeDetail';
 import { ZoneManager } from './components/spaces/ZoneManager';
 import { SettingsManager } from './components/core/SettingsManager';
 import { AppearanceManager } from './components/core/AppearanceManager';
@@ -65,10 +66,11 @@ export const AppRouter: FC<AppRouterProps> = ({
 }) => {
   const { locations } = useGarden();
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print' | 'journal'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'archetypeDetail' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print' | 'journal'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
+  const [activeArchetypeId, setActiveArchetypeId] = useState<string | null>(null);
   const [initialAction, setInitialAction] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWorkspaceMenuOpen, setIsWorkspaceMenuOpen] = useState(false);
@@ -87,6 +89,7 @@ export const AppRouter: FC<AppRouterProps> = ({
       setActiveQr(null);
       setActiveLoc(null);
       setActiveZone(null);
+      setActiveArchetypeId(null);
       setInitialAction(null);
       return;
     }
@@ -105,11 +108,15 @@ export const AppRouter: FC<AppRouterProps> = ({
       setActiveZone(decodeURIComponent(id));
       setInitialAction(action || null);
       setCurrentView('zoneDetail');
+    } else if (type === 'archetype' && id) {
+      setActiveArchetypeId(id);
+      setCurrentView('archetypeDetail');
     } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print', 'journal'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
       setActiveZone(null);
+      setActiveArchetypeId(null);
       setInitialAction(null);
     } else {
       setCurrentView('dashboard');
@@ -145,6 +152,7 @@ export const AppRouter: FC<AppRouterProps> = ({
   const handleNavigate = (qrId: string) => navigateTo(`/plant/${qrId}`);
   const handleNavigateLocation = (locId: string) => navigateTo(`/location/${locId}`);
   const handleNavigateZone = (zoneId: string) => navigateTo(`/zone/${zoneId}`);
+  const handleNavigateArchetype = (archId: string) => navigateTo(`/archetype/${archId}`);
 
   const handleMenuNavigate = (route: MenuRoute) => {
     setIsMenuOpen(false);
@@ -232,6 +240,12 @@ export const AppRouter: FC<AppRouterProps> = ({
       );
     }
 
+    if (currentView === 'archetypeDetail' && activeArchetypeId) {
+      return (
+        <ArchetypeDetail archetypeId={activeArchetypeId} onGoBack={handleGoBack} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />
+      );
+    }
+
     if (currentView === 'scanner') {
       return <Scanner onScan={handleScanResult} onClose={handleGoBack} />
     }
@@ -257,7 +271,7 @@ export const AppRouter: FC<AppRouterProps> = ({
     }
 
     if (currentView === 'archetypes') {
-      return <ArchetypeManager onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      return <ArchetypeManager onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} onNavigateArchetype={handleNavigateArchetype} />;
     }
 
     if (currentView === 'help') {
