@@ -25,7 +25,7 @@ export const GardenProfileSettings: FC<GardenProfileSettingsProps> = ({ gardenPr
           )}
           <label className="absolute bottom-[-8px] right-[-8px] bg-primary-500 text-white rounded-full p-1.5 cursor-pointer hover:bg-primary-600 transition-colors shadow-md text-xs leading-none flex items-center justify-center">
             <Icon name="camera" size={14} />
-            <ImageUploadInput onUpload={(base64) => onUpdateGarden(gardenProfile.name || 'My Garden', base64)} maxWidth={400} />
+            <ImageUploadInput type="garden" onUpload={(base64) => onUpdateGarden(gardenProfile.name || 'My Garden', base64)} maxWidth={400} />
           </label>
         </div>
         <div className="flex-1">

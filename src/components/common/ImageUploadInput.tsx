@@ -4,12 +4,12 @@ import { compressImage } from '../../utils/imageCompression';
 
 interface ImageUploadInputProps {
   onUpload: (url: string) => void;
-  type?: 'profile' | 'journal';
+  type?: 'profile' | 'journal' | 'garden';
   maxWidth?: number;
   quality?: number;
 }
 
-export const ImageUploadInput: FC<ImageUploadInputProps> = ({ onUpload, type = 'journal', maxWidth = 800, quality = 0.8 }) => {
+export const ImageUploadInput: FC<ImageUploadInputProps> = ({ onUpload, type = 'journal', maxWidth, quality }) => {
   const [isUploading, setIsUploading] = useState(false);
 
   const handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -18,8 +18,12 @@ export const ImageUploadInput: FC<ImageUploadInputProps> = ({ onUpload, type = '
       try {
         setIsUploading(true);
         
+        // Determine default compression settings based on type if not explicitly provided
+        const applyMaxWidth = maxWidth || (type === 'garden' ? 1920 : 800);
+        const applyQuality = quality || (type === 'garden' ? 0.9 : 0.8);
+
         // 1. Compress image on client side first (returns base64)
-        const compressedBase64 = await compressImage(file, maxWidth, quality);
+        const compressedBase64 = await compressImage(file, applyMaxWidth, applyQuality);
         
         // 2. Convert the compressed base64 string back into a File Blob
         const res = await fetch(compressedBase64);

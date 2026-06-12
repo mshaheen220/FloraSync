@@ -299,12 +299,21 @@ router.post('/api/upload/image', authenticateToken, upload.single('image'), asyn
     } else if (storageProvider === 'cloudinary') {
       // Cloudinary Storage: Upload from memory buffer
       const isProfile = req.body.type === 'profile';
-      const uploadOptions = {
-        folder: isProfile ? 'florasync_profiles' : 'florasync_uploads',
-        transformation: isProfile 
-          ? [{ width: 250, height: 250, crop: 'fill', gravity: 'face' }]
-          : [{ width: 1024, crop: 'limit' }] // Caps max width for journal photos to save space without forcing a square crop
-      };
+      const isGarden = req.body.type === 'garden';
+      
+      let folder = 'florasync_uploads';
+      let transformation = [{ width: 1024, crop: 'limit', quality: 'auto' }]; // Caps max width for journal photos
+      
+      if (isProfile) {
+        folder = 'florasync_profiles';
+        transformation = [{ width: 250, height: 250, crop: 'fill', gravity: 'face', quality: 'auto' }];
+      } else if (isGarden) {
+        folder = 'florasync_gardens';
+        // Higher resolution and better quality for wide garden banners
+        transformation = [{ width: 1920, crop: 'limit', quality: 'auto' }];
+      }
+
+      const uploadOptions = { folder, transformation };
 
       const result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
