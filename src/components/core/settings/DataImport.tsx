@@ -113,7 +113,10 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
       if (data.instances) {
         for (const inst of data.instances) {
           inst.imageUrl = await processImage(inst.imageUrl);
-          if (inst.journal) for (const j of inst.journal) j.imageUrl = await processImage(j.imageUrl);
+          if (inst.journal) for (const j of inst.journal) {
+            j.imageUrl = await processImage(j.imageUrl);
+            j.authorImageUrl = await processImage(j.authorImageUrl);
+          }
         }
       }
       if (data.archetypes) {
@@ -123,7 +126,16 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
         }
       }
       if (data.gardenJournal) {
-        for (const j of data.gardenJournal) j.imageUrl = await processImage(j.imageUrl);
+        for (const j of data.gardenJournal) {
+          j.imageUrl = await processImage(j.imageUrl);
+          j.authorImageUrl = await processImage(j.authorImageUrl);
+        }
+      }
+      if (data.zones) {
+        for (const z of data.zones) z.imageUrl = await processImage(z.imageUrl);
+      }
+      if (data.locations) {
+        for (const l of data.locations) l.imageUrl = await processImage(l.imageUrl);
       }
 
       if (compressedCount > 0) {

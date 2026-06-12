@@ -21,6 +21,7 @@ interface WeatherData {
     soil_moisture_3_to_9cm: number;
     relative_humidity_2m: number;
     wind_speed_10m: number;
+    is_day: number;
   };
   current_units: {
     precipitation: string;
@@ -99,7 +100,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       setLoading(true);
       setError(null);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.latitude}&longitude=${settings.longitude}&current=temperature_2m,weather_code,precipitation,shortwave_radiation,et0_fao_evapotranspiration,soil_temperature_6cm,soil_moisture_3_to_9cm,relative_humidity_2m,wind_speed_10m&hourly=precipitation,precipitation_probability,weather_code&past_hours=6&forecast_hours=12&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.latitude}&longitude=${settings.longitude}&current=temperature_2m,weather_code,precipitation,shortwave_radiation,et0_fao_evapotranspiration,soil_temperature_6cm,soil_moisture_3_to_9cm,relative_humidity_2m,wind_speed_10m,is_day&hourly=precipitation,precipitation_probability,weather_code&past_hours=6&forecast_hours=12&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
           const errorData = await res.json();
@@ -122,6 +123,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
   }, [settings]);
 
   const weatherInfo = weather ? WMO_WEATHER_CODES[weather.current.weather_code] : null;
+  const mainIcon = weatherInfo ? (weather?.current?.is_day === 0 ? weatherInfo.icon.replace('sun', 'moon') : weatherInfo.icon) : 'sun';
 
   // Interpret raw weather data into actionable gardening insights
   const getInterpretations = () => {
@@ -133,7 +135,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
     let out_t = 'Calm';
     let out_c = 'text-emerald-500';
     let out_v = 'Clear';
-    let out_i = 'sun';
+    let out_i = w.is_day === 0 ? 'moon' : 'sun';
     let out_desc = 'No significant precipitation recently or expected soon.';
 
     if (weather.hourly) {
@@ -239,7 +241,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between px-6 pt-4 pb-2">
             <div className="flex flex-col items-center gap-1">
-              <Icon name={weatherInfo.icon} size={48} className="text-amber-500" />
+              <Icon name={mainIcon as any} size={48} className={weather.current.is_day === 0 ? "text-indigo-400 dark:text-indigo-300" : "text-amber-500"} />
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">{weatherInfo.description}</p>
             </div>
             <div className="flex items-center gap-4">
@@ -298,7 +300,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
             <StatItem icon="droplets" label="Soil Moisture" value={`${Math.round(weather.current.soil_moisture_3_to_9cm * 100)}%`} interpret={interp.moist?.t} colorClass={interp.moist?.c} onClick={() => setSelectedStat({ label: 'Soil Moisture', value: `${Math.round(weather.current.soil_moisture_3_to_9cm * 100)}%`, interpret: interp.moist?.t, colorClass: interp.moist?.c, meaning: 'The percentage of the soil\'s volume that is made up of water at the 3-9cm root depth.', statusDesc: interp.moist?.desc })} />
             <StatItem icon="sun" label="Radiation" value={`${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`} interpret={interp.rad?.t} colorClass={interp.rad?.c} onClick={() => setSelectedStat({ label: 'Solar Radiation', value: `${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`, interpret: interp.rad?.t, colorClass: interp.rad?.c, meaning: 'Shortwave solar radiation measures the intensity of the sunlight hitting your garden, driving photosynthesis.', statusDesc: interp.rad?.desc })} />
             <StatItem icon="arrow-up" label="Water Loss" value={`${weather.current.et0_fao_evapotranspiration} ${weather.current_units.et0_fao_evapotranspiration}`} interpret={interp.et?.t} colorClass={interp.et?.c} onClick={() => setSelectedStat({ label: 'Water Loss (Evapotranspiration)', value: `${weather.current.et0_fao_evapotranspiration} ${weather.current_units.et0_fao_evapotranspiration}`, interpret: interp.et?.t, colorClass: interp.et?.c, meaning: 'Evapotranspiration (ET0) is the calculated rate at which water is evaporating from the soil and transpiring (sweating) out of plant leaves.', statusDesc: interp.et?.desc })} />
-            <StatItem icon={interp.outlook?.i || 'sun'} label="Outlook" value={interp.outlook?.v || 'Clear'} interpret={interp.outlook?.t} colorClass={interp.outlook?.c} onClick={() => setSelectedStat({ label: 'Precipitation Outlook', value: interp.outlook?.v || 'Clear', interpret: interp.outlook?.t, colorClass: interp.outlook?.c, meaning: 'A combined forecast monitoring the past 6 hours of recent rain and the upcoming 12 hours of potential storms.', statusDesc: interp.outlook?.desc })} />
+            <StatItem icon={interp.outlook?.i || (weather.current.is_day === 0 ? 'moon' : 'sun')} label="Outlook" value={interp.outlook?.v || 'Clear'} interpret={interp.outlook?.t} colorClass={interp.outlook?.c} onClick={() => setSelectedStat({ label: 'Precipitation Outlook', value: interp.outlook?.v || 'Clear', interpret: interp.outlook?.t, colorClass: interp.outlook?.c, meaning: 'A combined forecast monitoring the past 6 hours of recent rain and the upcoming 12 hours of potential storms.', statusDesc: interp.outlook?.desc })} />
           </div>
           )}
         </div>

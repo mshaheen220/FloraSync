@@ -178,7 +178,11 @@ router.post('/api/state', authenticateToken, (req, res) => {
 // Bulk Action Endpoint: Log Rain
 router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
   try {
-    const gardenId = db.prepare('SELECT garden_id FROM users WHERE id = ?').get(req.user.id)?.garden_id;
+    const userRow = db.prepare('SELECT garden_id, name, username, image_url FROM users WHERE id = ?').get(req.user.id);
+    const gardenId = userRow?.garden_id;
+    const authorName = userRow?.name || userRow?.username || 'Someone';
+    const authorImageUrl = userRow?.image_url || '';
+
     const access = db.prepare('SELECT role FROM garden_members WHERE user_id = ? AND garden_id = ?').get(req.user.id, gardenId);
     const effectiveRole = access ? access.role : (req.user.role === 'god-admin' ? 'admin' : 'viewer');
     
@@ -212,7 +216,8 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
           activityType: 'Heavy Rain',
           title: 'Natural Rain 🌧️',
           note: 'This plant was naturally watered by rainfall.',
-          authorName: req.user.name || req.user.username,
+          authorName: authorName,
+          authorImageUrl: authorImageUrl,
           batchScope: 'Natural Rain'
         });
         return { ...inst, lastWatered: now, journal: plantJournal };
@@ -228,7 +233,8 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
         activityType: 'Heavy Rain',
         title: 'Garden received rain 🌧️',
         note: `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'}.`,
-        authorName: req.user.name || req.user.username,
+        authorName: authorName,
+        authorImageUrl: authorImageUrl,
         targetType: 'garden',
         targetId: gardenId
       });

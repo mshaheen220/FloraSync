@@ -63,9 +63,9 @@ export const ActionControlStrip: FC<ActionControlStripProps> = ({
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-tight">Pin to Dash</span>
           </div>
           <div className="flex gap-1.5">
+            <button onClick={() => onPinToggle('navigate')} className={getPinClass('navigate')}><Icon name="info" size={14} /> Info</button>
             <button onClick={() => onPinToggle('water')} className={getPinClass('water')}><Icon name="water" size={14} /> Water</button>
             <button onClick={() => onPinToggle('feed')} className={getPinClass('feed')}><Icon name="feed" size={14} /> Feed</button>
-            <button onClick={() => onPinToggle('navigate')} className={getPinClass('navigate')}><Icon name="view" size={14} /> Nav</button>
           </div>
         </div>
       )}
