@@ -126,7 +126,7 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
 
   // Reset pagination when filters change
   useEffect(() => {
-    setDisplayLimit(35);
+    setDisplayLimit(12);
   }, [filterType, filterZone, filterLocation, filterCategory, filterActivity, searchTerm, showRoutineCare]);
 
   const allEntries = useMemo(() => {
