@@ -2,6 +2,46 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import db from '../database.js';
 import { authenticateToken } from '../middleware.js';
+import multer from 'multer';
+import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const UPLOADS_DIR = path.join(__dirname, '../../src/data/uploads');
+
+// Explicitly load the .env file into memory BEFORE configuring storage!
+try {
+  process.loadEnvFile(path.join(__dirname, '../../.env'));
+} catch (err) {
+  // Ignore if file doesn't exist
+}
+
+// Environment toggle: 'local' or 'cloudinary'
+const storageProvider = process.env.STORAGE_PROVIDER || 'local';
+
+// Configure Cloudinary (Keys should be set in your .env file)
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const localStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'img-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const memoryStorage = multer.memoryStorage();
+
+const upload = multer({
+  storage: storageProvider === 'local' ? localStorage : memoryStorage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB file size limit
+});
 
 const router = express.Router();
 
@@ -184,6 +224,9 @@ router.put('/api/users/:id', authenticateToken, (req, res) => {
 
 // Endpoint for users to update their own profile info
 router.put('/api/users/:id/profile', authenticateToken, (req, res) => {
+  if (req.user.role === 'demo') {
+    return res.status(403).json({ error: 'Demo accounts cannot modify their profile.' });
+  }
   if (req.user.role !== 'god-admin' && req.user.id !== req.params.id) {
     return res.status(403).json({ error: 'Not authorized to edit this profile.' });
   }
@@ -216,6 +259,9 @@ router.put('/api/users/:id/profile', authenticateToken, (req, res) => {
 
 // Endpoint for users to update their own password
 router.put('/api/users/:id/password', authenticateToken, (req, res) => {
+  if (req.user.role === 'demo') {
+    return res.status(403).json({ error: 'Demo accounts cannot change their password.' });
+  }
   if (req.user.id !== req.params.id) {
     return res.status(403).json({ error: 'Not authorized to change this password.' });
   }
@@ -235,6 +281,51 @@ router.put('/api/users/:id/password', authenticateToken, (req, res) => {
   } catch (err) {
     console.error('Error changing password:', err);
     res.status(500).json({ error: 'Internal server error.' });
+  }
+});
+
+// Endpoint for handling switchable image uploads
+router.post('/api/upload/image', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided.' });
+    }
+
+    let imageUrl = '';
+
+    if (storageProvider === 'local') {
+      // Local Storage: Return the statically served path we set up in server.js
+      imageUrl = `/uploads/${req.file.filename}`;
+    } else if (storageProvider === 'cloudinary') {
+      // Cloudinary Storage: Upload from memory buffer
+      const isProfile = req.body.type === 'profile';
+      const uploadOptions = {
+        folder: isProfile ? 'florasync_profiles' : 'florasync_uploads',
+        transformation: isProfile 
+          ? [{ width: 250, height: 250, crop: 'fill', gravity: 'face' }]
+          : [{ width: 1024, crop: 'limit' }] // Caps max width for journal photos to save space without forcing a square crop
+      };
+
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          uploadOptions,
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+      imageUrl = result.secure_url;
+    } else {
+      return res.status(500).json({ error: 'Invalid STORAGE_PROVIDER configured.' });
+    }
+
+    // Return the URL so the frontend can immediately save it to the user's profile
+    res.json({ success: true, imageUrl });
+  } catch (err) {
+    console.error('Error uploading image:', err);
+    res.status(500).json({ error: 'Internal server error during upload.' });
   }
 });
 

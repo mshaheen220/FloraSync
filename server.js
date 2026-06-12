@@ -21,6 +21,11 @@ if (!fs.existsSync(PLUGINS_DIR)) {
   fs.mkdirSync(PLUGINS_DIR, { recursive: true });
 }
 
+const UPLOADS_DIR = path.join(ROOT_DIR, 'src/data/uploads');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
 const app = express();
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -53,6 +58,7 @@ app.use('/', systemRoutes);
 // Serve the built static React frontend from the dist directory
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 app.use('/plugins', express.static(PLUGINS_DIR));
+app.use('/uploads', express.static(UPLOADS_DIR));
 app.use(express.static(DIST_DIR));
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(DIST_DIR, 'index.html'));

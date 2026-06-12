@@ -33,10 +33,10 @@ export const hasPermission = (user: User | null | undefined, permission: Permiss
       
     case 'manage_spaces':
     case 'manage_inventory':
-      return role === 'owner' || role === 'admin';
+      return role === 'owner' || role === 'admin' || role === 'demo';
       
     case 'perform_actions':
-      return role === 'owner' || role === 'admin' || role === 'helper';
+      return role === 'owner' || role === 'admin' || role === 'helper' || role === 'demo';
       
     default:
       return false;

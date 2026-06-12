@@ -18,30 +18,42 @@ if (!fs.existsSync(BACKUP_DIR)) {
 
 try {
   const db = new Database(DB_FILE, { fileMustExist: true });
-  const row = db.prepare('SELECT instances, archetypes, locations, zones FROM app_state WHERE id = 1').get();
   
-  if (row) {
-    const safeParse = (str) => {
-      try { return JSON.parse(str || '[]'); } catch (e) { return []; }
-    };
+  const users = db.prepare('SELECT * FROM users').all();
+  const garden_members = db.prepare('SELECT * FROM garden_members').all();
+  
+  const gardens = db.prepare('SELECT * FROM gardens').all().map(g => {
+    try { g.instances = JSON.parse(g.instances || '[]'); } catch(e) { g.instances = []; }
+    try { g.locations = JSON.parse(g.locations || '[]'); } catch(e) { g.locations = []; }
+    try { g.zones = JSON.parse(g.zones || '[]'); } catch(e) { g.zones = []; }
+    try { g.print_queue = JSON.parse(g.print_queue || '[]'); } catch(e) { g.print_queue = []; }
+    try { g.journal = JSON.parse(g.journal || '[]'); } catch(e) { g.journal = []; }
+    return g;
+  });
+
+  const shared_dictionary = db.prepare('SELECT * FROM shared_dictionary').all().map(d => {
+    try { d.archetypes = JSON.parse(d.archetypes || '[]'); } catch(e) { d.archetypes = []; }
+    return d;
+  });
     
-    const state = {
-      instances: safeParse(row.instances),
-      archetypes: safeParse(row.archetypes),
-      locations: safeParse(row.locations),
-      zones: safeParse(row.zones)
-    };
+  const state = {
+    users,
+    gardens,
+    shared_dictionary,
+    garden_members
+  };
     
-    // Create a timestamped backup file
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = path.join(BACKUP_DIR, `full_backup_${timestamp}.json`);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupPath = path.join(BACKUP_DIR, `full_backup_${timestamp}.json`);
     
-    fs.writeFileSync(backupPath, JSON.stringify(state, null, 2));
-    const totalInstances = state.instances.length;
-    console.log(`✅ Successfully backed up ${totalInstances} active plant instances (and all other data) to:\n   ${backupPath}`);
-  } else {
-    console.log('⚠️ No state found in the database to backup.');
-  }
+  fs.writeFileSync(backupPath, JSON.stringify(state, null, 2));
+  
+  let totalInstances = 0;
+  gardens.forEach(g => {
+    totalInstances += (g.instances ? g.instances.length : 0);
+  });
+
+  console.log(`✅ Successfully backed up ${gardens.length} gardens (${totalInstances} total plants) and all system data to:\n   ${backupPath}`);
 } catch (err) {
   console.error('❌ Failed to backup database:', err.message);
 }
