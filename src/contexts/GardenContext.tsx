@@ -36,7 +36,7 @@ export interface GardenContextType {
   onUpdateLocation: (id: string, updates: Partial<Location>) => void;
   onDeleteLocation: (id: string) => void;
   onRegisterZone: (id: string, name: string) => void;
-  onAddZone: (name: string, isCovered?: boolean) => void;
+  onAddZone: (name: string, isCovered?: boolean, description?: string, evaporationModifier?: number) => void;
   onUpdateZone: (id: string, updates: Partial<Zone>) => void;
   onDeleteZone: (id: string) => void;
   onAddArchetype: (newArchetype: PlantArchetype) => void;

@@ -15,6 +15,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
   const { gardenProfile, currentUser, locations, zones, instances, onAddLocation, onUpdateLocation, onDeleteLocation } = useGarden();
   const [toastMessage, setToastMessage] = useState('');
   const [newName, setNewName] = useState('');
+  const [isAddingLocation, setIsAddingLocation] = useState(false);
   const [selectedZoneId, setSelectedZoneId] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<Partial<Location>>({});
@@ -30,6 +31,7 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
     if (!newName.trim() || !selectedZoneId) return;
     onAddLocation(newName, selectedZoneId);
     setNewName('');
+    setIsAddingLocation(false);
     showToast('📍 Location added successfully!');
   };
 
@@ -63,9 +65,13 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
       <PageHeader title="Location Manager" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Subtitle>Manage Locations</Subtitle>
-      {currentUser?.workspaceRole !== 'viewer' && (
-       <Card>
-        <form onSubmit={handleAdd} className="flex flex-col gap-3 mt-3">
+      {!isAddingLocation && currentUser?.workspaceRole !== 'viewer' && (
+        <Button onClick={() => setIsAddingLocation(true)} className="mb-6">+ Add New Location</Button>
+      )}
+      {isAddingLocation && currentUser?.workspaceRole !== 'viewer' && (
+       <Card className="mb-6 shadow-md border-primary-500 dark:border-primary-500">
+        <Subtitle className="!mt-0 mb-4">Add New Location</Subtitle>
+        <form onSubmit={handleAdd} className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Assign to Zone</label>
             <select className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all" value={selectedZoneId} onChange={e => setSelectedZoneId(e.target.value)} required>
@@ -77,7 +83,10 @@ export const LocationManager: FC<LocationManagerProps> = ({ onOpenMenu, onNaviga
             <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Specific Name (e.g. Shelf B)</label>
             <Input placeholder="Location Name" value={newName} onChange={e => setNewName(e.target.value)} className="!mb-0 py-2.5" />
           </div>
-          <Button type="submit" className="mt-2">Add Location</Button>
+          <div className="flex gap-2 mt-2">
+            <Button type="button" $variant="secondary" onClick={() => setIsAddingLocation(false)}>Cancel</Button>
+            <Button type="submit">Add Location</Button>
+          </div>
         </form>
       </Card>
       )}
