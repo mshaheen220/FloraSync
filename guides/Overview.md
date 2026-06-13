@@ -96,7 +96,21 @@ The Print Center supports multiple physical templates out of the box:
 Crucially, you can embed "Zero-Click" actions directly into these printed QR codes. For example, you can print a standard "Info" tag for a Zone, alongside a specific "Water Zone" tag. Scanning the latter instantly processes the watering action for every plant in that zone without requiring a single tap on the screen.
 
 ### ⚙️ System & Customization
-* **Dashboard:** A quick-glance hub for what needs attention today.
+
+**The Command Center (Dashboard & Widgets):**
+The Dashboard is a dynamic sorting engine that builds an "Attention Queue" to surface the most urgent tasks and relevant insights using a modular widget system.
+* **The Attention Queue Logic:** FloraSync doesn't just show you a static list of plants. It calculates a real-time hydration and nutrition ratio for every plant by comparing its last care timestamp against its specific archetype intervals (intelligently modified by Zone evaporation rates and Sun Exposure). Plants whose ratios hit 0% (overdue) are automatically floated to the top of your queues.
+* **Garden Vitality:** A high-level summary showing the overall hydration and nutrition percentages of your entire tracked garden, along with active plant counts.
+* **Quick Actions:** A horizontal scroll of one-tap actions. Includes global batch actions ("Water All"), environmental logging ("Log Rain"), and any specific batch actions you've pinned from Location, Zone, or Plant profiles.
+* **Urgent Location Care:** Groups extremely thirsty plants by their physical location, offering a single button to "Water all on Shelf A" instead of tapping individually.
+* **Needs Watering & Hungry Plants:** Distinct queues displaying individual plants that are overdue for water or fertilizer, complete with what specific food they need.
+* **Health Watchlist:** Pulls data directly from your Plant Journals. If a recent journal entry flags a health issue (e.g., "Aphids"), the plant is pinned here until a new journal entry marks it as "Resolved" or "Healthy".
+* **Approaching Harvest:** Scans the planting dates and lifecycle data of active crops to count down the days until they are ready to pick.
+* **The Nursery:** Highlights seedlings and fresh transplants planted within the last 14 days so you can keep a close eye on their delicate establishment phase.
+* **Random Spotlight:** A rotating trivia card that generates smart tips (e.g., pruning reminders, companion planting warnings) or global Fun Facts based on the exact plants currently growing in your garden.
+* **Garden Pulse:** A localized social feed showing the 5 most recent actions taken across your garden by any collaborator.
+* **Local Weather & Soil Insights (Opt-In Addon):** While FloraSync is built to be a fully local, offline-first application, it includes an official "Weather Widget" addon. Because this widget requires an active internet connection to fetch live data, it is intentionally deactivated by default to respect your privacy and local network preferences. Once activated by a Garden Owner or Admin, it uses the **Open-Meteo** API to provide hyper-local weather conditions, soil temperatures, evapotranspiration (water loss) rates, and impending storm alerts—translating raw meteorological data into actionable gardening advice right on your dashboard.
+* **Customization:** Users can reorder or completely hide any of these widgets to tailor the dashboard to their specific workflow. Layout preferences sync to the individual user profile, so your layout won't affect your collaborators.
 
 **Settings & Administration (`SettingsManager.tsx`):**
 The General Settings screen serves as the control center for your account and garden workspace. It dynamically renders sections based on your role and permissions:
