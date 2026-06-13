@@ -81,36 +81,49 @@ const loadHelpDocuments = (): HelpDocument[] => {
 const renderMarkdownToHTML = (md: string) => {
   let html = md
     .replace(/^# (.*$)/gim, '') // Remove the H1 since we use the accordion title for it
+    .replace(/^### (.*$)/gim, '<h4 class="text-base font-bold mt-4 mb-2 text-primary-700 dark:text-primary-300">$1</h4>')
     .replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold mt-5 mb-2 text-primary-800 dark:text-primary-300">$1</h3>')
+    .replace(/\*!Screenshot: (.*?)\*/gim, '<div class="text-xs text-slate-500 dark:text-slate-400 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 my-2">📸 $1</div>')
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+    .replace(/\*(?!\s)([^*]+?)\*/gim, '<em>$1</em>')
     .replace(/`([^`]+)`/gim, '<code class="bg-surface-200 dark:bg-surface-800 px-1.5 py-0.5 rounded text-sm text-primary-700 dark:text-primary-300 font-mono">$1</code>')
     .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-primary-400 pl-3 py-2 my-3 bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 italic rounded-r-lg">$1</blockquote>')
     .replace(/!\[(.*?)\]\((.*?)\)/gim, (_match, alt, src) => {
       // Rewrite local relative paths meant for IDE preview into absolute web paths for production
       const cleanSrc = src.replace(/^(\.\.\/)+public\//, '/');
       return `<img src="${cleanSrc}" alt="${alt}" class="my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm max-w-full h-auto" />`;
-    })
-    .replace(/\*!Screenshot: (.*?)\*/gim, '<div class="text-xs text-slate-500 dark:text-slate-400 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 my-2">📸 $1</div>');
+    });
 
   // Handle Lists
   const listItems = html.split('\n');
   let inList = false;
+  let currentListType = '';
   html = listItems.map(line => {
-    if (line.match(/^\* (.*)/)) {
-      const li = line.replace(/^\* (.*)/, '<li class="ml-5 list-disc mb-1 marker:text-primary-400">$1</li>');
-      if (!inList) { inList = true; return `<ul class="mb-3 space-y-1">\n${li}`; }
+    const ulMatch = line.match(/^(\s*)\* (.*)/);
+    const olMatch = line.match(/^(\s*)[0-9]+\. (.*)/);
+    
+    if (ulMatch) {
+      const indent = ulMatch[1].length;
+      const liClass = indent > 0 ? "ml-10 list-[circle] mb-1 marker:text-primary-400" : "ml-5 list-disc mb-1 marker:text-primary-400";
+      const li = `<li class="${liClass}">${ulMatch[2]}</li>`;
+      if (!inList) { inList = true; currentListType = 'ul'; return `<ul class="mb-3 space-y-1">\n${li}`; }
       return li;
-    } else if (line.match(/^[0-9]+\. (.*)/)) {
-      const li = line.replace(/^[0-9]+\. (.*)/, '<li class="ml-5 list-decimal mb-1 marker:text-primary-400">$1</li>');
-      if (!inList) { inList = true; return `<ol class="mb-3 space-y-1">\n${li}`; }
+    } else if (olMatch) {
+      const indent = olMatch[1].length;
+      const liClass = indent > 0 ? "ml-10 list-decimal mb-1 marker:text-primary-400" : "ml-5 list-decimal mb-1 marker:text-primary-400";
+      const li = `<li class="${liClass}">${olMatch[2]}</li>`;
+      if (!inList) { inList = true; currentListType = 'ol'; return `<ol class="mb-3 space-y-1">\n${li}`; }
       return li;
     } else {
-      if (inList) { inList = false; return `</ul>\n${line}`; }
+      if (inList) { 
+        inList = false; 
+        const closingTag = currentListType === 'ol' ? '</ol>' : '</ul>';
+        return `${closingTag}\n${line}`; 
+      }
       return line;
     }
   }).join('\n');
-  if (inList) html += '</ul>';
+  if (inList) html += currentListType === 'ol' ? '</ol>' : '</ul>';
 
   // Wrap paragraphs
   return html.split('\n\n').map(p => {
