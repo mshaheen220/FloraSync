@@ -28,7 +28,7 @@ interface PlantDetailProps {
 export const PlantDetail: FC<PlantDetailProps> = ({ 
   qrId, initialAction, onGoBack, onOpenMenu, onClearAction, onNavigateLocation, onNavigateZone
 }) => {
-  const { instances, archetypes, locations, zones, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
+  const { instances, archetypes, locations, zones, gardenJournal, onWater, onFeed, onRegister, onUpdateInstance, onDeleteInstance, currentUser } = useGarden();
 
   const instance = instances.find(i => i.qrId === qrId);
   const archetype = instance ? archetypes.find(a => a.id === instance.archetypeId) : undefined;
@@ -404,6 +404,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     ? new Date(instance.dateHarvested).getFullYear() < currentYear
     : false;
 
+  const totalJournalCount = (instance?.journal?.length || 0) + (location?.journal?.length || 0) + (zone?.journal?.length || 0) + (gardenJournal?.length || 0);
+
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <header className="mb-6 flex items-start justify-between pt-6">
@@ -671,7 +673,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
       <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
         <button onClick={() => toggleSection('journal')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
           <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-            Plant Journal <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({instance.journal?.length || 0})</span>
+            Plant Journal <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({totalJournalCount})</span>
           </Subtitle>
           <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('journal') ? 'rotate-180' : ''}`}>▼</span>
         </button>

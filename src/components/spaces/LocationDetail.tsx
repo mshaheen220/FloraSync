@@ -2,10 +2,13 @@ import { useEffect, useState, FC } from 'react';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
+import { LocationJournal } from './LocationJournal';
 import { hasPermission } from '../../utils/permissions';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { Icon } from '../common/Icon';
+
+const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
 interface LocationDetailProps {
   locationId: string;
@@ -20,7 +23,7 @@ interface LocationDetailProps {
 export const LocationDetail: FC<LocationDetailProps> = ({ 
   locationId, initialAction, onNavigate, onNavigateZone, onGoBack, onOpenMenu, onClearAction
 }) => {
-  const { locations, zones, instances, archetypes, onRegisterLocation, onUpdateLocation, onBatchWaterLocation, onBatchFeedLocation, currentUser } = useGarden();
+  const { locations, zones, instances, archetypes, gardenJournal, onRegisterLocation, onUpdateLocation, onBatchWaterLocation, onBatchFeedLocation, currentUser } = useGarden();
   const location = locations.find(l => l.id === locationId);
   const zone = location ? zones.find(z => z.id === location.zoneId) : undefined;
   const locationInstances = instances.filter(i => i.locationId === locationId);
@@ -28,10 +31,19 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   const [toastMessage, setToastMessage] = useState('');
   const [newLocName, setNewLocName] = useState('');
   const [newLocZone, setNewLocZone] = useState('');
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => 
+      prev.includes(section)
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    );
   };
 
   // "Zero-Click" Action Handling for entire locations
@@ -114,6 +126,8 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     );
   }
 
+  const totalJournalCount = (location?.journal?.length || 0) + (zone?.journal?.length || 0) + (gardenJournal?.length || 0);
+
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <PageHeader 
@@ -130,24 +144,31 @@ export const LocationDetail: FC<LocationDetailProps> = ({
         onOpenMenu={onOpenMenu} 
       />
 
-      <Card className="flex flex-col items-center py-6 mb-6">
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{locationInstances.length} active plant{locationInstances.length !== 1 ? 's' : ''} in this location.</p>
-        {currentUser?.workspaceRole !== 'viewer' && (
-          <div className="w-full flex gap-3 px-2">
-            <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water All</Button>
-            <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed All</Button>
-          </div>
+      <Card className="flex flex-col items-center pb-8 mb-6 relative overflow-hidden !px-0 !pt-0">
+        {location.imageUrl ? (
+          <img src={location.imageUrl} alt={location.name} onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = FALLBACK_IMAGE; }} className="w-full h-48 object-cover mb-6 bg-slate-100 dark:bg-slate-800" />
+        ) : (
+          <div className="w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 mb-6"></div>
         )}
-        
-        <ActionControlStrip 
-          userPins={userPins}
-          onPinToggle={handlePinToggle}
-          targetId={locationId}
-          targetType="location"
-          targetTitle={location.name}
-          targetSubtitle={zone?.name || ''}
-          showToast={showToast}
-        />
+        <div className="px-5 w-full flex flex-col items-center">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{locationInstances.length} active plant{locationInstances.length !== 1 ? 's' : ''} in this location.</p>
+          {currentUser?.workspaceRole !== 'viewer' && (
+            <div className="w-full flex gap-3 px-2 mb-6">
+              <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water All</Button>
+              <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed All</Button>
+            </div>
+          )}
+          
+          <ActionControlStrip 
+            userPins={userPins}
+            onPinToggle={handlePinToggle}
+            targetId={locationId}
+            targetType="location"
+            targetTitle={location.name}
+            targetSubtitle={zone?.name || ''}
+            showToast={showToast}
+          />
+        </div>
       </Card>
 
       <Subtitle>Plants in {location.name}</Subtitle>
@@ -168,6 +189,23 @@ export const LocationDetail: FC<LocationDetailProps> = ({
               />
             );
           })
+        )}
+      </div>
+
+      <div className="border-t border-slate-200 dark:border-slate-800 mt-6 pt-6 mb-4">
+        <button onClick={() => toggleSection('journal')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+          <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+            Location Journal <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({totalJournalCount})</span>
+          </Subtitle>
+          <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('journal') ? 'rotate-180' : ''}`}>▼</span>
+        </button>
+        {expandedSections.includes('journal') && (
+          <LocationJournal 
+            location={location} 
+            onUpdate={(updates) => onUpdateLocation(location.id, updates)} 
+            showToast={showToast} 
+            currentUser={currentUser}
+          />
         )}
       </div>
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>

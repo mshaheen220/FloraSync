@@ -141,6 +141,8 @@ export interface Location {
   name: string;
   zoneId: string;
   isPinned?: boolean;
+  journal?: JournalEntry[];
+  imageUrl?: string;
   pinnedActions?: Record<string, string[]>;
 }
 
@@ -151,6 +153,7 @@ export interface Zone {
   imageUrl?: string;
   evaporationModifier?: number;
   isCovered?: boolean;
+  journal?: JournalEntry[];
   isPinned?: boolean;
   pinnedActions?: Record<string, string[]>;
 }

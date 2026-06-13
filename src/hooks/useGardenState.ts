@@ -28,112 +28,104 @@ export function useGardenState(currentUser: User | null) {
 
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
-    const loc = locations.find(l => l.id === locationId);
-    const batchScope = loc ? `the ${loc.name} location` : undefined;
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { 
-        ...inst, 
-        lastWatered: now,
+      inst.locationId === locationId ? { ...inst, lastWatered: now } : inst
+    ));
+    setLocations(prev => prev.map(loc => 
+      loc.id === locationId ? {
+        ...loc,
         journal: [{
-          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `j-loc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
           activityType: 'Watered',
           authorName: currentUser?.name || '',
-          authorImageUrl: currentUser?.imageUrl || '',
-          batchScope
-        } as any, ...(inst.journal || [])]
-      } : inst
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as JournalEntry, ...(loc.journal || [])]
+      } : loc
     ));
-  }, [locations, currentUser]);
+  }, [currentUser]);
 
   const handleBatchFeed = useCallback((locationId: string) => {
     const now = new Date().toISOString();
-    const loc = locations.find(l => l.id === locationId);
-    const batchScope = loc ? `the ${loc.name} location` : undefined;
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { 
-        ...inst, 
-        lastFed: now,
+      inst.locationId === locationId ? { ...inst, lastFed: now } : inst
+    ));
+    setLocations(prev => prev.map(loc => 
+      loc.id === locationId ? {
+        ...loc,
         journal: [{
-          id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `j-loc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
           activityType: 'Fed',
           authorName: currentUser?.name || '',
-          authorImageUrl: currentUser?.imageUrl || '',
-          batchScope
-        } as any, ...(inst.journal || [])]
-      } : inst
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as JournalEntry, ...(loc.journal || [])]
+      } : loc
     ));
-  }, [locations, currentUser]);
+  }, [currentUser]);
 
   const handleBatchWaterZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
-    const zone = zones.find(z => z.id === zoneId);
-    const batchScope = zone ? `the ${zone.name} zone` : undefined;
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
-    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
-      ...inst, 
-      lastWatered: now,
-      journal: [{
-        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: now,
-        activityType: 'Watered',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || '',
-        batchScope
-      } as any, ...(inst.journal || [])]
-    } : inst));
-  }, [locations, zones, currentUser]);
+    setInstances(prev => prev.map(inst => 
+      zoneLocIds.includes(inst.locationId) ? { ...inst, lastWatered: now } : inst
+    ));
+    setZones(prev => prev.map(z => 
+      z.id === zoneId ? {
+        ...z,
+        journal: [{
+          id: `j-zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Watered',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as JournalEntry, ...(z.journal || [])]
+      } : z
+    ));
+  }, [locations, currentUser]);
 
   const handleBatchFeedZone = useCallback((zoneId: string) => {
     const now = new Date().toISOString();
-    const zone = zones.find(z => z.id === zoneId);
-    const batchScope = zone ? `the ${zone.name} zone` : undefined;
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
-    setInstances(prev => prev.map(inst => zoneLocIds.includes(inst.locationId) ? { 
-      ...inst, 
-      lastFed: now,
-      journal: [{
-        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: now,
-        activityType: 'Fed',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || '',
-        batchScope
-      } as any, ...(inst.journal || [])]
-    } : inst));
-  }, [locations, zones, currentUser]);
+    setInstances(prev => prev.map(inst => 
+      zoneLocIds.includes(inst.locationId) ? { ...inst, lastFed: now } : inst
+    ));
+    setZones(prev => prev.map(z => 
+      z.id === zoneId ? {
+        ...z,
+        journal: [{
+          id: `j-zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          timestamp: now,
+          activityType: 'Fed',
+          authorName: currentUser?.name || '',
+          authorImageUrl: currentUser?.imageUrl || ''
+        } as JournalEntry, ...(z.journal || [])]
+      } : z
+    ));
+  }, [locations, currentUser]);
 
   const handleBatchWaterAll = useCallback(() => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ 
-      ...inst, 
-      lastWatered: now,
-      journal: [{
-        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: now,
-        activityType: 'Watered',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || '',
-        batchScope: 'the entire garden'
-      } as any, ...(inst.journal || [])]
-    })));
+    setInstances(prev => prev.map(inst => ({ ...inst, lastWatered: now })));
+    setGardenJournal(prev => [{
+      id: `j-gdn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: now,
+      activityType: 'Watered',
+      authorName: currentUser?.name || '',
+      authorImageUrl: currentUser?.imageUrl || ''
+    } as JournalEntry, ...prev]);
   }, [currentUser]);
 
   const handleBatchFeedAll = useCallback(() => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ 
-      ...inst, 
-      lastFed: now,
-      journal: [{
-        id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: now,
-        activityType: 'Fed',
-        authorName: currentUser?.name || '',
-        authorImageUrl: currentUser?.imageUrl || '',
-        batchScope: 'the entire garden'
-      } as any, ...(inst.journal || [])]
-    })));
+    setInstances(prev => prev.map(inst => ({ ...inst, lastFed: now })));
+    setGardenJournal(prev => [{
+      id: `j-gdn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: now,
+      activityType: 'Fed',
+      authorName: currentUser?.name || '',
+      authorImageUrl: currentUser?.imageUrl || ''
+    } as JournalEntry, ...prev]);
   }, [currentUser]);
 
   const handleWater = useCallback((qrId: string) => {
@@ -261,9 +253,9 @@ export function useGardenState(currentUser: User | null) {
     setZones(prev => [...prev, { id, name }]);
   };
 
-  const handleAddZone = (name: string) => {
+  const handleAddZone = (name: string, isCovered?: boolean, description?: string, evaporationModifier?: number) => {
     const newId = `zn-${Date.now()}`;
-    setZones(prev => [...prev, { id: newId, name }]);
+    setZones(prev => [...prev, { id: newId, name, isCovered, description, evaporationModifier }]);
   };
 
   const handleUpdateZone = (id: string, updates: Partial<Zone>) => {

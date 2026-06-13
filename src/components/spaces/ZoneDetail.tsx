@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, FC } from 'react';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
+import { ZoneJournal } from './ZoneJournal';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { hasPermission } from '../../utils/permissions';
@@ -21,7 +22,7 @@ interface ZoneDetailProps {
 export const ZoneDetail: FC<ZoneDetailProps> = ({ 
   zoneId, initialAction, onNavigate, onGoBack, onOpenMenu, onClearAction
 }) => {
-  const { zones, locations, instances, archetypes, onRegisterZone, onUpdateZone, onBatchWaterZone, onBatchFeedZone, currentUser } = useGarden();
+  const { zones, locations, instances, archetypes, gardenJournal, onRegisterZone, onUpdateZone, onBatchWaterZone, onBatchFeedZone, currentUser } = useGarden();
   const zone = zones.find(z => z.id === zoneId);
   const zoneLocations = locations.filter(l => l.zoneId === zoneId);
   const zoneLocIds = zoneLocations.map(l => l.id);
@@ -29,6 +30,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
 
   const [toastMessage, setToastMessage] = useState('');
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
+  const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [newZoneName, setNewZoneName] = useState('');
 
   const showToast = (msg: string) => {
@@ -41,6 +43,14 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
       prev.includes(locName)
         ? prev.filter(l => l !== locName)
         : [...prev, locName]
+    );
+  };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => 
+      prev.includes(section)
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
     );
   };
 
@@ -140,6 +150,8 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     );
   }
 
+  const totalJournalCount = (zone.journal?.length || 0) + (gardenJournal?.length || 0);
+
   return (
     <Container className="animate-in slide-in-from-right-4 duration-300">
       <PageHeader 
@@ -221,6 +233,23 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
               )}
             </div>
           ))
+        )}
+      </div>
+
+      <div className="border-t border-slate-200 dark:border-slate-800 mt-6 pt-6 mb-4">
+        <button onClick={() => toggleSection('journal')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+          <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+            Zone Journal <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({totalJournalCount})</span>
+          </Subtitle>
+          <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('journal') ? 'rotate-180' : ''}`}>▼</span>
+        </button>
+        {expandedSections.includes('journal') && (
+          <ZoneJournal 
+            zone={zone} 
+            onUpdate={(updates) => onUpdateZone(zone.id, updates)} 
+            showToast={showToast} 
+            currentUser={currentUser}
+          />
         )}
       </div>
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>

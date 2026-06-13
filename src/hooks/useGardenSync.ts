@@ -70,7 +70,6 @@ export function useGardenSync(
         }
 
         setGardenProfile(data.garden || null);
-        setInstances(data.instances || []);
         setArchetypes(data.archetypes || []);
         
         let loadedZones: Zone[] = data.zones || [];
@@ -89,10 +88,79 @@ export function useGardenSync(
           return loc;
         });
 
+        let loadedInstances: PlantInstance[] = data.instances || [];
+        let loadedGardenJournal: JournalEntry[] = data.gardenJournal || [];
+
+        // --- ONE-TIME DATA MIGRATION: Move old batch events from plants to parent journals ---
+        let hasMigrated = false;
+        const macroEventsMap = new Map<string, JournalEntry>();
+
+        loadedInstances = loadedInstances.map(inst => {
+          if (!inst.journal || !inst.journal.some(j => j.batchScope || j.activityType === 'Heavy Rain')) {
+            return inst;
+          }
+          
+          hasMigrated = true;
+          const cleanJournal: JournalEntry[] = [];
+          
+          inst.journal.forEach(entry => {
+            if (entry.batchScope || entry.activityType === 'Heavy Rain') {
+              const scope = entry.batchScope || 'the entire garden';
+              const key = `${entry.activityType}-${entry.timestamp}-${scope}`;
+              if (!macroEventsMap.has(key)) {
+                // Save exactly one copy of the macro event
+                macroEventsMap.set(key, { ...entry, id: `mig-${entry.id}` });
+              }
+            } else {
+              cleanJournal.push(entry);
+            }
+          });
+          
+          return { ...inst, journal: cleanJournal };
+        });
+
+        if (hasMigrated) {
+          macroEventsMap.forEach(entry => {
+            const scope = entry.batchScope || '';
+            if (scope === 'the entire garden' || entry.activityType === 'Heavy Rain') {
+              loadedGardenJournal.push(entry);
+            } else if (scope.endsWith(' zone')) {
+              const zoneName = scope.replace('the ', '').replace(' zone', '');
+              const targetZone = loadedZones.find(z => z.name === zoneName);
+              if (targetZone) {
+                targetZone.journal = targetZone.journal || [];
+                targetZone.journal.push(entry);
+              } else {
+                loadedGardenJournal.push(entry);
+              }
+            } else if (scope.endsWith(' location')) {
+              const locName = scope.replace('the ', '').replace(' location', '');
+              const targetLoc = loadedLocations.find(l => l.name === locName);
+              if (targetLoc) {
+                targetLoc.journal = targetLoc.journal || [];
+                targetLoc.journal.push(entry);
+              } else {
+                loadedGardenJournal.push(entry);
+              }
+            } else {
+              loadedGardenJournal.push(entry);
+            }
+          });
+
+          loadedGardenJournal.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          loadedZones.forEach(z => z.journal?.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+          loadedLocations.forEach(l => l.journal?.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+          
+          // Force a sync to save the cleaned data back to the database immediately
+          skipNextSync.current = false;
+        }
+        // --- END MIGRATION ---
+
+        setInstances(loadedInstances);
         setZones(loadedZones);
         setLocations(loadedLocations);
         setPrintQueue(data.printQueue || []);
-        setGardenJournal(data.gardenJournal || []);
+        setGardenJournal(loadedGardenJournal);
         
         setIsDbLoaded(true);
         setInitialLoadSuccess(true);
