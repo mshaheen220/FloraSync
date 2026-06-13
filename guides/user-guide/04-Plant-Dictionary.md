@@ -7,33 +7,28 @@ tags: ["dictionary", "archetypes", "database", "care", "fun facts", "global"]
 
 # Global Plant Dictionary
 
-A centralized database of "Plant Archetypes" (species or varieties) that is **global across all workspaces and gardens**. Instead of entering data for every single tomato plant, you define the "Heirloom Tomato" archetype once, and your individual physical plants inherit these rules.
+Think of the Plant Dictionary as your master blueprint! It's a centralized database of "Plant Archetypes" (species or varieties) that is shared **globally across all workspaces and gardens**. Instead of entering the same rules for every single tomato plant you grow, you define an "Heirloom Tomato" blueprint once, and all your physical tomato plants will automatically inherit those rules.
 
-## Administration & Maintenance
-Because the dictionary acts as the global source of truth, only Garden Owners and Admins have permission to add or update archetypes. They can manually create entries via the UI or use bulk import tools (see Settings) to quickly populate the database.
+### Administration & Maintenance
+To keep this master reference clean and perfectly accurate, only Garden Owners and Admins have permission to add new plants or edit existing entries. Helpers and Viewers can still view the dictionary and plant from it!
 
-## Archetype Details
-To provide the best guidance for physical plants, a new archetype entry gathers extensive cultivation data, including:
-* **Basic Info:** Common Name, Scientific Name, Category, Lifecycle, Growth Habit.
-* **Care Routines:** Sun Requirements, Watering Intervals, Feeding Intervals, What to Feed, Pruning Tips, Growth Requirements.
-* **Harvest & Yield:** Days to Harvest, Flavor Profile, Uses for Large Harvests.
-* **Planting & Environment:** When to Plant, When to Harvest, Planting Instructions, Hardiness Zones, Hardiness Notes.
-* **Ecosystem:** Companion Plants, Combative Plants.
-* **Extras:** Fun Facts and Image Thumbnails.
+### The Blueprint Details
+A great dictionary entry gives your plants the best chance to thrive. When an Admin creates a new blueprint, they can fill it with tons of helpful info:
+* **Care Routines:** Exactly how much sun it needs, and how many days should pass between watering or feeding.
+* **Harvest & Yield:** How long until it's ready to pick, what it tastes like, and what to do with a massive harvest.
+* **Ecosystem Secrets:** What companion plants it loves to grow next to, and which combative plants to keep far away!
+* **Extras:** Beautiful photos and fun botanical trivia.
 
-## Organization & Safety
-The dictionary features a dynamic search and categorization engine. As you type in the search bar, the UI automatically groups and expands relevant plant categories. To prevent data corruption and orphaned records, FloraSync includes a strict relational safety lock: an Archetype cannot be deleted if there are any living `PlantInstance`s currently using it in your garden.
+### Beautifully Organized & Safe
+Looking for a specific fern? Start typing in the search bar, and the dictionary will automatically spring open to exactly what you're looking for. 
+FloraSync also comes with a built-in safety net: it will completely prevent you from accidentally deleting a Dictionary entry if there are still living plants in your garden relying on those rules!
 
-## Archetype Detail View (`ArchetypeDetail.tsx`)
-The detail screen operates in two distinct modes based on user permissions and context:
-* **View Mode:** Presents a highly visual, read-only summary of the archetype. Information is intelligently grouped into collapsible accordion sections (Cultivation Basics, Details & Traits, Lifecycle & Harvest, and Fun Facts). The UI uses smart validation to dynamically hide any empty fields or arrays, ensuring a clean interface without blank gaps. Helpful visual cues, like dynamic icons that change based on sun, water, and feeding requirements, provide at-a-glance care summaries.
-* **Edit/New Mode:** Authorized Admins can toggle into edit mode (handled via the `ArchetypeForm`) to update the archetype's comprehensive data points. When creating a new archetype, the system automatically generates a unique identifier from the common name and prevents duplicate entries.
+### Exploring a Plant
+When you tap on a plant in the Dictionary, you'll get a gorgeous, highly visual summary of its needs. We intelligently hide any blank fields so the screen always looks clean, and we use dynamic icons that instantly show you its sun, water, and food requirements at a glance. Authorized Admins will see a quick toggle to jump into "Edit Mode" to tweak the rules whenever needed.
 
-## Rich Media & Trivia (`FunFactManager.tsx`)
-To make the dictionary engaging and educational, the system includes a dedicated inline manager for creating rich "Fun Facts" or trivia about a plant. During archetype editing, this manager allows admins to:
-* Add multiple trivia items, seamlessly converting legacy string-only facts into rich objects behind the scenes.
-* Expand specific facts inline to edit them without leaving the context of the main form.
-* Assign specific context icons from a predefined list (e.g., "Bugs", "Food", "Dangerous", "Science") to visually categorize the trivia.
-* Upload custom thumbnail images that override the default icons.
-* Add custom titles and source attributions to specific facts.
-* View a real-time layout preview of how the fact will look to end-users on the detail screen.
+### Rich Media & Fun Facts!
+Gardening should be fun and educational! That's why the dictionary includes a powerful Fun Fact manager. While editing a plant, Admins can:
+* Add bite-sized trivia or historical uses.
+* Tag facts with cool visual icons (like "Bugs", "Food", "Dangerous", or "Science").
+* Upload custom thumbnails just for that specific fact.
+* Add specific titles or quotes and instantly see a live preview of how it will look to everyone else!

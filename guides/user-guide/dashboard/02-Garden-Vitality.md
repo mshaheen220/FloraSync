@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "vitality", "stats", "health"]
 
 # Garden Vitality
 
-A high-level summary showing the overall hydration and nutrition percentages of your entire tracked garden, along with active plant counts.
+Get the big picture at a glance! This handy widget gives you a quick snapshot of your entire garden's overall health, showing you exactly how hydrated and well-fed your plants are, along with a live count of everything you're currently growing.

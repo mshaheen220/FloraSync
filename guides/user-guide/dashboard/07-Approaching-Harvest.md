@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "harvest", "countdown", "bloom", "milestones"]
 
 # Approaching Harvest
 
-Scans the planting dates and lifecycle data of active crops to count down the days until they are ready to pick or expected to bloom.
+The best part of gardening! FloraSync automatically scans your planting dates and counts down the days until your delicious veggies are ready to pick or your beautiful flowers are expected to bloom.

@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "quick actions", "batch actions", "water all", "ra
 
 # Quick Actions
 
-A horizontal scroll of one-tap actions. Includes global batch actions ("Water All"), environmental logging ("Log Rain"), and any specific batch actions you've pinned from Location, Zone, or Plant profiles.
+Your favorite chores, just one tap away! Scroll through this handy list of buttons to instantly log a heavy rain, water your entire garden, or trigger any specific custom chores you've pinned from your shelves and zones.

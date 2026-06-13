@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "health", "watchlist", "issues", "pests", "disease
 
 # Health Watchlist
 
-Pulls data directly from your Plant Journals. If a recent journal entry flags a health issue (e.g., "Aphids", "Fungus"), the plant is pinned here until a new journal entry marks it as "Resolved" or "Healthy".
+Keep a close eye on the sick bay! If you log a pest sighting like aphids or a nasty fungus in a plant's journal, FloraSync will automatically pin that plant right here on your dashboard. It will stay on your Watchlist to remind you to check on it until you log a new journal entry marking it as "Resolved" or "Healthy"!

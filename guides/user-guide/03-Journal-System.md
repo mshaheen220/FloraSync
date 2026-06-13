@@ -7,9 +7,9 @@ tags: ["journal", "history", "timeline", "notes", "trickle-down", "observations"
 
 # Unified Trickle-Down Journal System
 
-FloraSync features a powerful, context-aware journal engine (`SharedJournalFeed.tsx` & `SharedJournalForm.tsx`) that tracks care history and observations without duplicating data or bloating the database.
+FloraSync features a magical, context-aware journal that tracks your garden's complete history without forcing you to log the same thing over and over!
 
-* **Omni-Level Logging:** You can attach rich notes, photos, and activities (like pruning, harvesting, or pest sightings) to any entity level: the Global Garden, a Macro Zone, a Micro Location, or a Specific Plant Instance.
-* **The Trickle-Down Engine:** The journal operates on a seamless inheritance model. If you execute a macro event like "Water Greenhouse" or log "Heavy Rain" at the global level, the database creates *exactly one* journal entry at that parent level. When you view a specific plant inside that greenhouse, its personal timeline dynamically pulls in and displays that parent event as an "Inherited Event" without actually copying the data.
-* **Context-Aware Feeds:** The UI intelligently adapts based on where you are viewing it. In the Global Master Journal, it aggregates every event across your entire garden into a single, filterable timeline. On a specific plant profile, it displays a focused timeline and restricts editing/deleting to local events, keeping macro-events safely locked to their parent source.
-* **Routine Care Toggles:** Users can easily toggle "Show Routine Care" on or off in any feed to filter out the noise of daily watering and feeding, allowing them to focus purely on major milestones, observations, and photos.
+* **Log Anywhere:** You can attach rich notes, photos, and activities (like pruning, harvesting, or spotting pests) exactly where they belong: to the entire Garden, a specific Zone, a Location shelf, or just one individual Plant.
+* **The "Trickle-Down" Magic:** If you water your entire Greenhouse or log a "Heavy Rain" for the whole garden, FloraSync handles it smartly. It logs that big event *once* at the top level. But when you check on a specific little fern inside that greenhouse, its personal timeline will still dynamically show that "Inherited Event"—keeping you fully informed without cluttering up your data!
+* **Smart Feeds:** The journal adapts to what you are looking at. The Master Journal shows you a beautiful timeline of everything happening everywhere. But if you open a specific plant's profile, the timeline filters down to show only the history and inherited events that matter to *that* specific plant.
+* **Filter the Noise:** Don't want to scroll past a hundred "Watered" and "Fed" logs just to find the photo you took last month? Easy! Just toggle off "Show Routine Care" to hide the daily chores, leaving a clean timeline of your major milestones, notes, and photos.

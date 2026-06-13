@@ -7,14 +7,14 @@ tags: ["zones", "locations", "ecosystems", "hierarchy", "spaces", "batch actions
 
 # Spaces & Ecosystems (Zones & Locations)
 
-FloraSync uses a strict relational hierarchy (Zone ➔ Location ➔ Plant) to keep your garden organized and to automate environmental care calculations.
+To keep your garden perfectly organized and to make our smart hydration math possible, FloraSync groups your physical spaces into two simple levels: **Zones** and **Locations**. This means every plant has a specific home!
 
-* **Macro Zones:** Represent large physical areas like a "Greenhouse" or "Front Porch". (`ZoneManager.tsx`)
-  * **Environmental Modifiers:** You can assign custom evaporation modifiers (e.g., 1.5x for a hot, windy patio, or 0.5x for a humid, shaded indoor greenhouse) which dynamically speed up or slow down the watering schedules for every plant inside it.
-  * **Covered Areas:** Zones can be flagged as "Covered (No Natural Rain)" to signify areas excluded from natural weather events.
-* **Micro Locations:** Specific shelves, beds, or rows within a Zone (e.g., "Top Shelf", "South Bed"). This allows you to pinpoint exactly where a specific pot lives. (`LocationManager.tsx`)
-  * **Smart Grouping:** In the manager view, locations are automatically grouped and sorted by their parent Zone using collapsible accordions, ensuring organized navigation even in massive gardens.
-  * **Location Profiles:** Tapping a location reveals a dedicated dashboard featuring a customizable cover photo, a live summary of all active plants assigned to that spot, and a localized Trickle-Down journal feed.
-  * **Action Pinning:** Users can pin specific batch actions to the top of the location profile, giving them one-tap access to routine maintenance for that specific shelf or bed.
-* **Zero-Click Batch Actions:** Scanning a Zone or Location QR code allows you to execute batch actions (like "Water All" or "Feed All") for dozens of plants instantly. Thanks to the Trickle-Down architecture, this writes a single clean journal entry to the parent space instead of spamming individual plant histories.
-* **Just-In-Time Registration:** If you scan a brand new, unassigned QR code and choose to register it as a Location or Zone, the app provides a seamless onboarding form to name it and link it into your hierarchy on the spot.
+* **Macro Zones:** Think of these as your large, distinct environments (like "Greenhouse", "Front Porch", or "Backyard Raised Beds").
+  * **Custom Environments:** Every Zone has its own microclimate! You can tell FloraSync if a Zone dries out quickly (like a hot, windy patio) or slowly (like a humid indoor tent), and it will automatically adjust the watering schedules for every plant living there.
+  * **Covered Areas:** Have a patio roof? Just flag the Zone as "Covered" so FloraSync knows natural rainstorms won't reach the plants underneath it.
+* **Micro Locations:** These are the specific shelves, beds, or rows *inside* a Zone (e.g., "Top Shelf", "Tomato Row"). This lets you pinpoint exactly where a specific pot lives.
+  * **Organized Navigation:** In your Spaces view, Locations are neatly grouped under their parent Zone, keeping things tidy no matter how big your garden gets.
+  * **Location Profiles:** Tapping a location opens its own mini-dashboard! You can set a fun cover photo, see a live count of everything growing there, and review its specific journal history.
+  * **One-Tap Chores:** You can pin specific batch actions to a location. Need to water everything on the "Top Shelf"? Do it with a single tap!
+* **Zero-Click Batch Actions:** Want to go even faster? Print out a physical QR code for a Zone or Location and stick it nearby. Scanning it can instantly process a "Water All" or "Feed All" command for every plant in that space—you won't even need to tap your screen!
+* **Scan-to-Build:** Expanding your setup? Stick a blank QR tag onto a brand new shelf, scan it, and FloraSync will walk you through naming and registering that new location on the spot.

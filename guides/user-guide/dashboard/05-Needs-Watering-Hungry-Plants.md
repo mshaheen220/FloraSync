@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "water", "feed", "hungry", "thirsty", "fertilizer"
 
 # Needs Watering & Hungry Plants
 
-Distinct queues displaying individual plants that are overdue for water or fertilizer, complete with what specific food they need according to their archetype.
+Your daily to-do lists! These simple queues show you exactly which individual plants are begging for a drink or a snack. The Hungry queue will even remind you exactly what kind of fertilizer each plant prefers!

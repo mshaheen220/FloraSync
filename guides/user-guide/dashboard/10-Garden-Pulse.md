@@ -8,4 +8,4 @@ tags: ["dashboard", "widget", "pulse", "social", "activity", "recent", "log"]
 
 # Garden Pulse
 
-A localized social feed showing the 5 most recent actions taken across your garden by any collaborator.
+See what's happening right now! Garden Pulse is a fun, live timeline showing the most recent chores and updates logged across your garden by you or any of your helpers.

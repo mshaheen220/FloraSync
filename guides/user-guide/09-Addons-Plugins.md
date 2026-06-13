@@ -7,18 +7,19 @@ tags: ["addons", "plugins", "manifest", "extensions", "customization"]
 
 # Addon / Plugin System
 
-FloraSync features a robust, secure plugin architecture (`AddonManager.tsx` & `server/routes/addons.js`) allowing developers to seamlessly extend the app's functionality with custom code, external API integrations, and new UI elements.
+Want to give your garden superpowers? FloraSync features a secure plugin system that allows you to seamlessly add awesome new features, connect to outside weather services, or introduce fun new buttons to your app!
 
-* **Plugin Capabilities:** Plugins can inject custom Action Buttons directly into plant profiles, append new Activity Types to the Master Journal, provide custom settings forms, and execute custom backend JavaScript.
-* **Role-Based Permissions:**
-  * **System Admin ("God-Admin"):** Has exclusive rights to upload new `.zip` plugin packages and permanently delete or uninstall them from the server disk.
-  * **Workspace Owners:** Can activate or deactivate installed plugins for their specific garden, and configure the plugin's custom settings.
-  * **Helpers & Viewers:** Can view which plugins are active on the server but cannot modify their states.
-* **Package Structure:** A plugin is distributed as a `.zip` file. The backend intelligently handles the extraction, but it strictly requires a `manifest.json` file.
-  * **Manifest Requirements:** Must include `id`, `name`, `version`, and an `uninstallScript` (to safely clean up the database if the plugin is ever removed).
-  * **Optional Hooks:** Can include an `installScript` (runs immediately upon upload), an `executeScript` (handles backend API calls triggered by custom UI buttons), and a `settingsSchema` (which automatically generates a clean settings form in the UI).
-* **Installation & Activation Lifecycle:**
-  1. **Upload:** A God-Admin uploads the `.zip`. The system validates the manifest, extracts the files to `src/data/plugins/`, and runs the `installScript` to prepare any required database tables.
-  2. **Activate:** An Owner clicks "Activate", making the plugin's UI hooks (like journal types or buttons) visible across their workspace.
-  3. **Configure:** Owners can open the dynamically generated settings modal to configure API keys, coordinates, or preferences defined by the plugin's schema.
-  4. **Execute:** Users interact with the plugin in the UI, which routes secure requests to the backend `execute.js` script.
+### What Can Plugins Do?
+Plugins are like mini-apps inside FloraSync. They can magically:
+* **Add New Buttons:** Inject custom "Quick Action" buttons directly onto your plant profiles.
+* **Expand Your Journal:** Add brand new activity types to your Master Journal (like "Tested Soil pH" or "Tethered to Trellis").
+* **Connect to the World:** Safely connect your local garden to external services, like live local weather alerts or soil evapotranspiration data!
+
+### Who Can Do What?
+To keep your garden perfectly safe, plugin powers are strictly divided by your role:
+* **System Admins:** Have the exclusive power to upload new plugin files to the server and permanently install or delete them.
+* **Garden Owners:** Once a plugin is safely installed on the server, Garden Owners get to decide if they actually want to turn it on! They can click "Activate" to enable it for their specific garden and fill out any custom settings (like setting a zip code for weather).
+* **Helpers & Viewers:** Can see which fun plugins are currently running and enjoy using their features, but they can't change any of the core settings.
+
+### Getting Started
+If your System Admin has uploaded a new Plugin, all the Garden Owner has to do is tap **Activate**. If the plugin requires a little extra info (like your local coordinates), a special Settings menu will pop up to guide you through it. Once configured, your shiny new features will instantly appear across your workspace!

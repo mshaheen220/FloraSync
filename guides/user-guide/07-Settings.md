@@ -7,31 +7,12 @@ tags: ["settings", "admin", "profile", "users", "import", "sandbox", "optimizati
 
 # Settings & Administration
 
-The General Settings screen (`SettingsManager.tsx`) serves as the control center for your account and garden workspace. It dynamically renders sections based on your role and permissions:
+The Settings screen is the master control center for your account and your garden workspace. FloraSync is smart, so it only shows you the tools you actually have permission to use based on your role!
 
-* **Garden Profile:** Update the workspace name and cover photo for the active garden.
-* **Account Info:** Manage your personal details, email, and active session.
-* **User Administration:** Authorized admins can manage system users, assign workspace roles (e.g., viewer, admin), and control access permissions.
-* **Data Import & Optimization:** Access powerful tools to manage your database payload and bulk-import new dictionary archetypes.
-  * **Plant Package Import:** FloraSync supports uploading a `.zip` package containing a JSON array of plant archetypes alongside their local image files. The system automatically reads the JSON, matches the `imageUrl` paths to the files inside the zip, converts them into compressed data, and safely merges them into your global dictionary.
-    * **Zip File Structure Example:**
-      ```text
-      /new-plants.json
-      /images/vegetables/spaghetti-squash.jpg
-      ```
-    * **JSON Payload Example (`new-plants.json`):**
-      ```json
-      [
-        {
-          "id": "spaghetti-squash",
-          "commonName": "Spaghetti Squash",
-          "category": "Vegetable",
-          "lifecycle": "Annual",
-          "sunRequirement": "Full Sun",
-          "waterIntervalDays": 3,
-          "imageUrl": "images/vegetables/spaghetti-squash.jpg"
-        }
-      ]
-      ```
-  * **Database Optimization:** A one-click utility that safely scans your entire database (plants, journals, locations, and zones) and permanently compresses any oversized photos, drastically speeding up your local network syncs.
-* **Sandbox Management:** A special, restricted tool for "God-Admins" to instantly wipe and restore the Demo Garden to its initial seed state.
+* **Garden Profile:** Give your workspace a fun name and a beautiful cover photo.
+* **Account Info:** Manage your personal details and active session.
+* **User Administration:** Got helpers? Authorized Admins can invite new users, manage who has access to the garden, and decide who gets to be a Viewer, Helper, or a fellow Admin.
+* **Data Import & Optimization:** Powerful tools to keep your garden running smoothly:
+  * **Plant Package Import:** Want to add a ton of plants to your Dictionary all at once? Admins can upload a special `.zip` file containing new plant profiles and their photos. FloraSync will read the file, compress the images, and magically merge them all into your master Dictionary!
+  * **Database Optimization:** Snapped way too many high-resolution photos of your prized tomatoes? This one-click magic button safely scans your entire garden history and permanently compresses oversized photos, keeping your app lightning fast!
+* **Sandbox Management:** A special reset button just for System Admins to instantly wipe and restore the Demo Garden back to its original state.
