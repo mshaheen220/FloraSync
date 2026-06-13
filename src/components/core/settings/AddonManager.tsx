@@ -3,6 +3,7 @@ import { Card, Button, Input, Toast } from '../../../styles/StyledElements';
 import { AddonManifest, User } from '../../../../types';
 import { Icon } from '../../common/Icon';
 import JSZip from 'jszip';
+import { apiFetch } from '../../../utils/api';
 
 // Local registry for the MVP. Later, this could be fetched from the server.
 const AVAILABLE_ADDONS: AddonManifest[] = [
@@ -24,12 +25,10 @@ const AVAILABLE_ADDONS: AddonManifest[] = [
 
 interface AddonManagerProps {
   currentUser: User | null;
-  token?: string | null;
 }
 
 export const AddonManager: FC<AddonManagerProps> = ({
-  currentUser,
-  token
+  currentUser
 }) => {
   const [toastMessage, setToastMessage] = useState<ReactNode>('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -47,9 +46,6 @@ export const AddonManager: FC<AddonManagerProps> = ({
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
   const installedAddons = currentUser?.installedAddons || [];
   const activeAddons = currentUser?.activeAddons || [];
   const addonSettings = currentUser?.addonSettings || {};
@@ -59,9 +55,8 @@ export const AddonManager: FC<AddonManagerProps> = ({
   const canManageAddons = isSystemAdmin || isOwner;
 
   const apiCall = async (endpoint: string, payload: any) => {
-    const res = await fetch(`${apiBase}/api/addons/${endpoint}`, {
+    const res = await apiFetch(`/api/addons/${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(payload)
     });
     const data = await res.json();

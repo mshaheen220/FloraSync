@@ -3,19 +3,16 @@ import { Card, Button } from '../../../styles/StyledElements';
 import JSZip from 'jszip';
 import { Icon } from '../../common/Icon';
 import { compressBase64Image } from '../../../utils/imageCompression';
+import { apiFetch } from '../../../utils/api';
 
 interface DataImportProps {
-  token?: string | null;
   showToast: (msg: string) => void;
 }
 
-export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
+export const DataImport: FC<DataImportProps> = ({ showToast }) => {
   const [isImporting, setIsImporting] = useState(false);
   const [showImportHelp, setShowImportHelp] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -62,12 +59,8 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
       }
 
       // Fire the processed payload to your existing API route
-      const res = await fetch(`${apiBase}/api/import`, {
+      const res = await apiFetch('/api/import', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ type: 'archetypes', data })
       });
       const result = await res.json();
@@ -90,7 +83,7 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
     if (!window.confirm('This will safely scan your entire database and permanently compress any oversized photos to speed up syncing. Proceed?')) return;
     setIsImporting(true);
     try {
-      const res = await fetch(`${apiBase}/api/state`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await apiFetch('/api/state');
       const data = await res.json();
       
       let compressedCount = 0;
@@ -139,7 +132,7 @@ export const DataImport: FC<DataImportProps> = ({ token, showToast }) => {
       }
 
       if (compressedCount > 0) {
-        await fetch(`${apiBase}/api/state`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(data) });
+        await apiFetch('/api/state', { method: 'POST', body: JSON.stringify(data) });
         const mbSaved = (savedBytes * (3/4) / 1024 / 1024).toFixed(2); // Convert base64 string length back to actual file size bytes
         showToast(`✅ Compressed ${compressedCount} images! Saved ~${mbSaved} MB.`);
         setTimeout(() => window.location.reload(), 2500);

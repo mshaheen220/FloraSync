@@ -1,6 +1,7 @@
 import { FC, ChangeEvent, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { compressImage } from '../../utils/imageCompression';
+import { apiFetch } from '../../utils/api';
 
 interface ImageUploadInputProps {
   onUpload: (url: string) => void;
@@ -35,13 +36,8 @@ export const ImageUploadInput: FC<ImageUploadInputProps> = ({ onUpload, type = '
         formData.append('type', type); // Determines backend cropping rules
 
         // 4. Securely upload to backend
-        const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-        const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-        const token = localStorage.getItem('florasync_token');
-
-        const uploadRes = await fetch(`${apiBase}/api/upload/image`, {
+        const uploadRes = await apiFetch('/api/upload/image', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` },
           body: formData
         });
 

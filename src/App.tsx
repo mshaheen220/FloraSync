@@ -7,6 +7,7 @@ import { useTheme, Theme, ColorTheme } from './hooks/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { useGardenState } from './hooks/useGardenState';
 import { useGardenSync } from './hooks/useGardenSync';
+import { apiFetch } from './utils/api';
 
 export type { Theme, User, GardenProfile, Workspace };
 
@@ -73,12 +74,8 @@ export const App: FC = () => {
     
     auth.setCurrentUser(prev => prev ? { ...prev, ...updates } : prev);
     
-    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-    
-    fetch(`${apiBase}/api/users/${auth.currentUser.id}/profile`, {
+    apiFetch(`/api/users/${auth.currentUser.id}/profile`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${auth.token}` },
       body: JSON.stringify(updates)
     }).catch(err => console.error('Failed to sync theme to server:', err));
   };
@@ -108,12 +105,8 @@ export const App: FC = () => {
   const handleLogRain = async () => {
     if (!auth.token) return 0;
     try {
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-      
-      const res = await fetch(`${apiBase}/api/gardens/action/rain`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${auth.token}` }
+      const res = await apiFetch('/api/gardens/action/rain', {
+        method: 'POST'
       });
       const data = await res.json();
       if (data.success) {

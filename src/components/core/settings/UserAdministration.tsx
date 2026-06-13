@@ -4,14 +4,14 @@ import { User } from '../../../App';
 import { UserCard } from './UserCard';
 import { hasPermission } from '../../../utils/permissions';
 import { Icon } from '../../common/Icon';
+import { apiFetch } from '../../../utils/api';
 
 interface UserAdministrationProps {
   currentUser: User;
-  token?: string | null;
   showToast: (msg: string) => void;
 }
 
-export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, token, showToast }) => {
+export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, showToast }) => {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newFullName, setNewFullName] = useState('');
@@ -25,38 +25,31 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   const [grantGardenId, setGrantGardenId] = useState('');
   const [grantRole, setGrantRole] = useState('helper');
 
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
   useEffect(() => {
-    if (hasPermission(currentUser, 'manage_system_users') && token) {
-      fetch(`${apiBase}/api/users`, { headers: { 'Authorization': `Bearer ${token}` } })
+    if (hasPermission(currentUser, 'manage_system_users')) {
+      apiFetch('/api/users')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.users) setUsersList(data.users);
         })
         .catch(err => console.error('Failed to load users:', err));
         
-      fetch(`${apiBase}/api/gardens`, { headers: { 'Authorization': `Bearer ${token}` } })
+      apiFetch('/api/gardens')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.gardens) setGardensList(data.gardens);
         })
         .catch(err => console.error('Failed to load gardens:', err));
     }
-  }, [currentUser, apiBase, token]);
+  }, [currentUser]);
 
   const handleCreateUser = async (e: FormEvent) => {
     e.preventDefault();
     if (!newUsername || !newPassword) return;
     setIsCreatingUser(true);
     try {
-      const res = await fetch(`${apiBase}/api/users`, {
+      const res = await apiFetch('/api/users', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ username: newUsername, password: newPassword, name: newFullName, gardenId: selectedGardenId })
       });
       const data = await res.json();
@@ -81,9 +74,8 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   const handleDeleteUser = async (userId: string, username: string) => {
     if (!window.confirm(`Are you sure you want to permanently delete user '${username}' and all their garden data?`)) return;
     try {
-      const res = await fetch(`${apiBase}/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await apiFetch(`/api/users/${userId}`, {
+        method: 'DELETE'
       });
       const data = await res.json();
       if (data.success) {
@@ -99,9 +91,8 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
     const newPass = window.prompt(`Enter new password for ${username}:`);
     if (!newPass) return;
     try {
-      const res = await fetch(`${apiBase}/api/users/${userId}`, {
+      const res = await apiFetch(`/api/users/${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ password: newPass })
       });
       const data = await res.json();
@@ -120,7 +111,7 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
     }
     setManagingAccessUserId(userId);
     try {
-      const res = await fetch(`${apiBase}/api/users/${userId}/gardens`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await apiFetch(`/api/users/${userId}/gardens`);
       const data = await res.json();
       if (data.success) {
         setUserAccessList(data.access);
@@ -133,9 +124,8 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   const handleGrantAccess = async (userId: string) => {
     if (!grantGardenId) return;
     try {
-      const res = await fetch(`${apiBase}/api/users/${userId}/gardens`, {
+      const res = await apiFetch(`/api/users/${userId}/gardens`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ gardenId: grantGardenId, role: grantRole })
       });
       const data = await res.json();
@@ -164,9 +154,8 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
   const handleRevokeAccess = async (userId: string, gardenId: string) => {
     if (!window.confirm('Revoke this access?')) return;
     try {
-      const res = await fetch(`${apiBase}/api/users/${userId}/gardens/${gardenId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await apiFetch(`/api/users/${userId}/gardens/${gardenId}`, {
+        method: 'DELETE'
       });
       const data = await res.json();
       if (data.success) {
@@ -190,9 +179,8 @@ export const UserAdministration: FC<UserAdministrationProps> = ({ currentUser, t
     const newName = window.prompt(`Rename garden '${currentName}':`, currentName);
     if (!newName || newName === currentName) return;
     try {
-      const res = await fetch(`${apiBase}/api/gardens/${gardenId}`, {
+      const res = await apiFetch(`/api/gardens/${gardenId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: newName })
       });
       const data = await res.json();

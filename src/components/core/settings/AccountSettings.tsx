@@ -3,6 +3,7 @@ import { Card, Button, Input } from '../../../styles/StyledElements';
 import { User } from '../../../App';
 import { Icon } from '../../common/Icon';
 import { ImageUploadInput } from '../../common/ImageUploadInput';
+import { apiFetch } from '../../../utils/api';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -10,19 +11,15 @@ interface AccountSettingsProps {
   currentUser: User;
   onUpdateUser: (updates: Partial<User>) => void;
   onLogout: () => void;
-  token?: string | null;
   showToast: (msg: string) => void;
 }
 
-export const AccountSettings: FC<AccountSettingsProps> = ({ currentUser, onUpdateUser, onLogout, token, showToast }) => {
+export const AccountSettings: FC<AccountSettingsProps> = ({ currentUser, onUpdateUser, onLogout, showToast }) => {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [changeNewPassword, setChangeNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
   const handleChangePassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -32,9 +29,8 @@ export const AccountSettings: FC<AccountSettingsProps> = ({ currentUser, onUpdat
     }
     setIsUpdatingPassword(true);
     try {
-      const res = await fetch(`${apiBase}/api/users/${currentUser.id}/password`, {
+      const res = await apiFetch(`/api/users/${currentUser.id}/password`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ currentPassword, newPassword: changeNewPassword })
       });
       const data = await res.json();

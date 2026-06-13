@@ -5,6 +5,7 @@ import { PlantJournal } from './PlantJournal';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { Icon, IconName } from '../common/Icon';
+import { apiFetch } from '../../utils/api';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -120,15 +121,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   // Dynamic Plugin Execution
   const executePluginAction = async (manifestId: string, actionId: string) => {
     try {
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-      
-      // Fallback to localStorage if token isn't directly available in this component's scope
-      const token = localStorage.getItem('florasync_token'); 
-
-      const res = await fetch(`${apiBase}/api/addons/execute`, {
+      const res = await apiFetch('/api/addons/execute', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ addonId: manifestId, actionId, contextData: { qrId: instance?.qrId } })
       });
       

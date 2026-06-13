@@ -4,6 +4,7 @@ import { PrintLayout, PrintItem } from './PrintLayout';
 import { PageHeader } from '../../common/PageHeader';
 import { useGarden } from '../../../contexts/GardenContext';
 import { Icon } from '../../common/Icon';
+import { apiFetch } from '../../../utils/api';
 
 interface PrintCenterProps {
   token?: string | null;
@@ -28,9 +29,6 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
   const [blankStartId, setBlankStartId] = useState(() => Math.floor(Math.random() * 1000).toString().padStart(3, '0'));
   const [smartFill, setSmartFill] = useState(false);
 
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
@@ -38,9 +36,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
 
   useEffect(() => {
     if (token) {
-      fetch(`${apiBase}/api/prints`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      apiFetch('/api/prints')
         .then(res => res.json())
         .then(data => {
           if (data.files) {
@@ -49,7 +45,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
         })
         .catch(err => console.error('Failed to load prints:', err));
     }
-  }, [apiBase, token]);
+  }, [token]);
 
   const handleOpenPrintPreview = () => {
     const generatedItems: PrintItem[] = [];
@@ -170,9 +166,8 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
   const handleDeletePrint = async (filename: string) => {
     if (!window.confirm('Delete this print sheet?')) return;
     try {
-      const res = await fetch(`${apiBase}/api/prints/${filename}`, { 
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await apiFetch(`/api/prints/${filename}`, { 
+        method: 'DELETE'
       });
       const data = await res.json();
       if (data.success) {
@@ -209,7 +204,7 @@ export const PrintCenter: FC<PrintCenterProps> = ({ token, onOpenMenu, onOpenWor
 
   const handleDownload = async (filename: string) => {
     try {
-      const res = await fetch(`${apiBase}/api/prints/${filename}?token=${token}`);
+      const res = await apiFetch(`/api/prints/${filename}?token=${token}`);
       if (!res.ok) throw new Error('Download failed');
       const blob = await res.blob();
       

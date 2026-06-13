@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { User } from '../../types';
+import { apiFetch } from '../utils/api';
 
 export function useAuth() {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('florasync_token'));
@@ -10,12 +11,8 @@ export function useAuth() {
   });
 
   const handleLogin = async (username: string, password: string): Promise<void> => {
-    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
-    const res = await fetch(`${apiBase}/api/login`, {
+    const res = await apiFetch('/api/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
     });
 
@@ -50,11 +47,8 @@ export function useAuth() {
     localStorage.setItem('florasync_user', JSON.stringify(updatedUser));
 
     if (token) {
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-      fetch(`${apiBase}/api/users/${updatedUser.id}/profile`, {
+      apiFetch(`/api/users/${updatedUser.id}/profile`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: updatedUser.name, imageUrl: updatedUser.imageUrl })
       }).catch(err => console.error('Failed to sync profile update:', err));
     }

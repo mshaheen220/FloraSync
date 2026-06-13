@@ -9,6 +9,7 @@ import { PageHeader } from '../common/PageHeader';
 import { hasPermission } from '../../utils/permissions';
 import { AddonManager } from './settings/AddonManager';
 import { Icon } from '../common/Icon';
+import { apiFetch } from '../../utils/api';
 
 const SettingsSection: FC<{ title: string; isExpanded: boolean; onToggle: () => void; children: React.ReactNode }> = ({ title, isExpanded, onToggle, children }) => (
   <div className="border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0">
@@ -28,11 +29,10 @@ interface SettingsManagerProps {
   gardenProfile?: GardenProfile | null;
   onUpdateGarden?: (name: string, imageUrl: string) => void;
   onLogout?: () => void;
-  token?: string | null;
 }
 
 export const SettingsManager: FC<SettingsManagerProps> = ({ 
-  onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout, token 
+  onOpenMenu, onOpenWorkspaceMenu, currentUser, onUpdateUser, gardenProfile, onUpdateGarden, onLogout 
 }) => {
   const [toastMessage, setToastMessage] = useState('');
   const [expandedSettings, setExpandedSettings] = useState<string[]>([]);
@@ -50,16 +50,12 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-  const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
   const handleResetDemo = async () => {
     if (!window.confirm('WARNING: This will completely wipe and reset the Demo Garden to its initial seed state. Continue?')) return;
     
     try {
-      const res = await fetch(`${apiBase}/api/system/reset-demo`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await apiFetch('/api/system/reset-demo', {
+        method: 'POST'
       });
       const data = await res.json();
       if (data.success) {
@@ -86,12 +82,12 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
       {currentUser && onUpdateUser && onLogout && (
         <>
           <SettingsSection title="Account Info" isExpanded={expandedSettings.includes('account')} onToggle={() => toggleSetting('account')}>
-            <AccountSettings currentUser={currentUser} onUpdateUser={onUpdateUser} onLogout={onLogout} token={token} showToast={showToast} />
+            <AccountSettings currentUser={currentUser} onUpdateUser={onUpdateUser} onLogout={onLogout} showToast={showToast} />
           </SettingsSection>
 
           {hasPermission(currentUser, 'manage_system_users') && (
             <SettingsSection title="User Administration" isExpanded={expandedSettings.includes('users')} onToggle={() => toggleSetting('users')}>
-              <UserAdministration currentUser={currentUser} token={token} showToast={showToast} />
+              <UserAdministration currentUser={currentUser} showToast={showToast} />
             </SettingsSection>
           )}
 
@@ -112,14 +108,13 @@ export const SettingsManager: FC<SettingsManagerProps> = ({
 
       {hasPermission(currentUser, 'manage_dictionary') && (
         <SettingsSection title="Data Import" isExpanded={expandedSettings.includes('import')} onToggle={() => toggleSetting('import')}>
-          <DataImport token={token} showToast={showToast} />
+          <DataImport showToast={showToast} />
         </SettingsSection>
       )}
 
       <SettingsSection title="Add-ons & Plugins" isExpanded={expandedSettings.includes('addons')} onToggle={() => toggleSetting('addons')}>
         <AddonManager 
           currentUser={currentUser || null} 
-          token={token}
         />
       </SettingsSection>
 

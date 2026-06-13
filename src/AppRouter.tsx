@@ -259,7 +259,7 @@ export const AppRouter: FC<AppRouterProps> = ({
     }
 
     if (currentView === 'settings') {
-      return <SettingsManager onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} token={token} />;
+      return <SettingsManager onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} currentUser={currentUser || undefined} onUpdateUser={onUpdateUser} gardenProfile={gardenProfile} onUpdateGarden={onUpdateGarden} onLogout={onLogout} />;
     }
 
     if (currentView === 'appearance') {

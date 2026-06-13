@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { User, GardenProfile, Workspace, PlantInstance, PlantArchetype, Location, Zone, PrintQueueItem, JournalEntry } from '../../types';
+import { apiFetch } from '../utils/api';
 
 export function useGardenSync(
   token: string | null,
@@ -36,12 +37,8 @@ export function useGardenSync(
       return;
     }
 
-    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
-    fetch(`${apiBase}/api/state`, { 
+    apiFetch('/api/state', { 
       cache: 'no-store',
-      headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(async res => {
         if (!res.ok) {
@@ -166,7 +163,7 @@ export function useGardenSync(
         setInitialLoadSuccess(true);
         setSyncStatus('synced');
 
-        fetch(`${apiBase}/api/workspaces`, { headers: { 'Authorization': `Bearer ${token}` } })
+        apiFetch('/api/workspaces')
           .then(res => res.json())
           .then(wData => {
             if (wData.success) setWorkspaces(wData.workspaces);
@@ -191,15 +188,8 @@ export function useGardenSync(
     setSyncStatus('syncing');
 
     const syncTimeout = setTimeout(() => {
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-
-      fetch(`${apiBase}/api/state`, {
+      apiFetch('/api/state', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ instances, archetypes, locations, zones, printQueue, gardenJournal })
       })
       .then(res => {
@@ -218,13 +208,8 @@ export function useGardenSync(
   const handleSwitchGarden = (gardenId: string) => {
     if (!token) return;
     setIsDbLoaded(false);
-    const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-    const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
 
-    fetch(`${apiBase}/api/state?gardenId=${gardenId}`, { 
-      cache: 'no-store',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    apiFetch(`/api/state?gardenId=${gardenId}`, { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         skipNextSync.current = true;
@@ -251,11 +236,8 @@ export function useGardenSync(
     const updated = { ...gardenProfile, name, imageUrl };
     setGardenProfile(updated);
     if (token) {
-      const host = window.location.hostname === 'localhost' ? '127.0.0.1' : window.location.hostname;
-      const apiBase = ['5173', '5174', '5175'].includes(window.location.port) ? `${window.location.protocol}//${host}:5050` : '';
-      fetch(`${apiBase}/api/garden/profile`, {
+      apiFetch('/api/garden/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name, imageUrl })
       }).catch(err => console.error('Failed to sync garden profile update:', err));
     }
