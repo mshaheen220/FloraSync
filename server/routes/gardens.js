@@ -248,26 +248,13 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
         const newRatio = Math.min(1.0, currentRatio + waterFraction);
         const newDeficit = (1 - newRatio) * intervalMs;
 
-        const plantJournal = Array.isArray(inst.journal) ? [...inst.journal] : [];
-        plantJournal.push({
-          id: `jnl-rain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          timestamp: now,
-          activityType: rainType,
-          title: `${rainType} 🌧️`,
-          note: duration ? `This plant was naturally watered by ${rainType.toLowerCase()} for ${duration}.` : `This plant was naturally watered by ${rainType.toLowerCase()}.`,
-          authorName: authorName,
-          authorImageUrl: authorImageUrl,
-          batchScope: 'Natural Rain',
-          durationMinutes: durationMinutes || undefined
-        });
         return { 
           ...inst, 
           lastWatered: now, 
           rainDeficit: {
             timestamp: now,
             deficitMs: newDeficit
-          },
-          journal: plantJournal 
+          }
         };
       }
       return inst;

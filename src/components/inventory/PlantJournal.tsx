@@ -26,7 +26,8 @@ export const PlantJournal: FC<PlantJournalProps> = ({ instance, onUpdate, showTo
   const zone = useMemo(() => zones.find(z => z.id === location?.zoneId), [zones, location?.zoneId]);
 
   const allEvents = useMemo(() => {
-    const plantEvents = (instance.journal || []).map(e => ({ ...e, sourceType: 'plant', sourceName: 'This Plant' }));
+    // Filter out legacy batchScope items from plant journals so they don't duplicate trickle-down parent events
+    const plantEvents = (instance.journal || []).filter(e => !e.batchScope).map(e => ({ ...e, sourceType: 'plant', sourceName: 'This Plant' }));
     const locEvents = (location?.journal || []).map(e => ({ ...e, sourceType: 'location', sourceName: location?.name || 'Location' }));
     const zoneEvents = (zone?.journal || []).map(e => ({ ...e, sourceType: 'zone', sourceName: zone?.name || 'Zone' }));
     const globalEvents = (gardenJournal || []).map(e => ({ ...e, sourceType: 'garden', sourceName: 'Entire Garden' }));
