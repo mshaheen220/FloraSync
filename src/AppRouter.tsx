@@ -15,7 +15,7 @@ import { ZoneDetail } from './components/spaces/ZoneDetail';
 import { NavigationMenu, MenuRoute } from './components/common/NavigationMenu';
 import { GlobalJournal } from './components/inventory/GlobalJournal';
 import { LoginScreen } from './components/core/LoginScreen';
-import { HelpCenter } from './components/core/HelpCenter';
+import { HelpCenter, DeveloperGuide } from './components/core/HelpCenter';
 import { PrintCenter } from './components/core/settings/PrintCenter';
 import { useGarden } from './contexts/GardenContext';
 import { Theme } from './App';
@@ -66,7 +66,7 @@ export const AppRouter: FC<AppRouterProps> = ({
 }) => {
   const { locations } = useGarden();
 
-  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'archetypeDetail' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print' | 'journal'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'detail' | 'scanner' | 'locations' | 'archetypes' | 'archetypeDetail' | 'locationDetail' | 'zoneDetail' | 'settings' | 'appearance' | 'zones' | 'inventory' | 'help' | 'print' | 'journal' | 'developer-guide'>('dashboard');
   const [activeQr, setActiveQr] = useState<string | null>(null);
   const [activeLoc, setActiveLoc] = useState<string | null>(null);
   const [activeZone, setActiveZone] = useState<string | null>(null);
@@ -111,7 +111,7 @@ export const AppRouter: FC<AppRouterProps> = ({
     } else if (type === 'archetype' && id) {
       setActiveArchetypeId(id);
       setCurrentView('archetypeDetail');
-    } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print', 'journal'].includes(type)) {
+    } else if (['settings', 'appearance', 'zones', 'locations', 'inventory', 'archetypes', 'scanner', 'help', 'print', 'journal', 'developer-guide'].includes(type)) {
       setCurrentView(type as any);
       setActiveQr(null);
       setActiveLoc(null);
@@ -276,6 +276,10 @@ export const AppRouter: FC<AppRouterProps> = ({
 
     if (currentView === 'help') {
       return <HelpCenter gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+    }
+
+    if (currentView === 'developer-guide') {
+      return <DeveloperGuide gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
     }
 
     if (currentView === 'print') {

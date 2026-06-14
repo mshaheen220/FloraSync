@@ -38,10 +38,7 @@ interface HelpDocument {
   order?: number;
 }
 
-const loadHelpDocuments = (): HelpDocument[] => {
-  // Dynamically load all markdown files in the user-guide directory using Vite
-  const rawFiles = import.meta.glob('../../../guides/user-guide/**/*.md', { eager: true, query: '?raw', import: 'default' });
-  
+const loadDocuments = (rawFiles: Record<string, unknown>): HelpDocument[] => {
   const docs: HelpDocument[] = [];
 
   for (const [path, content] of Object.entries(rawFiles)) {
@@ -154,26 +151,39 @@ const renderMarkdownToHTML = (md: string) => {
   return html;
 };
 
-interface HelpCenterProps {
+export interface HelpCenterProps {
   gardenProfile?: GardenProfile | null;
   currentUser?: User | null;
   onOpenMenu: () => void;
   onOpenWorkspaceMenu?: () => void;
 }
 
-export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, onOpenMenu, onOpenWorkspaceMenu }) => {
+interface BaseDocumentCenterProps extends HelpCenterProps {
+  title: string;
+  welcomeTitle: string;
+  welcomeIcon: string;
+  welcomeContent: React.ReactNode;
+  rawFiles: Record<string, unknown>;
+  orderedCategories: string[];
+  storageKey: string;
+}
+
+const BaseDocumentCenter: FC<BaseDocumentCenterProps> = ({ 
+  title, welcomeTitle, welcomeIcon, welcomeContent, rawFiles, orderedCategories, storageKey,
+  gardenProfile, currentUser, onOpenMenu, onOpenWorkspaceMenu 
+}) => {
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isWelcomeExpanded, setIsWelcomeExpanded] = useState(() => {
-    const hasVisited = localStorage.getItem('florasync_help_welcome_seen');
+    const hasVisited = localStorage.getItem(storageKey);
     return !hasVisited;
   });
 
   useEffect(() => {
-    if (!localStorage.getItem('florasync_help_welcome_seen')) {
-      localStorage.setItem('florasync_help_welcome_seen', 'true');
+    if (!localStorage.getItem(storageKey)) {
+      localStorage.setItem(storageKey, 'true');
     }
-  }, []);
+  }, [storageKey]);
 
   const toggleSection = (section: string) => {
     setExpandedSections(prev => 
@@ -187,7 +197,7 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
 
   // Dynamically load, filter, and structure the tree
   const groupedDocs = useMemo(() => {
-    const allDocs = loadHelpDocuments();
+    const allDocs = loadDocuments(rawFiles);
     const isSearching = searchTerm.trim().length > 0;
     const term = searchTerm.toLowerCase();
 
@@ -222,25 +232,27 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     }, {} as Record<string, HelpDocument[]>);
 
     // Force a specific order for the main categories
-    const orderedCategories = ['Views', 'Features', 'Dashboard Widgets', 'Settings', 'Tips'];
     const grouped: Record<string, HelpDocument[]> = {};
     orderedCategories.forEach(cat => { if (unsortedGrouped[cat]) grouped[cat] = unsortedGrouped[cat] });
     Object.keys(unsortedGrouped).forEach(cat => { if (!grouped[cat]) grouped[cat] = unsortedGrouped[cat] }); // Catch stragglers
 
     return { grouped, childrenMap };
-  }, [isAdminOrOwner, searchTerm]);
+  }, [isAdminOrOwner, searchTerm, rawFiles, orderedCategories]);
 
   const categoryIcons: Record<string, string> = {
     'Views': 'layout',
     'Features': 'star',
     'Dashboard Widgets': 'dashboard',
     'Settings': 'settings',
-    'Tips': 'lightbulb'
+    'Tips': 'lightbulb',
+    'Developer Guide': 'code',
+    'Architecture': 'server',
+    'Plugins': 'box'
   };
 
   return (
     <Container className="animate-in slide-in-from-bottom-4 duration-300">
-      <PageHeader title="Help & FAQs" supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
+      <PageHeader title={title} supertitle={gardenProfile?.name || 'FloraSync'} onOpenMenu={onOpenMenu} onOpenWorkspaceMenu={onOpenWorkspaceMenu} />
 
       <Card className="mb-6 !bg-primary-50 dark:!bg-primary-900/20 !border-primary-200 dark:!border-primary-800 !p-0 overflow-hidden">
         <button 
@@ -248,18 +260,13 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
           className="w-full flex items-center justify-between text-left p-4 transition-colors hover:bg-primary-100/50 dark:hover:bg-primary-800/30 active:scale-[0.98]"
         >
           <span className="font-bold text-primary-900 dark:text-primary-300 flex items-center gap-2">
-            <span className="text-primary-600 dark:text-primary-400"><Icon name="sprout" size={24} /></span> Welcome to FloraSync
+            <span className="text-primary-600 dark:text-primary-400"><Icon name={welcomeIcon} size={24} /></span> {welcomeTitle}
           </span>
           <span className={`text-primary-600/50 dark:text-primary-400/50 transition-transform duration-200 ${isWelcomeExpanded ? 'rotate-180' : ''}`}>▼</span>
         </button>
         {isWelcomeExpanded && (
           <div className="px-4 pb-4 animate-in slide-in-from-top-2 fade-in duration-200 space-y-3">
-            <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
-              Welcome to FloraSync, your local, privacy-first garden command center! FloraSync is designed to eliminate the friction of data entry when managing your home greenhouse or raised beds by bridging the physical and digital worlds.
-            </p>
-            <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
-              Tap any topic below to explore the guide and learn how to get the absolute most out of your digital greenhouse.
-            </p>
+            {welcomeContent}
           </div>
         )}
       </Card>
@@ -322,3 +329,51 @@ export const HelpCenter: FC<HelpCenterProps> = ({ gardenProfile, currentUser, on
     </Container>
   );
 };
+
+const userGuideFiles = import.meta.glob('../../../guides/user-guide/**/*.md', { eager: true, query: '?raw', import: 'default' });
+
+export const HelpCenter: FC<HelpCenterProps> = (props) => (
+  <BaseDocumentCenter
+    {...props}
+    title="Help & FAQs"
+    welcomeTitle="Welcome to FloraSync"
+    welcomeIcon="sprout"
+    welcomeContent={
+      <>
+        <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
+          Welcome to FloraSync, your local, privacy-first garden command center! FloraSync is designed to eliminate the friction of data entry when managing your home greenhouse or raised beds by bridging the physical and digital worlds.
+        </p>
+        <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
+          Tap any topic below to explore the guide and learn how to get the absolute most out of your digital greenhouse.
+        </p>
+      </>
+    }
+    rawFiles={userGuideFiles}
+    orderedCategories={['Views', 'Features', 'Dashboard Widgets', 'Settings', 'Tips']}
+    storageKey="florasync_help_welcome_seen"
+  />
+);
+
+const devGuideFiles = import.meta.glob('../../../guides/developer-guide/**/*.md', { eager: true, query: '?raw', import: 'default' });
+
+export const DeveloperGuide: FC<HelpCenterProps> = (props) => (
+  <BaseDocumentCenter
+    {...props}
+    title="Developer Guide"
+    welcomeTitle="Developer Guide"
+    welcomeIcon="code"
+    welcomeContent={
+      <>
+        <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
+          Welcome to the FloraSync Developer Guide! Here you'll find technical documentation, architecture overviews, and guides on building plugins and extending the system.
+        </p>
+        <p className="text-sm font-medium text-primary-800 dark:text-primary-300">
+          Tap any topic below to explore the internal workings of FloraSync.
+        </p>
+      </>
+    }
+    rawFiles={devGuideFiles}
+    orderedCategories={['Developer Guide', 'Architecture', 'Plugins']}
+    storageKey="florasync_dev_welcome_seen"
+  />
+);
