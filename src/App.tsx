@@ -102,11 +102,12 @@ export const App: FC = () => {
     }
   };
 
-  const handleLogRain = async () => {
+  const handleLogRain = async (rainType?: string, duration?: string, durationMinutes?: number) => {
     if (!auth.token) return 0;
     try {
       const res = await apiFetch('/api/gardens/action/rain', {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify({ rainType, duration, durationMinutes })
       });
       const data = await res.json();
       if (data.success) {

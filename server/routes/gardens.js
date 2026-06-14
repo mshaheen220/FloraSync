@@ -178,6 +178,7 @@ router.post('/api/state', authenticateToken, (req, res) => {
 // Bulk Action Endpoint: Log Rain
 router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
   try {
+    const { rainType = 'Heavy Rain', duration = '', durationMinutes = 0 } = req.body || {};
     const userRow = db.prepare('SELECT garden_id, name, username, image_url FROM users WHERE id = ?').get(req.user.id);
     const gardenId = userRow?.garden_id;
     const authorName = userRow?.name || userRow?.username || 'Someone';
@@ -213,12 +214,13 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
         plantJournal.push({
           id: `jnl-rain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
-          activityType: 'Heavy Rain',
-          title: 'Natural Rain 🌧️',
-          note: 'This plant was naturally watered by rainfall.',
+          activityType: rainType,
+          title: `${rainType} 🌧️`,
+          note: duration ? `This plant was naturally watered by ${rainType.toLowerCase()} for ${duration}.` : `This plant was naturally watered by ${rainType.toLowerCase()}.`,
           authorName: authorName,
           authorImageUrl: authorImageUrl,
-          batchScope: 'Natural Rain'
+          batchScope: 'Natural Rain',
+          durationMinutes: durationMinutes || undefined
         });
         return { ...inst, lastWatered: now, journal: plantJournal };
       }
@@ -230,13 +232,16 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
       journal.push({
         id: `jnl-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         timestamp: now,
-        activityType: 'Heavy Rain',
-        title: 'Garden received rain 🌧️',
-        note: `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'}.`,
+        activityType: rainType,
+        title: `Garden received ${rainType.toLowerCase()} 🌧️`,
+        note: duration 
+          ? `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'} for ${duration}.`
+          : `Mother Nature naturally watered ${wateredCount} outdoor plant${wateredCount === 1 ? '' : 's'}.`,
         authorName: authorName,
         authorImageUrl: authorImageUrl,
         targetType: 'garden',
-        targetId: gardenId
+        targetId: gardenId,
+        durationMinutes: durationMinutes || undefined
       });
     }
 

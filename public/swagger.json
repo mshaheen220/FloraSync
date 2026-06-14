@@ -568,6 +568,21 @@
       "post": {
         "summary": "Bulk Action Endpoint: Log Rain",
         "tags": ["Gardens"],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rainType": { "type": "string", "example": "Light Sprinkle" },
+                  "duration": { "type": "string", "example": "1 hr 15 mins" },
+                  "durationMinutes": { "type": "integer", "example": 75 }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": { "description": "Rain logged successfully" },
           "403": { "description": "Forbidden - Viewers cannot modify state" },

@@ -120,6 +120,7 @@ export interface JournalEntry {
   batchScope?: string;
   targetId?: string;
   targetType?: 'plant' | 'location' | 'zone' | 'garden';
+  durationMinutes?: number;
 }
 
 export interface PlantInstance {

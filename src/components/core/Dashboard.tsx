@@ -1,5 +1,5 @@
 import { useMemo, FC, useState, useEffect, Suspense, useRef } from 'react';
-import { Container, Card, Toast } from '../../styles/StyledElements';
+import { Container, Card, Toast, Button } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
 import { GardenPulse } from './dashboard/GardenPulse';
 import { HealthWatchlist } from './dashboard/HealthWatchlist';
@@ -89,6 +89,41 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
     return saved ? JSON.parse(saved) : [];
   });
   const [isCustomizing, setIsCustomizing] = useState(false);
+
+  const [isRainModalOpen, setIsRainModalOpen] = useState(false);
+  const [rainType, setRainType] = useState('Heavy Rain');
+  const [rainDurationHours, setRainDurationHours] = useState('');
+  const [rainDurationMinutes, setRainDurationMinutes] = useState('');
+
+  const handleConfirmRain = async () => {
+    setIsRainModalOpen(false);
+    showToast('🌧️ Logging natural rain...');
+    if (onLogRain) {
+      let durationStr = '';
+      const h = parseInt(rainDurationHours) || 0;
+      const m = parseInt(rainDurationMinutes) || 0;
+      const totalMinutes = (h * 60) + m;
+      
+      if (h > 0 && m > 0) {
+        durationStr = `${h} hr${h !== 1 ? 's' : ''} ${m} min${m !== 1 ? 's' : ''}`;
+      } else if (h > 0) {
+        durationStr = `${h} hr${h !== 1 ? 's' : ''}`;
+      } else if (m > 0) {
+        durationStr = `${m} min${m !== 1 ? 's' : ''}`;
+      }
+
+      // @ts-ignore - Safely pass the new arguments to the context hook
+      const count = await onLogRain(rainType, durationStr, totalMinutes);
+      if (count !== undefined && count > 0) {
+        showToast(`🌧️ Logged natural rain for ${count} outdoor plants!`);
+      } else if (count === 0) {
+        showToast(`🌧️ No outdoor tracked plants were found, or all your plants are in covered zones!`);
+      }
+    }
+    setRainDurationHours('');
+    setRainDurationMinutes('');
+    setRainType('Heavy Rain');
+  };
 
   useEffect(() => {
     if (currentUser?.id) {
@@ -274,15 +309,7 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
         currentUser={currentUser!} 
         onBatchWaterAll={onBatchWaterAll} 
         onBatchFeedAll={onBatchFeedAll} 
-        onLogRain={onLogRain ? async () => {
-          showToast('🌧️ Logging natural rain...');
-          const count = await onLogRain();
-          if (count !== undefined && count > 0) {
-            showToast(`🌧️ Logged natural rain for ${count} outdoor plants!`);
-          } else if (count === 0) {
-            showToast(`🌧️ No outdoor tracked plants were found, or all your plants are in covered zones!`);
-          }
-        } : undefined}
+        onLogRain={onLogRain ? () => setIsRainModalOpen(true) : undefined}
         onBatchWaterZone={onBatchWaterZone} 
         onBatchFeedZone={onBatchFeedZone}
         onBatchWaterLocation={onBatchWaterLocation} 
@@ -381,6 +408,74 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
           </Card>
         )}
       </div>
+
+      {isRainModalOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 p-4"
+          onClick={() => setIsRainModalOpen(false)}
+        >
+          <div 
+            className="bg-surface-50 dark:bg-surface-900 rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-surface-200 dark:border-surface-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4 text-blue-500 dark:text-blue-400">
+              <Icon name="cloud-rain" size={28} />
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Log Rain</h3>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Rain Type</label>
+              <select 
+                value={rainType} 
+                onChange={e => setRainType(e.target.value)} 
+                className="w-full border-2 border-surface-200 dark:border-surface-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-surface-50 dark:bg-surface-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm font-medium"
+              >
+                <option value="Light Sprinkle">Light Sprinkle</option>
+                <option value="Steady Rain">Steady Rain</option>
+                <option value="Heavy Rain">Heavy Rain / Downpour</option>
+                <option value="Thunderstorm">Thunderstorm</option>
+              </select>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Duration (Optional)</label>
+              <div className="flex gap-3">
+                <div className="flex-1 flex items-center gap-2 bg-surface-50 dark:bg-surface-800 border-2 border-surface-200 dark:border-surface-700 rounded-xl px-3 focus-within:border-primary-500 transition-all">
+                  <input 
+                    type="number" 
+                    min="0"
+                    placeholder="0" 
+                    value={rainDurationHours} 
+                    onChange={e => setRainDurationHours(e.target.value)} 
+                    className="w-full bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 py-3 text-center"
+                  />
+                  <span className="text-sm font-bold text-slate-400">hrs</span>
+                </div>
+                <div className="flex-1 flex items-center gap-2 bg-surface-50 dark:bg-surface-800 border-2 border-surface-200 dark:border-surface-700 rounded-xl px-3 focus-within:border-primary-500 transition-all">
+                  <input 
+                    type="number" 
+                    min="0"
+                    max="59"
+                    placeholder="0" 
+                    value={rainDurationMinutes} 
+                    onChange={e => setRainDurationMinutes(e.target.value)} 
+                    className="w-full bg-transparent border-none focus:outline-none text-slate-800 dark:text-slate-100 py-3 text-center"
+                  />
+                  <span className="text-sm font-bold text-slate-400">mins</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button onClick={() => setIsRainModalOpen(false)} $variant="secondary" className="flex-1 !bg-surface-200 dark:!bg-surface-800 !text-slate-700 dark:!text-slate-300">Cancel</Button>
+              <Button onClick={handleConfirmRain} className="flex-1 flex items-center justify-center gap-2">
+                <Icon name="check" size={18} /> Log It
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );

@@ -55,7 +55,8 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
   // Core Aggregation Engine - Base filters (everything except activity)
   const baseFilteredEntries = useMemo(() => {
     const gardenArr: ExtendedJournalEntry[] = (gardenJournal || []).map(e => {
-      const isMacroEvent = e.activityType === 'Heavy Rain' || (e.activityType && routineTypes.includes(e.activityType));
+      const isRainEvent = ['Light Sprinkle', 'Steady Rain', 'Heavy Rain', 'Thunderstorm'].includes(e.activityType || '');
+      const isMacroEvent = e.targetType === 'garden' || isRainEvent || (e.activityType && routineTypes.includes(e.activityType));
       return { 
         ...e, 
         batchScope: e.batchScope || (isMacroEvent ? 'Entire Garden' : undefined),
@@ -72,6 +73,9 @@ export const GlobalJournal: FC<GlobalJournalProps> = ({ onGoBack, onOpenMenu, on
       const location = locations.find(l => l.id === inst.locationId);
       
       (inst.journal || []).forEach(e => {
+        // Skip inherited batch events so they don't spam the master journal (the parent event is already shown)
+        if (e.batchScope) return;
+        
         plantArr.push({
           ...e,
           sourceName: archetype?.commonName || 'Unknown Plant',
