@@ -4,6 +4,8 @@ import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
 import { hasPermission } from '../../utils/permissions';
 import { Icon } from '../common/Icon';
+import SwaggerUI from 'swagger-ui-react';
+import 'swagger-ui-react/swagger-ui.css';
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; level?: number; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, level = 0, children }) => (
   <div className={level === 0 ? 'border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0' : 'bg-surface-100/50 dark:bg-surface-800/30 rounded-xl p-3 mb-3 border border-surface-200 dark:border-surface-700'}>
@@ -86,6 +88,7 @@ const renderMarkdownToHTML = (md: string) => {
 
   html = html
     .replace(/^# (.*$)/gim, '') // Remove the H1 since we use the accordion title for it
+    .replace(/^#### (.*$)/gim, '<h5 class="text-sm font-bold mt-4 mb-2 text-primary-600 dark:text-primary-400">$1</h5>')
     .replace(/^### (.*$)/gim, '<h4 class="text-base font-bold mt-4 mb-2 text-primary-700 dark:text-primary-300">$1</h4>')
     .replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold mt-5 mb-2 text-primary-800 dark:text-primary-300">$1</h3>')
     .replace(/\*!Screenshot: (.*?)\*/gim, '<div class="text-xs text-slate-500 dark:text-slate-400 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 my-2">📸 $1</div>')
@@ -101,6 +104,38 @@ const renderMarkdownToHTML = (md: string) => {
       const cleanSrc = src.replace(/^(\.\.\/)+public\//, '/');
       return `<img src="${cleanSrc}" alt="${alt}" class="my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm max-w-full h-auto" />`;
     });
+
+  // Handle Tables
+  html = html.replace(/(?:^\|.*\|(?:\n|$))+/gm, (match) => {
+    const rows = match.trim().split('\n');
+    if (rows.length < 2) return match;
+    
+    // Check if second row is a separator
+    const isSeparator = /^\|?[\s\-\|:]+\|?$/.test(rows[1]);
+    if (!isSeparator) return match;
+
+    let tableHtml = '<div class="overflow-x-auto my-4 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm"><table class="w-full text-left text-sm">';
+    
+    const headers = rows[0].split('|').slice(1, -1).map(h => h.trim());
+    tableHtml += '<thead class="bg-surface-100 dark:bg-surface-800 text-slate-700 dark:text-slate-200"><tr>';
+    headers.forEach(h => {
+      tableHtml += `<th class="px-3 py-2 font-bold">${h}</th>`;
+    });
+    tableHtml += '</tr></thead>';
+
+    tableHtml += '<tbody class="divide-y divide-surface-200 dark:divide-surface-700">';
+    for (let i = 2; i < rows.length; i++) {
+      const cells = rows[i].split('|').slice(1, -1).map(c => c.trim());
+      tableHtml += '<tr class="bg-white dark:bg-surface-900">';
+      cells.forEach(c => {
+        tableHtml += `<td class="px-3 py-2 text-slate-600 dark:text-slate-300 align-top">${c}</td>`;
+      });
+      tableHtml += '</tr>';
+    }
+    tableHtml += '</tbody></table></div>\n\n';
+
+    return tableHtml;
+  });
 
   // Handle Lists
   const listItems = html.split('\n');
@@ -298,8 +333,14 @@ const BaseDocumentCenter: FC<BaseDocumentCenterProps> = ({
                 isExpanded={expandedSections.includes(doc.id)} 
                 onToggle={() => toggleSection(doc.id)}
               >
-                {/* Our custom lightweight HTML renderer */}
-                <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(doc.content) }} />
+                {/* Intercept the API Reference doc to render Swagger UI */}
+                {doc.id === 'dev-api-swagger' ? (
+                  <div className="bg-white text-slate-900 rounded-xl overflow-x-auto p-2 [&_.swagger-ui_.info]:!my-[10px]">
+                    <SwaggerUI url="/swagger.json" />
+                  </div>
+                ) : (
+                  <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(doc.content) }} />
+                )}
                 
                 {/* Nest Sub-Pages Inside */}
                 {groupedDocs.childrenMap[doc.id] && groupedDocs.childrenMap[doc.id].length > 0 && (
@@ -314,7 +355,13 @@ const BaseDocumentCenter: FC<BaseDocumentCenterProps> = ({
                         onToggle={() => toggleSection(child.id)}
                         level={1}
                       >
-                        <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(child.content) }} />
+                        {child.id === 'dev-api-swagger' ? (
+                          <div className="bg-white text-slate-900 rounded-xl overflow-x-auto p-2 [&_.swagger-ui_.info]:!my-[10px]">
+                            <SwaggerUI url="/swagger.json" />
+                          </div>
+                        ) : (
+                          <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(child.content) }} />
+                        )}
                       </HelpSection>
                     ))}
                   </div>

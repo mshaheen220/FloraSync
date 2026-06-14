@@ -1,0 +1,734 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FloraSync API",
+    "version": "1.0.0",
+    "description": "Local backend API for FloraSync greenhouse management."
+  },
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "Authenticate user and get token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string", "format": "password" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful login, returns JWT token and user details"
+          },
+          "400": {
+            "description": "Bad Request - Username and password required"
+          },
+          "401": {
+            "description": "Unauthorized - Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/users": {
+      "get": {
+        "summary": "Get all users",
+        "tags": ["Users"],
+        "responses": {
+          "200": {
+            "description": "List of users retrieved successfully"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can view users."
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new user account",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" },
+                  "name": { "type": "string" },
+                  "gardenId": { "type": "string" },
+                  "role": { "type": "string", "default": "garden-owner" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created successfully"
+          },
+          "400": {
+            "description": "Bad Request - Username and password required, or username exists"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can create new users."
+          }
+        }
+      }
+    },
+    "/api/users/{id}": {
+      "delete": {
+        "summary": "Delete a user account",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          },
+          "400": {
+            "description": "Bad Request - Cannot delete yourself"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can delete users."
+          }
+        }
+      },
+      "put": {
+        "summary": "Reset user password (Admin)",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "password": { "type": "string" }
+                },
+                "required": ["password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "400": {
+            "description": "Bad Request - Password required"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can edit users."
+          }
+        }
+      }
+    },
+    "/api/users/{id}/gardens": {
+      "get": {
+        "summary": "Get user garden access",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User garden access retrieved successfully"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can view user gardens."
+          }
+        }
+      },
+      "post": {
+        "summary": "Grant garden access",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "gardenId": { "type": "string" },
+                  "role": { "type": "string" }
+                },
+                "required": ["gardenId", "role"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access granted successfully"
+          },
+          "400": {
+            "description": "Bad Request - Garden ID and role are required"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can grant garden access."
+          }
+        }
+      }
+    },
+    "/api/users/{id}/gardens/{gardenId}": {
+      "delete": {
+        "summary": "Revoke garden access",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "gardenId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Access revoked successfully"
+          },
+          "403": {
+            "description": "Forbidden - Only admins can revoke garden access."
+          }
+        }
+      }
+    },
+    "/api/users/{id}/profile": {
+      "put": {
+        "summary": "Update user profile",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "imageUrl": { "type": "string" },
+                  "theme": { "type": "string" },
+                  "colorTheme": { "type": "string" },
+                  "iconTheme": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully"
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to edit this profile or demo account."
+          }
+        }
+      }
+    },
+    "/api/users/{id}/password": {
+      "put": {
+        "summary": "Update user password",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string" }
+                },
+                "required": ["currentPassword", "newPassword"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully"
+          },
+          "400": {
+            "description": "Bad Request - Current and new passwords are required"
+          },
+          "401": {
+            "description": "Unauthorized - Incorrect current password"
+          },
+          "403": {
+            "description": "Forbidden - Not authorized to change this password or demo account."
+          },
+          "404": {
+            "description": "Not Found - User not found"
+          }
+        }
+      }
+    },
+    "/api/upload/image": {
+      "post": {
+        "summary": "Upload an image",
+        "tags": ["Uploads"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "image": { "type": "string", "format": "binary" },
+                  "type": { "type": "string", "enum": ["profile", "garden", "general"] }
+                },
+                "required": ["image"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Image uploaded successfully"
+          },
+          "400": {
+            "description": "Bad Request - No image file provided"
+          }
+        }
+      }
+    },
+    "/api/generate-qrs": {
+      "post": {
+        "summary": "Generate QR code sheets",
+        "tags": ["Prints"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "mode": { "type": "string", "enum": ["db", "blank"] },
+                  "category": { "type": "string" },
+                  "prefix": { "type": "string" },
+                  "startId": { "type": "string" }
+                },
+                "required": ["mode"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "QR codes generated successfully" },
+          "400": { "description": "Bad Request - Invalid mode or missing fields" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/prints": {
+      "get": {
+        "summary": "List all generated QR sheets",
+        "tags": ["Prints"],
+        "responses": {
+          "200": { "description": "List of available print sheets" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/prints/{filename}": {
+      "get": {
+        "summary": "Download a specific QR sheet",
+        "tags": ["Prints"],
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { 
+            "description": "File downloaded successfully", 
+            "content": { "image/png": {} } 
+          },
+          "400": { "description": "Bad Request - Invalid filename" },
+          "404": { "description": "Not Found - File does not exist" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a generated QR sheet",
+        "tags": ["Prints"],
+        "parameters": [
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "File deleted successfully" },
+          "400": { "description": "Bad Request - Invalid filename" },
+          "404": { "description": "Not Found - File does not exist" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/system/reset-demo": {
+      "post": {
+        "summary": "Initialize and reset the Demo Garden",
+        "tags": ["System"],
+        "responses": {
+          "200": { "description": "Demo garden reset successfully" },
+          "403": { "description": "Forbidden - Only admins can reset the demo garden." },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/gardens": {
+      "get": {
+        "summary": "Admin Endpoint to Get All Gardens",
+        "tags": ["Gardens"],
+        "responses": {
+          "200": { "description": "List of all gardens retrieved successfully" },
+          "403": { "description": "Forbidden - Only admins can view all gardens." },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/gardens/{id}": {
+      "put": {
+        "summary": "Admin Endpoint to Rename Garden",
+        "tags": ["Gardens"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Garden renamed successfully" },
+          "400": { "description": "Bad Request - Name required" },
+          "403": { "description": "Forbidden - Only admins can rename gardens." },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/workspaces": {
+      "get": {
+        "summary": "Get all gardens the user has access to",
+        "tags": ["Workspaces"],
+        "responses": {
+          "200": { "description": "List of accessible workspaces retrieved successfully" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/garden/profile": {
+      "put": {
+        "summary": "Update shared garden profile info",
+        "tags": ["Gardens"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "imageUrl": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Garden profile updated successfully" },
+          "400": { "description": "Bad Request - No garden assigned" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/state": {
+      "get": {
+        "summary": "Fetch entire garden state",
+        "tags": ["State"],
+        "parameters": [
+          {
+            "name": "gardenId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Complete garden state retrieved successfully" },
+          "403": { "description": "Forbidden - Access denied to this garden" },
+          "500": { "description": "Internal server error" }
+        }
+      },
+      "post": {
+        "summary": "Update garden state",
+        "tags": ["State"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "instances": { "type": "array", "items": {} },
+                  "locations": { "type": "array", "items": {} },
+                  "zones": { "type": "array", "items": {} },
+                  "printQueue": { "type": "array", "items": {} },
+                  "gardenJournal": { "type": "array", "items": {} },
+                  "archetypes": { "type": "array", "items": {} }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Garden state updated successfully" },
+          "403": { "description": "Forbidden - Viewers cannot modify state" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/gardens/action/rain": {
+      "post": {
+        "summary": "Bulk Action Endpoint: Log Rain",
+        "tags": ["Gardens"],
+        "responses": {
+          "200": { "description": "Rain logged successfully" },
+          "403": { "description": "Forbidden - Viewers cannot modify state" },
+          "404": { "description": "Not Found - Garden not found" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/install": {
+      "post": {
+        "summary": "Install a plugin package",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "zipData": { "type": "string", "description": "Base64 encoded zip file" },
+                  "manifest": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plugin installed successfully" },
+          "400": { "description": "Bad Request - Invalid package" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/uninstall": {
+      "post": {
+        "summary": "Uninstall a plugin package",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "manifest": { "type": "object" }
+                },
+                "required": ["manifest"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plugin uninstalled successfully" },
+          "400": { "description": "Bad Request - Valid manifest required" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/activate": {
+      "post": {
+        "summary": "Activate an installed plugin",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addonId": { "type": "string" }
+                },
+                "required": ["addonId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plugin activated successfully" },
+          "403": { "description": "Forbidden - Only admins and owners can activate plugins" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/deactivate": {
+      "post": {
+        "summary": "Deactivate a plugin",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addonId": { "type": "string" }
+                },
+                "required": ["addonId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plugin deactivated successfully" },
+          "403": { "description": "Forbidden - Only admins and owners can deactivate plugins" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/execute": {
+      "post": {
+        "summary": "Execute a backend plugin action",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addonId": { "type": "string" },
+                  "actionId": { "type": "string" },
+                  "contextData": { "type": "object" }
+                },
+                "required": ["addonId", "actionId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Plugin action executed successfully" },
+          "400": { "description": "Bad Request - Plugin does not support backend execution" },
+          "404": { "description": "Not Found - Plugin not found" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/api/addons/settings": {
+      "post": {
+        "summary": "Update plugin settings",
+        "tags": ["Plugins"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "addonId": { "type": "string" },
+                  "settings": { "type": "object" }
+                },
+                "required": ["addonId", "settings"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Settings updated successfully" },
+          "403": { "description": "Forbidden - Only admins and owners can modify plugin settings" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    }
+  }
+}
