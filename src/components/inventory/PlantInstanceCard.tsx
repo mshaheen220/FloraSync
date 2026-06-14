@@ -18,7 +18,13 @@ export const PlantInstanceCard: FC<PlantInstanceCardProps> = ({ instance, archet
   
   const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
   const timeElapsed = new Date().getTime() - new Date(instance.lastWatered).getTime();
-  const ratio = Math.max(0, 1 - (timeElapsed / intervalMs));
+  
+  let effectiveDeficit = timeElapsed;
+  if (instance.rainDeficit && instance.rainDeficit.timestamp === instance.lastWatered) {
+    effectiveDeficit += instance.rainDeficit.deficitMs;
+  }
+  
+  const ratio = Math.max(0, 1 - (effectiveDeficit / intervalMs));
   const isOverdue = !instance.untracked && ratio <= 0;
 
   return (

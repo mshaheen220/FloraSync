@@ -29,8 +29,11 @@ The final target interval in milliseconds is calculated as:
 
 ### 3. Ratio Computation
 The engine determines the time elapsed since the plant's `lastWatered` timestamp.
+
+If the plant was recently watered by a *partial* rain event (e.g., a 15-minute sprinkle), the engine checks for the presence of a `rainDeficit` object. If `rainDeficit.timestamp` matches `lastWatered`, the `deficitMs` is added to the total elapsed time. This allows the plant to retain its true `lastWatered` display date in the UI while mathematically simulating that it was not fully hydrated.
+
 It computes the `ratio` using:
-`ratio = Math.max(0, 1 - (timeElapsed / intervalMs))`
+`ratio = Math.max(0, 1 - (effectiveDeficit / intervalMs))`
 
 * A ratio of `1.0` indicates maximum hydration/nutrition (just serviced).
 * As time passes, the ratio approaches `0`.

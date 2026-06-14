@@ -8,7 +8,7 @@ tags: ["dashboard", "widget", "quick actions", "batch actions", "water all", "ra
 
 # Quick Actions
 
-Your favorite chores, just one tap away! Scroll through this handy list of buttons to instantly log a heavy rain, water your entire garden, or trigger any specific custom chores you've pinned from your shelves and zones.
+Your favorite chores, just one tap away! Scroll through this handy list of buttons to instantly log natural rain (specifying the exact type and duration), water your entire garden, or trigger any specific custom chores you've pinned from your shelves and zones.
 
 > **Note 📝** 
 > To keep your garden data safe, you must be a Garden Owner, Admin, or Helper to use Quick Actions. Viewers will not see this widget!

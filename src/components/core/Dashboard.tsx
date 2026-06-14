@@ -232,7 +232,14 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
       
       const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
       const timeElapsed = today - lastWateredTime;
-      const ratio = Math.max(0, 1 - (timeElapsed / intervalMs));
+      
+      // If the last watering event was a partial rain, apply the mathematical offset
+      let effectiveDeficit = timeElapsed;
+      if (instance.rainDeficit && instance.rainDeficit.timestamp === instance.lastWatered) {
+        effectiveDeficit += instance.rainDeficit.deficitMs;
+      }
+      
+      const ratio = Math.max(0, 1 - (effectiveDeficit / intervalMs));
       
       return {
         ...instance,

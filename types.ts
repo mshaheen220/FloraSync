@@ -135,6 +135,10 @@ export interface PlantInstance {
   imageUrl?: string;   // Instance-specific custom thumbnail
   journal?: JournalEntry[];
   pinnedActions?: Record<string, string[]>;
+  rainDeficit?: {
+    timestamp: string;
+    deficitMs: number;
+  };
 }
 
 export interface Location {

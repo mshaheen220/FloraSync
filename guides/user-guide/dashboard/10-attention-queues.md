@@ -26,3 +26,8 @@ The physical environment matters just as much. If you place that Basil in a Zone
 When you water or feed a plant (like scanning its QR code or tapping the quick action button), FloraSync logs the exact timestamp. It then continuously runs a hidden countdown timer using all of that smart math.
 
 Once the calculated hydration or nutrition level hits **0%**, the plant drops directly into your **Needs Watering** or **Hungry** queue. No guesswork required!
+
+### 5. Partial Rain Logging
+When you log natural rain on your Dashboard, FloraSync calculates the exact hydration value of that weather event based on the hours and minutes you entered! 
+* A **60+ minute Heavy Rain** fully saturates your garden, completely resetting the queue to 100%. 
+* A **15 minute Light Sprinkle** only provides a fraction of the needed water, meaning a severely overdue plant might *still* be thirsty and need a supplemental hand-watering later that day!

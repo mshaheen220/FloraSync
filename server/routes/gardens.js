@@ -199,17 +199,55 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
     let instances = JSON.parse(garden.instances || '[]');
     const journal = JSON.parse(garden.journal || '[]');
 
+    const dict = db.prepare('SELECT archetypes FROM shared_dictionary WHERE id = 1').get();
+    const archetypes = JSON.parse(dict?.archetypes || '[]');
+
     // 1. Map hierarchy to find covered plants (exclusion list is safer)
     const coveredZoneIds = new Set(zones.filter(z => z.isCovered === true || z.isCovered === 'true').map(z => z.id));
     const coveredLocationIds = new Set(locations.filter(l => coveredZoneIds.has(l.zoneId)).map(l => l.id));
 
+    // Calculate effective water fraction (Assume 60 minutes is a 100% full soak)
+    let effectiveMinutes = durationMinutes;
+    if (!effectiveMinutes) {
+      if (rainType === 'Thunderstorm' || rainType === 'Heavy Rain') effectiveMinutes = 60;
+      else if (rainType === 'Steady Rain') effectiveMinutes = 30;
+      else if (rainType === 'Light Sprinkle') effectiveMinutes = 10;
+      else effectiveMinutes = 60;
+    }
+    const waterFraction = Math.min(effectiveMinutes / 60, 1.0);
+
     // 2. Update all affected instances
-    const now = new Date().toISOString();
+    const nowTime = Date.now();
+    const now = new Date(nowTime).toISOString();
     let wateredCount = 0;
 
     instances = instances.map(inst => {
       if (!coveredLocationIds.has(inst.locationId) && !inst.untracked) {
         wateredCount++;
+        
+        // Smart Hydration Advancement Calculation
+        const loc = locations.find(l => l.id === inst.locationId);
+        const zone = zones.find(z => z.id === loc?.zoneId);
+        const archetype = archetypes.find(a => a.id === inst.archetypeId);
+
+        const zoneModifier = zone?.evaporationModifier || 1.0;
+        const sunReq = archetype?.sunRequirement?.toLowerCase() || '';
+        const sunModifier = sunReq.includes('full sun') ? 1.2 : (sunReq.includes('shade') && !sunReq.includes('part') ? 0.8 : 1.0);
+        const baseIntervalDays = archetype?.waterIntervalDays || 1;
+        const intervalMs = (baseIntervalDays * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
+
+        const lastWateredTime = new Date(inst.lastWatered).getTime();
+        let currentDeficit = Math.max(0, nowTime - lastWateredTime);
+        if (inst.rainDeficit && inst.rainDeficit.timestamp === inst.lastWatered) {
+          currentDeficit += inst.rainDeficit.deficitMs;
+        }
+        
+        const currentRatio = Math.max(0, 1 - (currentDeficit / intervalMs));
+
+        // Prevent the new ratio from exceeding 100% hydration, then calculate the deficit
+        const newRatio = Math.min(1.0, currentRatio + waterFraction);
+        const newDeficit = (1 - newRatio) * intervalMs;
+
         const plantJournal = Array.isArray(inst.journal) ? [...inst.journal] : [];
         plantJournal.push({
           id: `jnl-rain-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -222,7 +260,15 @@ router.post('/api/gardens/action/rain', authenticateToken, (req, res) => {
           batchScope: 'Natural Rain',
           durationMinutes: durationMinutes || undefined
         });
-        return { ...inst, lastWatered: now, journal: plantJournal };
+        return { 
+          ...inst, 
+          lastWatered: now, 
+          rainDeficit: {
+            timestamp: now,
+            deficitMs: newDeficit
+          },
+          journal: plantJournal 
+        };
       }
       return inst;
     });

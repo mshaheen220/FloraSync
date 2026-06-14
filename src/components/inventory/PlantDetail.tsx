@@ -310,7 +310,13 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     const sunModifier = sunReq.includes('full sun') ? 1.2 : (sunReq.includes('shade') && !sunReq.includes('part') ? 0.8 : 1.0);
     
     const intervalMs = ((archetype?.waterIntervalDays || 1) * 24 * 60 * 60 * 1000) / (zoneModifier * sunModifier);
-    return (today - lastWateredTime) > intervalMs;
+    
+    let effectiveDeficit = (today - lastWateredTime);
+    if (instance.rainDeficit && instance.rainDeficit.timestamp === instance.lastWatered) {
+      effectiveDeficit += instance.rainDeficit.deficitMs;
+    }
+    
+    return effectiveDeficit > intervalMs;
   })();
 
   const isValidData = (val: string | number | null | undefined): boolean => {
