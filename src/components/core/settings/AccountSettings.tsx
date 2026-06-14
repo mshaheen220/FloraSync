@@ -65,12 +65,29 @@ export const AccountSettings: FC<AccountSettingsProps> = ({ currentUser, onUpdat
             <ImageUploadInput onUpload={(base64) => onUpdateUser({ imageUrl: base64 })} maxWidth={400} />
           </label>
         </div>
-        <div className="flex-1">
-          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Display Name</label>
-          <Input value={currentUser.name} onChange={e => onUpdateUser({ name: e.target.value })} className="!mb-0" />
+        <div className="flex-1 flex flex-col gap-3">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Display Name</label>
+            <Input value={currentUser.name} onChange={e => onUpdateUser({ name: e.target.value })} className="!mb-0 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Username (Login)</label>
+            <Input value={currentUser.username || ''} disabled className="!mb-0 py-2 text-sm bg-surface-100 dark:bg-surface-800/50 text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-80" />
+          </div>
         </div>
       </div>
       
+      <div className="flex flex-wrap gap-2 mb-4 pb-4 border-b border-surface-200 dark:border-surface-700">
+        <span className="text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-bold uppercase tracking-wider border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+          <Icon name="shield" size={12} /> System: {currentUser.role === 'god-admin' ? 'God-Admin' : 'Standard User'}
+        </span>
+        {currentUser.workspaceRole && (
+          <span className="text-[10px] bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded font-bold uppercase tracking-wider border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+            <Icon name="leaf" size={12} /> Garden: {currentUser.workspaceRole}
+          </span>
+        )}
+      </div>
+
       {!showPasswordForm ? (
         <Button $variant="secondary" type="button" onClick={() => setShowPasswordForm(true)} className="w-full mb-3 text-sm">
           Change Password

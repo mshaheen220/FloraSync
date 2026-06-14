@@ -9,8 +9,6 @@ tags: ["dashboard", "command center", "widgets", "overview"]
 
 Welcome to your personal gardening hub! The Dashboard is a smart engine that automatically builds an "Attention Queue." Instead of making you dig through lists to figure out what needs water, FloraSync pushes the most urgent tasks and fun insights right to the top of your screen.
 
-Make it yours! You can easily reorder or completely hide any of these widgets to fit your exact workflow. Even better, your layout preferences are saved to your personal profile, so your custom view won't mess up the screen for anyone else sharing your garden.
-
 ### Available Widgets
 * **Garden Vitality:** A quick snapshot showing the overall health, hydration, and nutrition levels of your entire tracked garden.
 * **Quick Actions:** A handy scroll of one-tap buttons. Quickly log rain for the whole garden or access custom chores you've pinned from your shelves and zones.
@@ -22,3 +20,13 @@ Make it yours! You can easily reorder or completely hide any of these widgets to
 * **Random Spotlight:** A rotating trivia card that gives you smart tips (like pruning reminders) or fun botanical facts based on the specific plants you're currently growing.
 * **Garden Pulse:** A live activity feed showing the most recent actions taken by you or any of your garden helpers.
 * **Local Weather & Soil Insights:** If your Admin activates the optional Weather plugin, this widget translates live weather data into actionable gardening advice, like soil temperatures and impending storm alerts!
+
+### How to Customize Your View
+You can easily reorder or completely hide any of these widgets to fit your exact workflow! Even better, your layout preferences are saved to your personal profile, so your custom view won't mess up the screen for anyone else sharing your garden.
+
+1. **Open the Editor:** Scroll all the way to the bottom of your Dashboard and tap **Customize Dashboard**.
+*!Screenshot: The Customize Dashboard button at the bottom of the feed.*
+2. **Reorder:** Grab the drag handle (the vertical dots) on the right side of any widget to slide it higher or lower in your list. 
+3. **Hide & Show:** Use the checkboxes on the left to turn widgets on or off. Don't have any seedlings? Uncheck "The Nursery" to instantly hide it!
+*!Screenshot: The customization tray showing drag handles and checkboxes.*
+4. **Save:** Tap **Done Customizing** to lock in your new layout!

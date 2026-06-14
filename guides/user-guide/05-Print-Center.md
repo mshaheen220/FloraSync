@@ -17,5 +17,9 @@ The Print Center is the magic bridge between your phone and your physical garden
 ### Label Formats & Zero-Click Actions
 The Print Center supports multiple physical sticker sizes right out of the box, from massive 10x6cm garden stakes down to tiny 1-inch square micro-stickers.
 
+> **DIY Weatherproofing Tip 🌧️**
+> To make your labels survive the elements, print them onto **full-sheet vinyl sticker paper**, then laminate the entire printed sheet. The laminating plastic will adhere to both sides. When you cut out your individual tags, simply peel the back lamination layer off to expose the vinyl's sticky back and apply it to your stakes!
+
+
 **The Best Part: Zero-Click Chores!**
 You can embed magical "Zero-Click" actions directly into your printed QR codes. For example, you can print a standard "Info" tag for your Greenhouse, and stick a special "Water Greenhouse" tag right next to it. Scanning that second tag will instantly log a watering event for *every single plant* inside the greenhouse—you won't even need to tap your screen!

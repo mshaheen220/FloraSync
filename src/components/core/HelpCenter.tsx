@@ -79,7 +79,15 @@ const loadHelpDocuments = (): HelpDocument[] => {
 
 // Lightweight regex-based Markdown to HTML Converter for safe internal rendering
 const renderMarkdownToHTML = (md: string) => {
-  let html = md
+  // Extract fenced code blocks first to protect them from line-level formatting
+  const codeBlocks: string[] = [];
+  let html = md.replace(/```(\w+)?\n([\s\S]*?)```/gim, (_match, _lang, code) => {
+    const safeCode = code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    codeBlocks.push(`<pre class="bg-slate-800 text-slate-200 p-4 rounded-xl text-sm font-mono overflow-x-auto my-4 border border-slate-700 shadow-sm"><code>${safeCode.trim()}</code></pre>`);
+    return `\n\n__CODE_BLOCK_${codeBlocks.length - 1}__\n\n`;
+  });
+
+  html = html
     .replace(/^# (.*$)/gim, '') // Remove the H1 since we use the accordion title for it
     .replace(/^### (.*$)/gim, '<h4 class="text-base font-bold mt-4 mb-2 text-primary-700 dark:text-primary-300">$1</h4>')
     .replace(/^## (.*$)/gim, '<h3 class="text-lg font-bold mt-5 mb-2 text-primary-800 dark:text-primary-300">$1</h3>')
@@ -87,7 +95,10 @@ const renderMarkdownToHTML = (md: string) => {
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(?!\s)([^*]+?)\*/gim, '<em>$1</em>')
     .replace(/`([^`]+)`/gim, '<code class="bg-surface-200 dark:bg-surface-800 px-1.5 py-0.5 rounded text-sm text-primary-700 dark:text-primary-300 font-mono">$1</code>')
-    .replace(/^> (.*$)/gim, '<blockquote class="border-l-4 border-primary-400 pl-3 py-2 my-3 bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 italic rounded-r-lg">$1</blockquote>')
+    .replace(/(?:^> .*(?:\n|$))+/gim, (match) => {
+      const content = match.replace(/^> /gm, '').trim().replace(/\n/g, '<br />');
+      return `<blockquote class="border-l-4 border-primary-400 pl-3 py-3 my-4 bg-primary-50 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200 italic rounded-r-lg">${content}</blockquote>`;
+    })
     .replace(/!\[(.*?)\]\((.*?)\)/gim, (_match, alt, src) => {
       // Rewrite local relative paths meant for IDE preview into absolute web paths for production
       const cleanSrc = src.replace(/^(\.\.\/)+public\//, '/');
@@ -126,11 +137,19 @@ const renderMarkdownToHTML = (md: string) => {
   if (inList) html += currentListType === 'ol' ? '</ol>' : '</ul>';
 
   // Wrap paragraphs
-  return html.split('\n\n').map(p => {
+  html = html.split('\n\n').map(p => {
     if (!p.trim()) return '';
     if (p.startsWith('<') && !p.startsWith('<strong>') && !p.startsWith('<em>')) return p;
+    if (p.trim().startsWith('__CODE_BLOCK_')) return p.trim();
     return `<p class="mb-3 leading-relaxed text-slate-600 dark:text-slate-300">${p}</p>`;
   }).join('\n');
+
+  // Re-inject fenced code blocks
+  codeBlocks.forEach((block, i) => {
+    html = html.replace(`__CODE_BLOCK_${i}__`, block);
+  });
+
+  return html;
 };
 
 interface HelpCenterProps {
