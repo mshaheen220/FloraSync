@@ -279,7 +279,10 @@ export const AppRouter: FC<AppRouterProps> = ({
     }
 
     if (currentView === 'developer-guide') {
-      return <DeveloperGuide gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      const isDevAuthorized = currentUser?.role === 'god-admin' || currentUser?.workspaceRole === 'owner' || currentUser?.workspaceRole === 'admin';
+      if (isDevAuthorized) {
+        return <DeveloperGuide gardenProfile={gardenProfile} currentUser={currentUser} onOpenMenu={() => setIsMenuOpen(true)} onOpenWorkspaceMenu={handleOpenWorkspaceMenu} />;
+      }
     }
 
     if (currentView === 'print') {
