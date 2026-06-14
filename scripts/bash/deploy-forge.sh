@@ -13,7 +13,6 @@ mv ~/dist.tar.gz .
 tar -xzf dist.tar.gz
 
 echo "3️⃣ Installing backend dependencies (safely skipping dev tools)..."
-rm -rf node_modules
 npm install --omit=dev --loglevel=error --no-audit --no-fund
 
 echo "4️⃣ Restarting PM2 server..."
