@@ -111,7 +111,7 @@ const renderMarkdownToHTML = (md: string) => {
   let currentListType = '';
   html = listItems.map(line => {
     const ulMatch = line.match(/^(\s*)\* (.*)/);
-    const olMatch = line.match(/^(\s*)[0-9]+\. (.*)/);
+    const olMatch = line.match(/^(\s*)([0-9]+)\. (.*)/);
     
     if (ulMatch) {
       const indent = ulMatch[1].length;
@@ -121,9 +121,11 @@ const renderMarkdownToHTML = (md: string) => {
       return li;
     } else if (olMatch) {
       const indent = olMatch[1].length;
+      const startNum = olMatch[2];
+      const content = olMatch[3];
       const liClass = indent > 0 ? "ml-10 list-decimal mb-1 marker:text-primary-400" : "ml-5 list-decimal mb-1 marker:text-primary-400";
-      const li = `<li class="${liClass}">${olMatch[2]}</li>`;
-      if (!inList) { inList = true; currentListType = 'ol'; return `<ol class="mb-3 space-y-1">\n${li}`; }
+      const li = `<li class="${liClass}">${content}</li>`;
+      if (!inList) { inList = true; currentListType = 'ol'; return `<ol start="${startNum}" class="mb-3 space-y-1">\n${li}`; }
       return li;
     } else {
       if (inList) { 
