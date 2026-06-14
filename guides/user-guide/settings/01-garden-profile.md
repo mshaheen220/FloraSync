@@ -16,4 +16,5 @@ Make your workspace feel like home! The Garden Profile section allows you to per
 ### Managing Multiple Gardens?
 If you belong to multiple workspaces (like a home garden and a shared community plot), setting a distinct Cover Photo and Name is incredibly helpful! When you open the **Workspace Switcher** from the top menu, those photos make it super easy to visually identify exactly which garden you are jumping into.
 
-*(Note: To keep things organized, only Garden Owners and Admins have permission to change the profile details.)*
+> **Note 📝** 
+> To keep things organized, only Garden Owners and Admins have permission to change the profile details.

@@ -10,7 +10,8 @@ tags: ["dashboard", "widget", "quick actions", "batch actions", "water all", "ra
 
 Your favorite chores, just one tap away! Scroll through this handy list of buttons to instantly log a heavy rain, water your entire garden, or trigger any specific custom chores you've pinned from your shelves and zones.
 
-*(Note: To keep your garden data safe, you must be a Garden Owner, Admin, or Helper to use Quick Actions. Viewers will not see this widget!)*
+> **Note 📝** 
+> To keep your garden data safe, you must be a Garden Owner, Admin, or Helper to use Quick Actions. Viewers will not see this widget!
 
 ### The Basics
 By default, you will always have access to global actions like **Water All** and **Feed All**. Tapping these will instantly log a bulk journal entry for your entire garden and reset the hydration or nutrition meters for every single tracked plant!

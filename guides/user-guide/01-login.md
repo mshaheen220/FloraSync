@@ -19,6 +19,7 @@ Depending on your assigned role, your experience and permissions within the app 
 *   **Owner:** Has full control over the garden. Owners can generate QR codes, import bulk data, manage workspace members, and edit the global Plant Dictionary.
 *   **Helper:** Perfect for a garden-sitter or family member. Helpers can log watering, feeding, and add journal entries, but cannot delete plants, print QR tags, or change structural rules.
 *   **Viewer:** Read-only access. Viewers can explore your beautiful plants and journals, but cannot make any modifications.
-*   *Note: **God-Admin** is a special system-level role that has ultimate administrative power over the entire server and all workspaces.*
+> **Note 📝** 
+> **God-Admin** is a special system-level role that has ultimate administrative power over the entire server and all workspaces.
 
 Enter your credentials to proceed to your default Workspace.

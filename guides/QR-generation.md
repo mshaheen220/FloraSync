@@ -53,7 +53,8 @@ python3 scripts/python/make_qrs.py --category plant --prefix qr --start-id 001
 python3 scripts/python/make_qrs.py --category location --prefix loc --start-id 050
 ```
 
-*Pro-Tip: When the script finishes, it will print out the next available `--start-id` in the terminal so you know exactly where to pick up on your next sheet!*
+> **Pro-Tip 💡**
+> When the script finishes, it will print out the next available `--start-id` in the terminal so you know exactly where to pick up on your next sheet!
 
 ---
 
