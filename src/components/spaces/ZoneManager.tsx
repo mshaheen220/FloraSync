@@ -66,7 +66,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
             </label>
             <div className="bg-slate-50 dark:bg-slate-900/50 p-3 pb-2 rounded-xl border border-slate-200 dark:border-slate-700">
               <input 
-                type="range" min="0.5" max="1.5" step="0.1" 
+                type="range" min="0.5" max="4.0" step="0.1" 
                 value={newZoneEvaporationModifier} 
                 onChange={e => setNewZoneEvaporationModifier(parseFloat(e.target.value))} 
                 className="w-full accent-primary-600 dark:accent-primary-500"
@@ -74,7 +74,7 @@ export const ZoneManager: FC<ZoneManagerProps> = ({ onNavigateZone, onOpenMenu, 
               <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium">
                 <span>Slower (0.5x)</span>
                 <span>Normal (1.0x)</span>
-                <span>Faster (1.5x)</span>
+                <span>Extreme (4.0x)</span>
               </div>
             </div>
           </div>
