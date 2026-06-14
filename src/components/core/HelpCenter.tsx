@@ -1,11 +1,12 @@
-import { useState, useEffect, FC, useMemo } from 'react';
+import { useState, useEffect, FC, useMemo, lazy, Suspense } from 'react';
 import { Container, Card, Subtitle, Input } from '../../styles/StyledElements';
 import { PageHeader } from '../common/PageHeader';
 import { GardenProfile, User } from '../../../types';
 import { hasPermission } from '../../utils/permissions';
 import { Icon } from '../common/Icon';
-import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
+
+const SwaggerUI = lazy(() => import('swagger-ui-react'));
 
 const HelpSection: FC<{ title: string; icon: React.ReactNode; isExpanded: boolean; onToggle: () => void; level?: number; children: React.ReactNode }> = ({ title, icon, isExpanded, onToggle, level = 0, children }) => (
   <div className={level === 0 ? 'border-b border-surface-200 dark:border-surface-800 pb-2 mb-4 last:border-0' : 'bg-surface-100/50 dark:bg-surface-800/30 rounded-xl p-3 mb-3 border border-surface-200 dark:border-surface-700'}>
@@ -336,7 +337,9 @@ const BaseDocumentCenter: FC<BaseDocumentCenterProps> = ({
                 {/* Intercept the API Reference doc to render Swagger UI */}
                 {doc.id === 'dev-api-swagger' ? (
                   <div className="bg-white text-slate-900 rounded-xl overflow-x-auto p-2 [&_.swagger-ui_.info]:!my-[10px]">
-                    <SwaggerUI url="/swagger.json" />
+                    <Suspense fallback={<div className="p-8 text-center text-slate-500 animate-pulse font-bold">Loading API Documentation...</div>}>
+                      <SwaggerUI url="/swagger.json" />
+                    </Suspense>
                   </div>
                 ) : (
                   <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(doc.content) }} />
@@ -357,7 +360,9 @@ const BaseDocumentCenter: FC<BaseDocumentCenterProps> = ({
                       >
                         {child.id === 'dev-api-swagger' ? (
                           <div className="bg-white text-slate-900 rounded-xl overflow-x-auto p-2 [&_.swagger-ui_.info]:!my-[10px]">
-                            <SwaggerUI url="/swagger.json" />
+                            <Suspense fallback={<div className="p-8 text-center text-slate-500 animate-pulse font-bold">Loading API Documentation...</div>}>
+                              <SwaggerUI url="/swagger.json" />
+                            </Suspense>
                           </div>
                         ) : (
                           <div dangerouslySetInnerHTML={{ __html: renderMarkdownToHTML(child.content) }} />
