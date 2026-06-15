@@ -32,8 +32,8 @@ async function askGeminiForPlantData(commonName) {
   The JSON must match exactly this structure, providing realistic horticultural data:
   {
     "scientificName": "...",
-    "category": "...", // e.g. Vegetable, Herb, Foliage Accent, Flower
-    "folder": "...", // MUST be exactly one of: flowers, fruits, foliage, herbs, vegetables
+    "category": "...", // e.g. Vegetable, Herb, Foliage Accent, Flower, Tree
+    "folder": "...", // MUST be exactly one of: flowers, fruits, foliage, herbs, vegetables, trees
     "imageSearchTerm": "...", // A 3-5 word search query for Wikimedia Commons. MUST use the Scientific/Latin name. MUST include 'blooming' or 'flowers' for flowers, and 'fruiting' or 'growing' for vegetables/vines. (e.g. 'blooming Hemerocallis', 'fruiting Vitis vinifera', 'growing Brassica rapa').
     "lifecycle": "...", // e.g. Annual, Biennial, Perennial
     "sunRequirement": "...",
@@ -58,7 +58,7 @@ async function askGeminiForPlantData(commonName) {
         "title": "...", // optional string (e.g. "Historical Use")
         "fact": "...", // string (the trivia or fact. MUST be short: around 20 words, 130 characters max)
         "attributedTo": "...", // optional string (e.g. "Mark Twain")
-        "icon": "..." // optional string, pick one emoji from this list that best fits the fact: 🪲, ☠️, 🍹, 🍲, 💡, ❗, 😂, ❤️, 💰, 🐈, 🧬, 🤔, 🤷
+        "icon": "..." // optional string, pick one from this list that best fits the fact: 'bug', 'skull', 'cocktail', 'utensils', 'lightbulb', 'alert-triangle', 'heart', 'dollar-sign', 'cat', 'dna', 'help-circle'
       }
     ] // array of 2-3 objects containing interesting, short botanical trivia, historical uses, or quirky fun facts about this plant (strictly under 130 characters each).
   }

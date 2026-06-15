@@ -23,7 +23,7 @@ export const DataImport: FC<DataImportProps> = ({ showToast }) => {
       const zip = await JSZip.loadAsync(file);
       
       // Locate the core JSON file inside the ZIP
-      const jsonFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith('.json'));
+      const jsonFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith('.json') && !f.name.includes('__MACOSX'));
       if (!jsonFile) {
         showToast('❌ No .json file found in the package.');
         setIsImporting(false);
@@ -43,36 +43,83 @@ export const DataImport: FC<DataImportProps> = ({ showToast }) => {
 
       // Search for matching image files and convert them into Base64 Data URIs
       for (const item of data) {
-        if (item.imageUrl && typeof item.imageUrl === 'string') {
-          const targetPath = item.imageUrl.startsWith('/') ? item.imageUrl.substring(1) : item.imageUrl;
-          const imgFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith(targetPath));
-          
-          if (imgFile) {
-            const base64Data = await imgFile.async('base64');
-            const extension = targetPath.split('.').pop()?.toLowerCase();
-            const mimeType = extension === 'png' ? 'image/png' : 
-                             extension === 'webp' ? 'image/webp' : 
-                             'image/jpeg';
-            item.imageUrl = `data:${mimeType};base64,${base64Data}`;
+        const processImage = async (imgUrl: string) => {
+          if (imgUrl && typeof imgUrl === 'string' && !imgUrl.startsWith('data:')) {
+            const targetPath = imgUrl.startsWith('/') ? imgUrl.substring(1) : imgUrl;
+            const imgFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith(targetPath) && !f.name.includes('__MACOSX'));
+            
+            if (imgFile) {
+              const base64Data = await imgFile.async('base64');
+              const extension = targetPath.split('.').pop()?.toLowerCase();
+              const mimeType = extension === 'png' ? 'image/png' : 
+                               extension === 'webp' ? 'image/webp' : 
+                               'image/jpeg';
+              const rawBase64 = `data:${mimeType};base64,${base64Data}`;
+              try {
+                // Compress inline to avoid 413 Payload Too Large errors and save DB space
+                return await compressBase64Image(rawBase64, 800, 0.8);
+              } catch (e) {
+                return rawBase64;
+              }
+            }
+          }
+          return imgUrl;
+        };
+
+        if (item.imageUrl) {
+          item.imageUrl = await processImage(item.imageUrl);
+        }
+        
+        if (item.funFacts && Array.isArray(item.funFacts)) {
+          for (const fact of item.funFacts) {
+            if (fact.imageUrl) {
+              fact.imageUrl = await processImage(fact.imageUrl);
+            }
           }
         }
       }
 
-      // Fire the processed payload to your existing API route
-      const res = await apiFetch('/api/import', {
+      // Fetch current state to merge new archetypes
+      const stateRes = await apiFetch('/api/state');
+      if (!stateRes.ok) throw new Error(`Failed to fetch current state (Status: ${stateRes.status})`);
+      const stateData = await stateRes.json();
+      
+      const existingArchetypes = stateData.archetypes || [];
+      const existingIds = new Set(existingArchetypes.map((a: any) => a.id));
+      
+      let importedCount = 0;
+      for (const item of data) {
+        if (!item.id) continue;
+        if (!existingIds.has(item.id)) {
+          existingArchetypes.push(item);
+          importedCount++;
+        }
+      }
+      
+      stateData.archetypes = existingArchetypes;
+
+      // Save merged state back to server
+      const saveRes = await apiFetch('/api/state', {
         method: 'POST',
-        body: JSON.stringify({ type: 'archetypes', data })
+        body: JSON.stringify(stateData)
       });
-      const result = await res.json();
+      
+      let result;
+      try {
+        result = await saveRes.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned a non-JSON response (Status: ${saveRes.status}). The package payload might be too large.`);
+      }
+
       if (result.success) {
-        showToast(`✅ Package imported successfully! Refreshing...`);
+        showToast(`✅ Imported ${importedCount} new plants successfully! Refreshing...`);
         setTimeout(() => window.location.reload(), 1500);
       } else {
         showToast(`❌ Import failed: ${result.error || 'Check data format.'}`);
       }
-    } catch (err) { 
+    } catch (err: any) { 
       console.error(err);
-      showToast('❌ Failed to process the package file.'); 
+      showToast(`❌ Failed to process package: ${err.message || 'Unknown error'}`); 
     }
     
     setIsImporting(false);

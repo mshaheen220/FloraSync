@@ -15,7 +15,6 @@ interface WeatherData {
     temperature_2m: number;
     weather_code: number;
     precipitation: number;
-    shortwave_radiation: number;
     relative_humidity_2m: number;
     wind_speed_10m: number;
     cloud_cover: number;
@@ -24,7 +23,6 @@ interface WeatherData {
   };
   current_units: {
     precipitation: string;
-    shortwave_radiation: string;
     relative_humidity_2m: string;
     wind_speed_10m: string;
     cloud_cover: string;
@@ -158,15 +156,14 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
             temperature_2m: currentVals.temperature || 0,
           weather_code: currentVals.weatherCode || 0,
             precipitation: currentVals.precipitationIntensity || 0,
-            shortwave_radiation: currentVals.solarGHI || 0,
             relative_humidity_2m: currentVals.humidity || 0,
             wind_speed_10m: currentVals.windSpeed || 0,
             cloud_cover: currentVals.cloudCover || 0,
             uv_index: currentVals.uvIndex || 0,
-            is_day: currentVals.solarGHI > 0 ? 1 : 0
+            is_day: (new Date().getHours() >= 6 && new Date().getHours() <= 20) ? 1 : 0
           },
           current_units: {
-            precipitation: 'in', shortwave_radiation: 'W/m²', relative_humidity_2m: '%', wind_speed_10m: 'mph', cloud_cover: '%', uv_index: ''
+            precipitation: 'in', relative_humidity_2m: '%', wind_speed_10m: 'mph', cloud_cover: '%', uv_index: ''
           },
           hourly: {
             time: hourlyTime, precipitation: hourlyPrecip,
@@ -246,7 +243,6 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       wind: evaluateMetric(w.wind_speed_10m, INTERP_RULES.wind),
       hum: evaluateMetric(w.relative_humidity_2m, INTERP_RULES.hum),
       precip: evaluateMetric(w.precipitation, INTERP_RULES.precip),
-      rad: evaluateMetric(w.shortwave_radiation, INTERP_RULES.rad),
       uv: evaluateMetric(w.uv_index, INTERP_RULES.uv),
       cloud: evaluateMetric(w.cloud_cover, INTERP_RULES.cloud),
       outlook: outlookResult
@@ -263,7 +259,6 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
     if (interp.outlook?.v === 'Storms' || interp.outlook?.v === 'Heavy Rain') alerts.push({ text: "Storms or heavy rain expected. Hold off on watering and ensure good drainage.", severity: 2, icon: "cloud-lightning", color: "text-amber-500" });
     
     // Warning Level (1)
-    if (interp.rad?.t === 'Intense') alerts.push({ text: "Intense solar radiation. Delicate shade-lovers may scorch.", severity: 1, icon: "sun", color: "text-amber-500" });
     if (interp.uv?.t === 'Extreme') alerts.push({ text: "Extreme UV levels today. Consider providing temporary shade for delicate seedlings.", severity: 1, icon: "sun", color: "text-red-500" });
     if (interp.outlook?.v === 'Rain Likely') alerts.push({ text: "Rain is likely soon. You may want to delay manual watering.", severity: 1, icon: "cloud-drizzle", color: "text-blue-500" });
     if (interp.hum?.t === 'Rot Risk') alerts.push({ text: "High humidity increases the risk of fungal diseases. Ensure good airflow.", severity: 1, icon: "alert-triangle", color: "text-amber-500" });
@@ -314,16 +309,6 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       colorClass: interp.precip?.c,
       meaning: 'The volume of liquid precipitation falling this hour. A good benchmark is that 1 inch of natural rain per week generally satisfies the needs of most established garden beds.',
       statusDesc: interp.precip?.desc
-    },
-    {
-      icon: "sun",
-      label: "Radiation",
-      modalLabel: "Solar Radiation",
-      value: `${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`,
-      interpret: interp.rad?.t,
-      colorClass: interp.rad?.c,
-      meaning: 'Measures the sheer energy of the sunlight hitting your garden. High radiation drives rapid photosynthesis but also heavily increases evaporation from the soil.',
-      statusDesc: interp.rad?.desc
     },
     {
       icon: "sun",
@@ -449,16 +434,16 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
                 />
               ))}
             
-            <div className="flex flex-col items-center justify-center bg-transparent p-2.5 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 w-full h-full opacity-80 hover:opacity-100 transition-opacity">
-              <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 mb-1">
+            <div className="col-span-2 flex flex-row items-center justify-between bg-transparent px-3 py-1.5 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 w-full opacity-80 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500">
                 <Icon name="clock" size={12} />
                 <span className="text-[10px] font-bold uppercase tracking-wider">Updated</span>
               </div>
-              <div className="flex items-center gap-2 mt-auto pt-0.5">
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
                   {lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '---'}
                 </span>
-                <button onClick={handleRefresh} disabled={loading} className="p-1.5 text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 bg-surface-100 hover:bg-primary-50 dark:bg-surface-800 dark:hover:bg-primary-900/30 rounded-full transition-colors active:scale-95 disabled:opacity-50 shadow-sm" title="Refresh weather data">
+                <button onClick={handleRefresh} disabled={loading} className="p-1 text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 bg-surface-100 hover:bg-primary-50 dark:bg-surface-800 dark:hover:bg-primary-900/30 rounded-full transition-colors active:scale-95 disabled:opacity-50 shadow-sm" title="Refresh weather data">
                   <Icon name="refresh" size={12} className={loading ? "animate-spin" : ""} />
                 </button>
               </div>
