@@ -1,7 +1,7 @@
 {
   "id": "widget-weather",
   "name": "Weather Widget",
-  "version": "2.0.1",
+  "version": "2.3.1",
   "description": "Provides hyper-local, garden-specific weather insights, alerts, and other metrics using data from Tomorrow.io.",
   "author": "Michael Shaheen",
   "entryPoints": [
@@ -21,6 +21,12 @@
       "label": "Longitude",
       "type": "number",
       "defaultValue": -80.041077
+    },
+    {
+      "key": "enablePushNotifications",
+      "label": "Enable Push Notifications (Critical Weather Alerts)",
+      "type": "boolean",
+      "defaultValue": false
     }
   ]
 }

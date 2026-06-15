@@ -7,6 +7,7 @@ interface WeatherWidgetProps {
   settings: {
     latitude?: number;
     longitude?: number;
+    enablePushNotifications?: boolean;
   };
 }
 
@@ -74,6 +75,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
   const [locationName, setLocationName] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [addonVersion, setAddonVersion] = useState<string>('');
 
   // Fetch location name in a separate effect to avoid triggering weather fetches unnecessarily
   useEffect(() => {
@@ -83,7 +85,77 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
         .then(data => setLocationName(data.city || data.locality || data.principalSubdivision || null))
         .catch(err => console.error("Failed to fetch location name", err));
     }
+
+    // Fetch the addon's manifest to display its version. This helps diagnose caching issues.
+    fetch('/addons/widget-weather/manifest.json')
+      .then(res => res.json())
+      .then(manifest => {
+        if (manifest.version) setAddonVersion(manifest.version);
+      })
+      .catch(err => console.error("Could not load addon version", err));
   }, [settings?.latitude, settings?.longitude]);
+
+  // Handle Push Notifications Subscription
+  useEffect(() => {
+    if (settings?.enablePushNotifications && 'serviceWorker' in navigator && 'PushManager' in window) {
+      const registerAndSubscribe = async () => {
+        try {
+          // 1. Register the service worker. This is the crucial step.
+          // The browser must be explicitly told to install the service worker file.
+          // We register it at the root scope ('/') so it can manage notifications for the whole app.
+          const registration = await navigator.serviceWorker.register('/addons/widget-weather/service-worker.js', { scope: '/' });
+
+          // 2. Now that it's registered, request permission.
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') return;
+
+          // 3. Get VAPID Public Key from the backend
+          const response = await fetch('/api/addons/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ addonId: 'widget-weather', actionId: 'get-vapid-key' })
+          });
+
+          const { publicKey } = await response.json();
+          if (!publicKey || publicKey.includes('YOUR_GENERATED')) {
+            console.error("VAPID public key is missing or is a placeholder. Please generate keys and add them to your .env file.");
+            return;
+          }
+
+          // 4. Convert base64 VAPID to Uint8Array required by pushManager
+          const urlBase64ToUint8Array = (base64String: string) => {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+              outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+          };
+
+          // 5. Check for existing subscription to avoid re-subscribing
+          let subscription = await registration.pushManager.getSubscription();
+          if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+          }
+
+          // 6. Post successful subscription to the backend
+          await fetch('/api/addons/execute', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ addonId: 'widget-weather', actionId: 'save-subscription', contextData: { subscription } })
+          });
+        } catch (err) {
+          console.error('Error during Service Worker registration or Push subscription:', err);
+        }
+      };
+      registerAndSubscribe();
+    }
+  }, [settings?.enablePushNotifications]);
 
   useEffect(() => {
     if (!settings || !settings.latitude || !settings.longitude) {
@@ -361,7 +433,10 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-base text-slate-700 dark:text-slate-200 flex items-center gap-2">
           <Icon name="cloud-sun" size={18} />
-          {locationName ? `${locationName} Weather` : 'Local Weather'}
+          <span>{locationName ? `${locationName} Weather` : 'Local Weather'}</span>
+          {addonVersion && (
+            <span className="text-[9px] font-mono font-bold text-slate-400 dark:text-slate-500 bg-surface-100 dark:bg-surface-800 px-1.5 py-0.5 rounded-md">v{addonVersion}</span>
+          )}
         </h3>
         {loading && <div className="w-4 h-4 border-2 border-slate-300 border-t-slate-500 rounded-full animate-spin"></div>}
       </div>

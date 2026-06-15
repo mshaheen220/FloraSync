@@ -1,28 +1,12 @@
-import { FC, useState, FormEvent, useRef, ReactNode } from 'react';
+import { FC, useState, useEffect, FormEvent, useRef, ReactNode } from 'react';
 import { Card, Button, Input, Toast } from '../../../styles/StyledElements';
 import { AddonManifest, User } from '../../../../types';
 import { Icon } from '../../common/Icon';
 import JSZip from 'jszip';
 import { apiFetch } from '../../../utils/api';
 
-// Local registry for the MVP. Later, this could be fetched from the server.
-const AVAILABLE_ADDONS: AddonManifest[] = [
-  {
-    id: "widget-weather",
-    name: "Weather Widget",
-    version: "2.0.1",
-    description: "Provides hyper-local, garden-specific weather insights, alerts, and other metrics using data from Tomorrow.io.",
-    author: "Michael Shaheen",
-    entryPoints: ["dashboard"],
-    requiresInternet: true,
-    executeScript: "execute.js",
-    settingsSchema: [
-      { key: "latitude", label: "Latitude", type: "number", defaultValue: 40.689156 },
-      { key: "longitude", label: "Longitude", type: "number", defaultValue: -80.041077 }
-    ]
-  }
-];
-
+// The list of official, system-provided addons. Their manifests will be fetched dynamically.
+const OFFICIAL_ADDON_IDS = ['widget-weather'];
 interface AddonManagerProps {
   currentUser: User | null;
 }
@@ -35,6 +19,7 @@ export const AddonManager: FC<AddonManagerProps> = ({
   const [settingsModalAddon, setSettingsModalAddon] = useState<AddonManifest | null>(null);
   const [settingsFormData, setSettingsFormData] = useState<Record<string, any>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [officialAddons, setOfficialAddons] = useState<AddonManifest[]>([]);
 
   const [customAddons, setCustomAddons] = useState<AddonManifest[]>(() => {
     const saved = localStorage.getItem('florasync_custom_addons');
@@ -46,6 +31,25 @@ export const AddonManager: FC<AddonManagerProps> = ({
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  useEffect(() => {
+    const fetchOfficialAddons = async () => {
+      const manifests: AddonManifest[] = [];
+      for (const id of OFFICIAL_ADDON_IDS) {
+        try {
+          // Fetch manifest directly from its public path to ensure it's always up-to-date
+          const res = await fetch(`/addons/${id}/manifest.json`);
+          if (res.ok) {
+            const manifest = await res.json();
+            manifests.push(manifest);
+          }
+        } catch (err) {
+          console.error(`Failed to fetch manifest for official addon: ${id}`, err);
+        }
+      }
+      setOfficialAddons(manifests);
+    };
+    fetchOfficialAddons();
+  }, []);
   const installedAddons = currentUser?.installedAddons || [];
   const activeAddons = currentUser?.activeAddons || [];
   const addonSettings = currentUser?.addonSettings || {};
@@ -149,8 +153,8 @@ export const AddonManager: FC<AddonManagerProps> = ({
       const manifestFile = Object.values(zip.files).find(f => !f.dir && f.name.endsWith('manifest.json') && !f.name.includes('__MACOSX'));
       if (manifestFile) {
         const manifestText = await manifestFile.async('text');
-        const manifest = JSON.parse(manifestText);
-        if (AVAILABLE_ADDONS.some(a => a.id === manifest.id)) {
+        const manifest = JSON.parse(manifestText) as AddonManifest;
+        if (OFFICIAL_ADDON_IDS.includes(manifest.id)) {
           showToast(<span className="flex items-center gap-2"><Icon name="alert-circle" size={16} /> Cannot replace official system packages.</span>);
           setLoadingId(null);
           if (fileInputRef.current) fileInputRef.current.value = '';
@@ -212,7 +216,7 @@ export const AddonManager: FC<AddonManagerProps> = ({
   // Deduplicate addons by ID. 
   // Official addons come second, ensuring they can never be replaced by custom uploads in the UI.
   const ALL_ADDONS = Object.values(
-    [...customAddons, ...AVAILABLE_ADDONS].reduce((acc, addon) => {
+    [...customAddons, ...officialAddons].reduce((acc, addon) => {
       acc[addon.id] = addon;
       return acc;
     }, {} as Record<string, AddonManifest>)
