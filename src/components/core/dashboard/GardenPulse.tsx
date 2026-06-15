@@ -8,6 +8,7 @@ interface GardenPulseProps {
   archetypes: PlantArchetype[];
   locations: Location[];
   zones: Zone[];
+  gardenJournal?: any[];
   onNavigate: (qrId: string) => void;
   onNavigateZone: (zoneId: string) => void;
   onNavigateLocation: (locId: string) => void;
@@ -25,7 +26,7 @@ const timeAgo = (dateStr: string) => {
   return `${days}d ago`;
 };
 
-export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locations, zones, onNavigate, onNavigateZone, onNavigateLocation }) => {
+export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locations, zones, gardenJournal = [], onNavigate, onNavigateZone, onNavigateLocation }) => {
   const recentActivity = useMemo(() => {
     const groups: Record<string, any[]> = {};
 
@@ -33,21 +34,81 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
       if (!inst.journal) return;
       const arch = archetypes.find(a => a.id === inst.archetypeId);
       inst.journal.forEach(entry => {
-        const key = `${entry.timestamp}_${entry.activityType}_${entry.authorName}`;
+        // Group events that occur within the same minute to securely catch backend loop executions
+        const timeKey = Math.floor(new Date(entry.timestamp).getTime() / 60000);
+        const key = entry.batchScope 
+          ? `macro_${timeKey}_${entry.activityType}_${entry.batchScope}` 
+          : `${timeKey}_${entry.activityType}_${entry.authorName}`;
+          
         if (!groups[key]) groups[key] = [];
         groups[key].push({
           ...entry,
           qrId: inst.qrId,
           plantName: arch?.commonName || 'Unknown Plant',
-          locationId: inst.locationId
+          locationId: inst.locationId,
+          sourceType: 'plant'
         });
       });
     });
     
+    locations.forEach(loc => {
+      const jEntries = (loc as any).journal || [];
+      jEntries.forEach((entry: any) => {
+        const timeKey = Math.floor(new Date(entry.timestamp).getTime() / 60000);
+        const scope = entry.batchScope || `the ${loc.name} location`;
+        const key = `macro_${timeKey}_${entry.activityType}_${scope}`;
+        groups[key] = [{
+          ...entry,
+          isBatch: true,
+          batchScope: scope,
+          onClick: () => onNavigateLocation(loc.id),
+          sourceType: 'location'
+        }];
+      });
+    });
+
+    zones.forEach(zone => {
+      const jEntries = (zone as any).journal || [];
+      jEntries.forEach((entry: any) => {
+        const timeKey = Math.floor(new Date(entry.timestamp).getTime() / 60000);
+        const scope = entry.batchScope || `the ${zone.name} zone`;
+        const key = `macro_${timeKey}_${entry.activityType}_${scope}`;
+        groups[key] = [{
+          ...entry,
+          isBatch: true,
+          batchScope: scope,
+          onClick: () => onNavigateZone(zone.id),
+          sourceType: 'zone'
+        }];
+      });
+    });
+
+    gardenJournal.forEach(entry => {
+      const timeKey = Math.floor(new Date(entry.timestamp).getTime() / 60000);
+      const scope = entry.batchScope || 'the entire garden';
+      const key = `macro_${timeKey}_${entry.activityType}_${scope}`;
+      groups[key] = [{
+        ...entry,
+        isBatch: true,
+        batchScope: scope,
+        sourceType: 'garden'
+      }];
+    });
+
     const displayItems = Object.values(groups).map(group => {
       const first = group[0];
-      if (group.length === 1) {
+      
+      if (first.sourceType !== 'plant') {
+        return first;
+      }
+
+      if (group.length === 1 && !first.batchScope) {
         return { ...first, isBatch: false, onClick: () => onNavigate(first.qrId) };
+      }
+      
+      // If the backend has already declared this a trickle-down macro event, respect it!
+      if (first.batchScope) {
+        return { ...first, isBatch: true, batchScope: first.batchScope };
       }
 
       const locIds = new Set(group.map(g => g.locationId));
@@ -79,7 +140,7 @@ export const GardenPulse: FC<GardenPulseProps> = ({ instances, archetypes, locat
     return displayItems
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, 5); // Take the top 5 most recent actions globally
-  }, [instances, archetypes, locations, zones, onNavigate, onNavigateZone, onNavigateLocation]);
+  }, [instances, archetypes, locations, zones, gardenJournal, onNavigate, onNavigateZone, onNavigateLocation]);
 
   if (recentActivity.length === 0) return null;
 

@@ -67,7 +67,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNavigateInventory, onNavigateZone, onNavigateLocation, onOpenWorkspaceMenu }) => {
-  const { gardenProfile, instances, archetypes, locations, zones, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
+  const { gardenProfile, instances, archetypes, locations, zones, gardenJournal, onBatchWaterLocation, onBatchWaterAll, onBatchFeedAll, onLogRain, onBatchWaterZone, onBatchFeedZone, onBatchFeedLocation, onWater, onFeed, currentUser } = useGarden();
 
   const [toastMessage, setToastMessage] = useState('');
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -357,7 +357,7 @@ export const Dashboard: FC<DashboardProps> = ({ onNavigate, onOpenMenu, onNaviga
           case 'urgent': return <UrgentLocationCare key={id} overdueLocations={overdueLocations} zones={zones} currentUser={currentUser!} onBatchWater={onBatchWaterLocation} />;
           case 'water': return <NeedsWatering key={id} overduePlants={overduePlants} onNavigate={onNavigate} />;
           case 'feed': return <HungryPlants key={id} trackedInstances={trackedInstances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} />;
-          case 'pulse': return <GardenPulse key={id} instances={instances} archetypes={archetypes} locations={locations} zones={zones} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />;
+          case 'pulse': return <GardenPulse key={id} instances={instances} archetypes={archetypes} locations={locations} zones={zones} gardenJournal={gardenJournal} onNavigate={onNavigate} onNavigateZone={onNavigateZone} onNavigateLocation={onNavigateLocation} />;
           default: return null;
         }
       })}
