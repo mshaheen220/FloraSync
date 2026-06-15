@@ -1,7 +1,7 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, Button } from '../../src/styles/StyledElements';
 import { Icon } from '../../src/components/common/Icon';
-import { WMO_WEATHER_CODES } from './weather-codes';
+import { TOMORROW_WEATHER_CODES, INTERP_RULES, evaluateMetric, evaluateOutlook } from './weather-utils';
 
 interface WeatherWidgetProps {
   settings: {
@@ -16,21 +16,19 @@ interface WeatherData {
     weather_code: number;
     precipitation: number;
     shortwave_radiation: number;
-    et0_fao_evapotranspiration: number;
-    soil_temperature_6cm: number;
-    soil_moisture_3_to_9cm: number;
     relative_humidity_2m: number;
     wind_speed_10m: number;
+    cloud_cover: number;
+    uv_index: number;
     is_day: number;
   };
   current_units: {
     precipitation: string;
     shortwave_radiation: string;
-    et0_fao_evapotranspiration: string;
-    soil_temperature_6cm: string;
-    soil_moisture_3_to_9cm: string;
     relative_humidity_2m: string;
     wind_speed_10m: string;
+    cloud_cover: string;
+    uv_index: string;
   };
   hourly?: {
     time: string[];
@@ -74,6 +72,18 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
   const [selectedStat, setSelectedStat] = useState<StatInfo | null>(null);
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [locationName, setLocationName] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fetch location name in a separate effect to avoid triggering weather fetches unnecessarily
+  useEffect(() => {
+    if (settings?.latitude && settings?.longitude && !locationName) {
+      fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${settings.latitude}&longitude=${settings.longitude}&localityLanguage=en`)
+        .then(res => res.json())
+        .then(data => setLocationName(data.city || data.locality || data.principalSubdivision || null))
+        .catch(err => console.error("Failed to fetch location name", err));
+    }
+  }, [settings?.latitude, settings?.longitude]);
 
   useEffect(() => {
     if (!settings || !settings.latitude || !settings.longitude) {
@@ -82,14 +92,6 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       return;
     }
 
-    // Attempt to reverse-geocode the coordinates to a city name for display
-    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${settings.latitude}&longitude=${settings.longitude}&localityLanguage=en`)
-      .then(res => res.json())
-      .then(data => {
-        setLocationName(data.city || data.locality || data.principalSubdivision || null);
-      })
-      .catch(err => console.error("Failed to fetch location name", err));
-
     const fetchWeather = async () => {
       if (!navigator.onLine) {
         setError('You are currently offline. Live weather data is unavailable.');
@@ -97,17 +99,95 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
         return;
       }
 
+      const CACHE_MINUTES = 15;
+      const CACHE_KEY = `florasync_weather_${settings.latitude}_${settings.longitude}`;
+
+      try {
+        const cachedDataStr = localStorage.getItem(CACHE_KEY);
+        if (cachedDataStr) {
+          const cached = JSON.parse(cachedDataStr);
+          if (new Date().getTime() - cached.timestamp < CACHE_MINUTES * 60 * 1000) {
+            setWeather(cached.data);
+            setLastUpdated(new Date(cached.timestamp));
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors and fetch fresh data
+      }
+
       setLoading(true);
       setError(null);
       try {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${settings.latitude}&longitude=${settings.longitude}&current=temperature_2m,weather_code,precipitation,shortwave_radiation,et0_fao_evapotranspiration,soil_temperature_6cm,soil_moisture_3_to_9cm,relative_humidity_2m,wind_speed_10m,is_day&hourly=precipitation,precipitation_probability,weather_code&past_hours=6&forecast_hours=12&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`;
+        // Vite requires environment variables to be prefixed with VITE_ to be available on the client
+        const apiKey = import.meta.env.VITE_TOMORROW_IO_API_KEY;
+        if (!apiKey) {
+          throw new Error('Tomorrow.io API Key is missing. Ensure your .env file uses VITE_TOMORROW_IO_API_KEY.');
+        }
+
+        // Using the forecast endpoint instead of /locations to retrieve actual weather metrics
+        const url = `https://api.tomorrow.io/v4/weather/forecast?location=${settings.latitude},${settings.longitude}&apikey=${apiKey}&units=imperial`;
         const res = await fetch(url, { cache: 'no-store' });
         if (!res.ok) {
           const errorData = await res.json();
-          throw new Error(errorData.reason || 'Failed to fetch weather data.');
+          throw new Error(errorData.message || 'Failed to fetch Tomorrow.io data.');
         }
-        const data = await res.json();
-        setWeather(data);
+        
+        const tomorrowData = await res.json();
+        const timelines = tomorrowData.timelines || {};
+        const hourly = timelines.hourly || [];
+        const daily = timelines.daily || [];
+        const currentVals = hourly[0]?.values || {};
+
+        // Pad 6 hours of empty historical data to prevent breaking the "Recent Rain" insight calculation
+        const hourlyTime = Array(6).fill("");
+        const hourlyPrecip = Array(6).fill(0);
+        const hourlyPrecipProb = Array(6).fill(0);
+        const hourlyCode = Array(6).fill(0);
+
+        hourly.slice(0, 13).forEach((h: any) => {
+          hourlyTime.push(h.time);
+          hourlyPrecip.push(h.values.precipitationIntensity || 0);
+          hourlyPrecipProb.push(h.values.precipitationProbability || 0);
+        hourlyCode.push(h.values.weatherCode || 0);
+        });
+
+        const mappedData: WeatherData = {
+          current: {
+            temperature_2m: currentVals.temperature || 0,
+          weather_code: currentVals.weatherCode || 0,
+            precipitation: currentVals.precipitationIntensity || 0,
+            shortwave_radiation: currentVals.solarGHI || 0,
+            relative_humidity_2m: currentVals.humidity || 0,
+            wind_speed_10m: currentVals.windSpeed || 0,
+            cloud_cover: currentVals.cloudCover || 0,
+            uv_index: currentVals.uvIndex || 0,
+            is_day: currentVals.solarGHI > 0 ? 1 : 0
+          },
+          current_units: {
+            precipitation: 'in', shortwave_radiation: 'W/m²', relative_humidity_2m: '%', wind_speed_10m: 'mph', cloud_cover: '%', uv_index: ''
+          },
+          hourly: {
+            time: hourlyTime, precipitation: hourlyPrecip,
+            precipitation_probability: hourlyPrecipProb, weather_code: hourlyCode
+          },
+          daily: {
+            time: daily.map((d: any) => d.time),
+            temperature_2m_max: daily.map((d: any) => d.values.temperatureMax || 0),
+            temperature_2m_min: daily.map((d: any) => d.values.temperatureMin || 0)
+          }
+        };
+
+        const now = new Date();
+        // Cache the mapped data scoped to this specific location
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          timestamp: now.getTime(),
+          data: mappedData
+        }));
+
+        setWeather(mappedData);
+        setLastUpdated(now);
       } catch (err: any) {
         if (!navigator.onLine || err.message.includes('Failed to fetch')) {
           setError('You are currently offline or the weather service is unreachable.');
@@ -120,23 +200,27 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
     };
 
     fetchWeather();
-  }, [settings]);
+  }, [settings, refreshTrigger]);
 
-  const weatherInfo = weather ? WMO_WEATHER_CODES[weather.current.weather_code] : null;
+  const handleRefresh = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (settings.latitude && settings.longitude) {
+      const CACHE_KEY = `florasync_weather_${settings.latitude}_${settings.longitude}`;
+      localStorage.removeItem(CACHE_KEY);
+    }
+    setRefreshTrigger(prev => prev + 1);
+  }, [settings.latitude, settings.longitude]);
+
+  const weatherInfo = weather ? TOMORROW_WEATHER_CODES[weather.current.weather_code] : null;
   const mainIcon = weatherInfo ? (weather?.current?.is_day === 0 ? weatherInfo.icon.replace('sun', 'moon') : weatherInfo.icon) : 'sun';
 
-  // Interpret raw weather data into actionable gardening insights
-  const getInterpretations = () => {
-    if (!weather) return {};
+  // Memoize heavy logic so it doesn't recalculate on every minor state change (like opening modals)
+  const interp = useMemo(() => {
+    if (!weather) return {} as Record<string, any>;
     const w = weather.current;
-    const moist = w.soil_moisture_3_to_9cm * 100;
     
     // Outlook calculation
-    let out_t = 'Calm';
-    let out_c = 'text-emerald-500';
-    let out_v = 'Clear';
-    let out_i = w.is_day === 0 ? 'moon' : 'sun';
-    let out_desc = 'No significant precipitation recently or expected soon.';
+    let outlookResult = { t: 'Calm', c: 'text-emerald-500', v: 'Clear', i: w.is_day === 0 ? 'moon' : 'sun', desc: 'No significant precipitation recently or expected soon.' };
 
     if (weather.hourly) {
       const pastPrecip = weather.hourly.precipitation.slice(0, 6).reduce((a, b) => a + b, 0);
@@ -144,62 +228,44 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
       const futureMaxProb = Math.max(...weather.hourly.precipitation_probability.slice(7));
       const futureCodes = weather.hourly.weather_code.slice(7);
 
-      const stormComing = futureCodes.some(c => c >= 95);
-      const heavyRainComing = futureCodes.some(c => c === 65 || c === 67 || c === 82);
+      const stormComing = futureCodes.some(c => c === 8000);
+      const heavyRainComing = futureCodes.some(c => c === 4201 || c === 6201 || c === 4001 || c === 6001);
 
-      const descParts = [];
-      if (pastPrecip > 0.05) descParts.push(`Rained ${pastPrecip.toFixed(2)}in recently.`);
-
-      if (stormComing) {
-        out_v = 'Storms'; out_t = 'Alert'; out_c = 'text-amber-500'; out_i = 'cloud-lightning';
-        descParts.push('Thunderstorms expected later.');
-      } else if (heavyRainComing || futurePrecip > 0.3) {
-        out_v = 'Heavy Rain'; out_t = 'Alert'; out_c = 'text-blue-500'; out_i = 'cloud-rain';
-        descParts.push('Heavy rain expected later.');
-      } else if (futureMaxProb >= 60) {
-        out_v = 'Rain Likely'; out_t = 'Watch'; out_c = 'text-blue-400'; out_i = 'cloud-drizzle';
-        descParts.push(`${Math.round(futureMaxProb)}% chance of rain later.`);
-      } else if (futureMaxProb >= 30) {
-        out_v = 'Chance of Rain'; out_t = 'Notice'; out_c = 'text-blue-400'; out_i = 'cloud-drizzle';
-        descParts.push(`${Math.round(futureMaxProb)}% chance of rain later.`);
-      } else if (pastPrecip > 0.05) {
-        out_v = 'Recent Rain'; out_t = 'Wet'; out_c = 'text-blue-500'; out_i = 'droplets';
-      }
-
-      if (descParts.length > 0) out_desc = descParts.join(' ');
+      outlookResult = evaluateOutlook({
+        stormComing,
+        heavyRainComing,
+        futurePrecip,
+        futureMaxProb,
+        pastPrecip,
+        isDay: w.is_day
+      });
     }
 
     return {
-      wind: w.wind_speed_10m > 15 ? { t: 'Strong', c: 'text-red-500', desc: 'High winds can snap tall plants and rapidly dry out leaves.' } : w.wind_speed_10m > 8 ? { t: 'Breezy', c: 'text-amber-400', desc: 'Moderate wind increases water loss. Keep an eye on hydration.' } : { t: 'Calm', c: 'text-emerald-500', desc: 'Ideal wind conditions for plant stability and minimal water loss.' },
-      hum: w.relative_humidity_2m > 70 ? { t: 'Rot Risk', c: 'text-amber-500', desc: 'High humidity slows evaporation and increases the risk of fungal diseases like powdery mildew.' } : w.relative_humidity_2m < 30 ? { t: 'Dry', c: 'text-amber-500', desc: 'Low humidity can cause leaf crisping and rapid water loss. Consider misting or extra watering.' } : { t: 'Optimal', c: 'text-emerald-500', desc: 'Perfect humidity levels for most standard vegetable and herb growth.' },
-      precip: w.precipitation > 0.5 ? { t: 'Heavy', c: 'text-blue-500', desc: 'Heavy rain is falling. Check for soil washout and ensure pots are draining properly.' } : w.precipitation > 0.1 ? { t: 'Moderate', c: 'text-blue-400', desc: 'Moderate rain. Your garden is getting a good natural soaking.' } : w.precipitation > 0 ? { t: 'Light', c: 'text-blue-300', desc: 'Light drizzle. May not penetrate deep into the root zone.' } : { t: 'None', c: 'text-slate-400', desc: 'No precipitation currently.' },
-      soilT: w.soil_temperature_6cm > 85 ? { t: 'Hot', c: 'text-red-500', desc: 'Soil is very hot. Roots may be stressed. Consider adding mulch to cool the ground.' } : w.soil_temperature_6cm < 50 ? { t: 'Cold', c: 'text-blue-500', desc: 'Soil is cold. Seeds will struggle to germinate and warm-weather crops may stunt.' } : { t: 'Optimal', c: 'text-emerald-500', desc: 'Excellent soil temperature for active root growth and nutrient uptake.' },
-      moist: moist > 80 ? { t: 'Saturated', c: 'text-blue-500', desc: 'Soil is waterlogged. Hold off on watering to prevent root rot.' } : moist < 20 ? { t: 'Very Dry', c: 'text-red-500', desc: 'Soil is dangerously dry at the root level. Water immediately.' } : moist < 40 ? { t: 'Monitor', c: 'text-amber-500', desc: 'Soil moisture is dropping. Plan to water soon depending on the plant type.' } : { t: 'Optimal', c: 'text-emerald-500', desc: 'Perfect moisture balance for healthy root respiration and drinking.' },
-      rad: w.shortwave_radiation > 600 ? { t: 'Intense', c: 'text-amber-500', desc: 'Very strong sunlight. Great for fruiting crops but may scorch delicate shade-lovers.' } : w.shortwave_radiation > 200 ? { t: 'Moderate', c: 'text-emerald-500', desc: 'Good, healthy sunlight levels for general photosynthesis.' } : { t: 'Low', c: 'text-slate-400', desc: 'Overcast or dim conditions. Photosynthesis is slowed.' },
-      et: w.et0_fao_evapotranspiration > 0.2 ? { t: 'High Loss', c: 'text-red-500', desc: 'Sun and wind are sucking moisture out of your plants and soil rapidly. Extra water needed.' } : w.et0_fao_evapotranspiration > 0.1 ? { t: 'Mod Loss', c: 'text-amber-500', desc: 'Moderate evaporation. Plants are drinking and transpiring at a normal active rate.' } : { t: 'Low Loss', c: 'text-emerald-500', desc: 'Very little water is being lost to the air today.' },
-      outlook: { t: out_t, c: out_c, v: out_v, i: out_i, desc: out_desc }
+      wind: evaluateMetric(w.wind_speed_10m, INTERP_RULES.wind),
+      hum: evaluateMetric(w.relative_humidity_2m, INTERP_RULES.hum),
+      precip: evaluateMetric(w.precipitation, INTERP_RULES.precip),
+      rad: evaluateMetric(w.shortwave_radiation, INTERP_RULES.rad),
+      uv: evaluateMetric(w.uv_index, INTERP_RULES.uv),
+      cloud: evaluateMetric(w.cloud_cover, INTERP_RULES.cloud),
+      outlook: outlookResult
     };
-  };
+  }, [weather]);
 
-  const interp = getInterpretations();
-
-  // Synthesize all metrics into a single overarching garden recommendation
-  const getGardenSummary = () => {
+  const summary = useMemo(() => {
     if (!weather) return { text: "Loading insights...", icon: "sparkles", color: "text-slate-500" };
     
     const alerts: { text: string, severity: number, icon: string, color: string }[] = [];
 
     // Critical Level (2)
-    if (interp.moist?.t === 'Very Dry') alerts.push({ text: "Soil moisture is critically low. Immediate deep watering is highly recommended.", severity: 2, icon: "droplets", color: "text-red-500" });
     if (interp.wind?.t === 'Strong') alerts.push({ text: "High winds can snap plants. Secure tall crops and monitor for rapid drying.", severity: 2, icon: "wind", color: "text-red-500" });
     if (interp.outlook?.v === 'Storms' || interp.outlook?.v === 'Heavy Rain') alerts.push({ text: "Storms or heavy rain expected. Hold off on watering and ensure good drainage.", severity: 2, icon: "cloud-lightning", color: "text-amber-500" });
     
     // Warning Level (1)
     if (interp.rad?.t === 'Intense') alerts.push({ text: "Intense solar radiation. Delicate shade-lovers may scorch.", severity: 1, icon: "sun", color: "text-amber-500" });
-    if (interp.et?.t === 'High Loss' || interp.soilT?.t === 'Hot') alerts.push({ text: "High heat and evaporation today. Plants will lose water quickly.", severity: 1, icon: "arrow-up", color: "text-amber-500" });
+    if (interp.uv?.t === 'Extreme') alerts.push({ text: "Extreme UV levels today. Consider providing temporary shade for delicate seedlings.", severity: 1, icon: "sun", color: "text-red-500" });
     if (interp.outlook?.v === 'Rain Likely') alerts.push({ text: "Rain is likely soon. You may want to delay manual watering.", severity: 1, icon: "cloud-drizzle", color: "text-blue-500" });
     if (interp.hum?.t === 'Rot Risk') alerts.push({ text: "High humidity increases the risk of fungal diseases. Ensure good airflow.", severity: 1, icon: "alert-triangle", color: "text-amber-500" });
-    if (interp.soilT?.t === 'Cold') alerts.push({ text: "Soil temperatures are cold. Seed germination will be slow.", severity: 1, icon: "snowflake", color: "text-blue-500" });
     
     // Info Level (0)
     if (interp.outlook?.v === 'Chance of Rain') alerts.push({ text: "There is a chance of rain later today. Check conditions before watering.", severity: 0, icon: "cloud-drizzle", color: "text-blue-400" });
@@ -216,8 +282,78 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
 
     // Use the color and icon of the highest severity alert to theme the card
     return { text, icon: topAlerts[0].icon, color: topAlerts[0].color };
-  };
-  const summary = getGardenSummary();
+  }, [weather, interp]);
+
+  const statsList = useMemo(() => {
+    return weather ? [
+      {
+      icon: "droplet",
+      label: "Humidity",
+      value: `${weather.current.relative_humidity_2m}${weather.current_units.relative_humidity_2m}`,
+      interpret: interp.hum?.t,
+      colorClass: interp.hum?.c,
+      meaning: 'Relative humidity affects how plants breathe. High humidity slows water loss but increases fungal rot risk, while low humidity causes rapid transpiration and dry soil.',
+      statusDesc: interp.hum?.desc
+    },
+    {
+      icon: "wind",
+      label: "Wind",
+      value: `${weather.current.wind_speed_10m} ${weather.current_units.wind_speed_10m}`,
+      interpret: interp.wind?.t,
+      colorClass: interp.wind?.c,
+      meaning: 'Wind increases the rate of evaporation from both the soil and plant leaves. High winds can rapidly dehydrate plants and physically damage tall or heavy-fruiting crops.',
+      statusDesc: interp.wind?.desc
+    },
+    {
+      icon: "cloud-rain",
+      label: "Rain Vol.",
+      modalLabel: "Rain Volume",
+      value: `${weather.current.precipitation} ${weather.current_units.precipitation}`,
+      interpret: interp.precip?.t,
+      colorClass: interp.precip?.c,
+      meaning: 'The volume of liquid precipitation falling this hour. A good benchmark is that 1 inch of natural rain per week generally satisfies the needs of most established garden beds.',
+      statusDesc: interp.precip?.desc
+    },
+    {
+      icon: "sun",
+      label: "Radiation",
+      modalLabel: "Solar Radiation",
+      value: `${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`,
+      interpret: interp.rad?.t,
+      colorClass: interp.rad?.c,
+      meaning: 'Measures the sheer energy of the sunlight hitting your garden. High radiation drives rapid photosynthesis but also heavily increases evaporation from the soil.',
+      statusDesc: interp.rad?.desc
+    },
+    {
+      icon: "sun",
+      label: "UV Index",
+      value: `${weather.current.uv_index}`,
+      interpret: interp.uv?.t,
+      colorClass: interp.uv?.c,
+      meaning: 'Measures the strength of ultraviolet rays. While sunlight is necessary, extreme UV levels can cause sunburn or leaf scorch, especially on tender seedlings or newly transplanted crops.',
+      statusDesc: interp.uv?.desc
+    },
+    {
+      icon: "cloud",
+      label: "Cloud Cover",
+      value: `${weather.current.cloud_cover}${weather.current_units.cloud_cover}`,
+      interpret: interp.cloud?.t,
+      colorClass: interp.cloud?.c,
+      meaning: 'The percentage of the sky obscured by clouds. Heavy cloud cover slows down photosynthesis and drastically reduces the rate at which soil dries out.',
+      statusDesc: interp.cloud?.desc
+    },
+    {
+      icon: interp.outlook?.i || (weather.current.is_day === 0 ? 'moon' : 'sun'),
+      label: "Outlook",
+      modalLabel: "Precipitation Outlook",
+      value: interp.outlook?.v || 'Clear',
+      interpret: interp.outlook?.t,
+      colorClass: interp.outlook?.c,
+      meaning: 'A smart snapshot combining recent rainfall over the past 6 hours with a 12-hour forward look at impending storms, helping you decide if you should water now or wait.',
+      statusDesc: interp.outlook?.desc
+    }
+    ] : [];
+  }, [weather, interp]);
 
   return (
     <Card className="flex flex-col gap-2">
@@ -293,14 +429,39 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
 
           {isDetailsExpanded && (
             <div className="grid grid-cols-2 gap-2 mt-2 pt-4 border-t border-surface-200 dark:border-surface-700 animate-in slide-in-from-top-2 fade-in duration-200">
-            <StatItem icon="droplet" label="Humidity" value={`${weather.current.relative_humidity_2m}${weather.current_units.relative_humidity_2m}`} interpret={interp.hum?.t} colorClass={interp.hum?.c} onClick={() => setSelectedStat({ label: 'Humidity', value: `${weather.current.relative_humidity_2m}${weather.current_units.relative_humidity_2m}`, interpret: interp.hum?.t, colorClass: interp.hum?.c, meaning: 'Relative humidity measures the amount of moisture present in the air compared to the maximum it could hold at the current temperature.', statusDesc: interp.hum?.desc })} />
-            <StatItem icon="wind" label="Wind" value={`${weather.current.wind_speed_10m} ${weather.current_units.wind_speed_10m}`} interpret={interp.wind?.t} colorClass={interp.wind?.c} onClick={() => setSelectedStat({ label: 'Wind', value: `${weather.current.wind_speed_10m} ${weather.current_units.wind_speed_10m}`, interpret: interp.wind?.t, colorClass: interp.wind?.c, meaning: 'Measures the current wind speed at 10 meters above ground.', statusDesc: interp.wind?.desc })} />
-            <StatItem icon="cloud-rain" label="Rain Vol." value={`${weather.current.precipitation} ${weather.current_units.precipitation}`} interpret={interp.precip?.t} colorClass={interp.precip?.c} onClick={() => setSelectedStat({ label: 'Rain Volume', value: `${weather.current.precipitation} ${weather.current_units.precipitation}`, interpret: interp.precip?.t, colorClass: interp.precip?.c, meaning: 'The total physical volume of liquid precipitation (rain, showers, etc.) falling in the current hour.', statusDesc: interp.precip?.desc })} />
-            <StatItem icon="thermometer" label="Soil Temp" value={`${Math.round(weather.current.soil_temperature_6cm)}${weather.current_units.soil_temperature_6cm}`} interpret={interp.soilT?.t} colorClass={interp.soilT?.c} onClick={() => setSelectedStat({ label: 'Soil Temperature', value: `${Math.round(weather.current.soil_temperature_6cm)}${weather.current_units.soil_temperature_6cm}`, interpret: interp.soilT?.t, colorClass: interp.soilT?.c, meaning: 'The physical temperature of the ground at a 6cm depth, which is the critical zone for root health and seed germination.', statusDesc: interp.soilT?.desc })} />
-            <StatItem icon="droplets" label="Soil Moisture" value={`${Math.round(weather.current.soil_moisture_3_to_9cm * 100)}%`} interpret={interp.moist?.t} colorClass={interp.moist?.c} onClick={() => setSelectedStat({ label: 'Soil Moisture', value: `${Math.round(weather.current.soil_moisture_3_to_9cm * 100)}%`, interpret: interp.moist?.t, colorClass: interp.moist?.c, meaning: 'The percentage of the soil\'s volume that is made up of water at the 3-9cm root depth.', statusDesc: interp.moist?.desc })} />
-            <StatItem icon="sun" label="Radiation" value={`${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`} interpret={interp.rad?.t} colorClass={interp.rad?.c} onClick={() => setSelectedStat({ label: 'Solar Radiation', value: `${weather.current.shortwave_radiation} ${weather.current_units.shortwave_radiation}`, interpret: interp.rad?.t, colorClass: interp.rad?.c, meaning: 'Shortwave solar radiation measures the intensity of the sunlight hitting your garden, driving photosynthesis.', statusDesc: interp.rad?.desc })} />
-            <StatItem icon="arrow-up" label="Water Loss" value={`${weather.current.et0_fao_evapotranspiration} ${weather.current_units.et0_fao_evapotranspiration}`} interpret={interp.et?.t} colorClass={interp.et?.c} onClick={() => setSelectedStat({ label: 'Water Loss (Evapotranspiration)', value: `${weather.current.et0_fao_evapotranspiration} ${weather.current_units.et0_fao_evapotranspiration}`, interpret: interp.et?.t, colorClass: interp.et?.c, meaning: 'Evapotranspiration (ET0) is the calculated rate at which water is evaporating from the soil and transpiring (sweating) out of plant leaves.', statusDesc: interp.et?.desc })} />
-            <StatItem icon={interp.outlook?.i || (weather.current.is_day === 0 ? 'moon' : 'sun')} label="Outlook" value={interp.outlook?.v || 'Clear'} interpret={interp.outlook?.t} colorClass={interp.outlook?.c} onClick={() => setSelectedStat({ label: 'Precipitation Outlook', value: interp.outlook?.v || 'Clear', interpret: interp.outlook?.t, colorClass: interp.outlook?.c, meaning: 'A combined forecast monitoring the past 6 hours of recent rain and the upcoming 12 hours of potential storms.', statusDesc: interp.outlook?.desc })} />
+              {statsList.map((stat, idx) => (
+                <StatItem 
+                  key={idx}
+                  icon={stat.icon} 
+                  label={stat.label} 
+                  value={stat.value} 
+                  interpret={stat.interpret} 
+                  colorClass={stat.colorClass} 
+                  onClick={() => setSelectedStat({ 
+                    label: stat.modalLabel || stat.label, 
+                    value: stat.value, 
+                    interpret: stat.interpret, 
+                    colorClass: stat.colorClass, 
+                    meaning: stat.meaning, 
+                    statusDesc: stat.statusDesc 
+                  })} 
+                />
+              ))}
+            
+            <div className="flex flex-col items-center justify-center bg-transparent p-2.5 rounded-xl border-2 border-dashed border-surface-200 dark:border-surface-700 w-full h-full opacity-80 hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 mb-1">
+                <Icon name="clock" size={12} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Updated</span>
+              </div>
+              <div className="flex items-center gap-2 mt-auto pt-0.5">
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '---'}
+                </span>
+                <button onClick={handleRefresh} disabled={loading} className="p-1.5 text-slate-500 hover:text-primary-600 dark:text-slate-400 dark:hover:text-primary-400 bg-surface-100 hover:bg-primary-50 dark:bg-surface-800 dark:hover:bg-primary-900/30 rounded-full transition-colors active:scale-95 disabled:opacity-50 shadow-sm" title="Refresh weather data">
+                  <Icon name="refresh" size={12} className={loading ? "animate-spin" : ""} />
+                </button>
+              </div>
+            </div>
           </div>
           )}
         </div>

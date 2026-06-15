@@ -10,8 +10,8 @@ const AVAILABLE_ADDONS: AddonManifest[] = [
   {
     id: "widget-weather",
     name: "Weather Widget",
-    version: "1.5.0",
-    description: "Provides hyper-local, garden-specific weather insights, alerts, and soil metrics using data from Open-Meteo.",
+    version: "2.0.1",
+    description: "Provides hyper-local, garden-specific weather insights, alerts, and other metrics using data from Tomorrow.io.",
     author: "Michael Shaheen",
     entryPoints: ["dashboard"],
     requiresInternet: true,
