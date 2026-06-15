@@ -213,6 +213,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
 
   const weatherInfo = weather ? TOMORROW_WEATHER_CODES[weather.current.weather_code] : null;
   const mainIcon = weatherInfo ? (weather?.current?.is_day === 0 ? weatherInfo.icon.replace('sun', 'moon') : weatherInfo.icon) : 'sun';
+  const mainDesc = weatherInfo ? (weather?.current?.is_day === 0 ? weatherInfo.description.replace(', Sunny', '') : weatherInfo.description) : '';
 
   // Memoize heavy logic so it doesn't recalculate on every minor state change (like opening modals)
   const interp = useMemo(() => {
@@ -378,7 +379,7 @@ const WeatherWidget: FC<WeatherWidgetProps> = ({ settings }) => {
           <div className="flex items-center justify-between px-6 pt-4 pb-2">
             <div className="flex flex-col items-center gap-1">
               <Icon name={mainIcon as any} size={48} className={weather.current.is_day === 0 ? "text-indigo-400 dark:text-indigo-300" : "text-amber-500"} />
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">{weatherInfo.description}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center">{mainDesc}</p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-4xl font-bold text-slate-800 dark:text-slate-100 tracking-tighter">
