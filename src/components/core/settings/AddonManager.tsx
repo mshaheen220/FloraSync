@@ -224,7 +224,7 @@ export const AddonManager: FC<AddonManagerProps> = ({
         </div>
 
       <div className="space-y-4">
-        {ALL_ADDONS.filter(addon => isSystemAdmin || installedAddons.includes(addon.id)).map(addon => {
+        {ALL_ADDONS.filter(addon => canManageAddons || installedAddons.includes(addon.id)).map(addon => {
           const isInstalled = installedAddons.includes(addon.id);
           const isActive = activeAddons.includes(addon.id);
           const isLoading = loadingId === addon.id;
@@ -261,7 +261,7 @@ export const AddonManager: FC<AddonManagerProps> = ({
               <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center gap-2">
                   {!isInstalled ? (
-                  isSystemAdmin && (
+                  canManageAddons && (
                     <Button onClick={() => handleInstall(addon)} disabled={isLoading} className="!text-[10px] !py-1 !px-2 !h-auto !min-h-0 w-max">
                       {isLoading ? '...' : 'Install'}
                     </Button>
