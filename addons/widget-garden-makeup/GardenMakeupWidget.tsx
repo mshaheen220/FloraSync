@@ -100,7 +100,7 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
                       <div className="h-px bg-slate-400 flex-1"></div>
                     </div>
                   )}
-                  <div className={`border-2 rounded-2xl p-6 ${feed === 'GENERAL_FEED' ? 'bg-slate-50 border-slate-300 border-dashed' : 'bg-white border-slate-200'}`}>
+                  <div className={`border-2 rounded-2xl p-6 ${feed === 'GENERAL_FEED' ? 'bg-surface-50 border-surface-300 border-dashed' : 'bg-white border-surface-200'}`}>
                     <div className="flex justify-between items-end border-b border-slate-100 pb-3 mb-4">
                     <h2 className="text-2xl font-bold text-slate-800">
                       {FEED_PROFILE_LABELS[feed] || feed}
@@ -241,9 +241,9 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
       </section>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => { setIsModalOpen(false); setDetailView(null); }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-surface-900 dark:bg-surface-900 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => { setIsModalOpen(false); setDetailView(null); }}>
           <Card className="w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 !p-0" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-700 shrink-0 rounded-t-2xl">
+            <div className="flex justify-between items-center p-4 border-b border-surface-100 dark:border-surface-700 shrink-0 rounded-t-2xl">
               <Subtitle className="!m-0 flex items-center gap-2">
                 <Icon name="pie-chart" size={20} className="text-primary-500" />
                 {detailView ? 'Detailed Breakdown' : 'Inventory Makeup'}
@@ -326,7 +326,7 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
                               <div className="h-px bg-slate-400 flex-1"></div>
                             </div>
                           )}
-                          <div className={`p-4 rounded-xl border ${feed === 'GENERAL_FEED' ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-300 dark:border-slate-600 border-dashed' : 'bg-surface-50 dark:bg-surface-800/50 border-surface-200 dark:border-surface-700/50'} ${data.count === 0 ? 'opacity-80' : ''}`}>
+                          <div className={`p-4 rounded-xl border ${feed === 'GENERAL_FEED' ? 'bg-surface-100 dark:bg-surface-800/70 border-surface-300 dark:border-surface-600 border-dashed' : 'bg-surface-50 dark:bg-surface-800/50 border-surface-200 dark:border-surface-700/50'} ${data.count === 0 ? 'opacity-80' : ''}`}>
                             <div className="flex items-center justify-between mb-1">
                             <span className="font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                               <Icon name="feed" size={14} className={feed === 'BLOOM_BOOST' ? 'text-amber-500' : feed === 'VEG_GROW' ? 'text-emerald-500' : feed === 'LOW_FEED' ? 'text-orange-400' : feed === 'ACID_LOVERS' ? 'text-purple-500' : 'text-blue-500'} />
@@ -359,7 +359,7 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
             </div>
             )}
 
-            <div className="p-4 flex gap-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shrink-0 rounded-b-2xl">
+            <div className="p-4 flex gap-3 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 shrink-0 rounded-b-2xl">
               <Button onClick={() => setIsPrinting(true)} $variant="secondary" className="flex-1 py-3 flex items-center justify-center gap-2">
                 <Icon name="print" size={18} /> Print List
               </Button>
