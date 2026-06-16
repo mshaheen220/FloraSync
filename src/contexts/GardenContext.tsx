@@ -16,18 +16,18 @@ export interface GardenContextType {
   
   // Instance Actions
   onWater: (qrId: string) => void;
-  onFeed: (qrId: string) => void;
+  onFeed: (qrId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => void;
   onRegister: (qrId: string, identifier: string, isNew: boolean, locationId: string, isNewLocation?: boolean, zoneId?: string, isNewZone?: boolean, imageUrl?: string) => void;
   onUpdateInstance: (qrId: string, updates: Partial<PlantInstance>) => void;
   onDeleteInstance: (qrId: string) => void;
   
   // Batch Actions
   onBatchWaterLocation: (locationId: string) => void;
-  onBatchFeedLocation: (locationId: string) => void;
+  onBatchFeedLocation: (locationId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => void;
   onBatchWaterZone: (zoneId: string) => void;
-  onBatchFeedZone: (zoneId: string) => void;
+  onBatchFeedZone: (zoneId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => void;
   onBatchWaterAll: () => void;
-  onBatchFeedAll: () => void;
+  onBatchFeedAll: (feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => void;
   onLogRain?: () => Promise<number | void>;
 
   // Environment Actions

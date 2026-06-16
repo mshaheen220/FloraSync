@@ -5,7 +5,10 @@ import { PlantJournal } from './PlantJournal';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { Icon, IconName } from '../common/Icon';
+import { FeedActionModal } from '../common/FeedActionModal';
+import { NutrientProfileInfoModal } from '../common/NutrientProfileInfoModal';
 import { apiFetch } from '../../utils/api';
+import { FEED_PROFILE_LABELS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -56,6 +59,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const [editData, setEditData] = useState({ locationId: '', lastWatered: '', lastFed: '', datePlanted: '', dateHarvested: '', untracked: false });
 
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -101,11 +106,6 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const handleManualWater = () => {
     onWater(qrId);
     showToast('💦 Plant watered successfully!');
-  };
-
-  const handleManualFeed = () => {
-    onFeed(qrId);
-    showToast('🪴 Plant fed successfully!');
   };
 
   const currentUserId = currentUser?.id || '';
@@ -330,7 +330,8 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     isValidData(archetype.sunRequirement) || 
     isValidData(archetype.waterIntervalDays) || 
     isValidData(archetype.feedingIntervalDays) || 
-    isValidData(archetype.pruningTips)
+    isValidData(archetype.pruningTips) ||
+    isValidData(archetype.preferredNutrientProfile)
   );
 
   const hasTraitsData = archetype && (
@@ -443,9 +444,18 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <div className="w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 mb-8"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
-          <StatusBadge $status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-5 shadow-sm">
+          <StatusBadge $status={instance.untracked ? 'unmonitored' : (isOverdue ? 'overdue' : 'hydrated')} className="mb-3 shadow-sm">
             {instance.untracked ? 'Unmonitored / Rain-Fed' : (isOverdue ? 'Watering Overdue' : 'Optimal Hydration')}
           </StatusBadge>
+          {archetype?.preferredNutrientProfile && (
+            <div className="flex justify-center mb-5 mt-1">
+               <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors shadow-sm border border-slate-200 dark:border-slate-700">
+                 <Icon name="feed" size={14} />
+                 {FEED_PROFILE_LABELS[archetype.preferredNutrientProfile] || archetype.preferredNutrientProfile}
+                 <Icon name="help-circle" size={14} className="opacity-70 ml-0.5" />
+               </button>
+            </div>
+          )}
           <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-8 text-center space-y-1">
           <p>Planted: {new Date(instance.datePlanted).toLocaleDateString()}</p>
           {instance.dateHarvested && !isPastYearHarvest ? (
@@ -461,7 +471,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           
           <div className="w-full flex gap-3 px-2">
             <Button onClick={handleManualWater} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water</Button>
-            <Button $variant="secondary" onClick={handleManualFeed} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed</Button>
+            <Button $variant="secondary" onClick={() => setIsFeedModalOpen(true)} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed</Button>
             
             {/* Dynamic Data-Driven Plugin Buttons */}
             {currentUser?.activeAddonManifests?.map(manifest => 
@@ -524,6 +534,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
                   <div className="pt-1">
                     <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Feeding</strong>
                     <span className="text-slate-500 dark:text-slate-400 leading-relaxed block mb-1">Every {archetype?.feedingIntervalDays} days</span>
+                    {archetype?.preferredNutrientProfile && (
+                      <div className="flex items-center gap-1 mb-1 mt-0.5 text-slate-500 dark:text-slate-400 leading-relaxed">
+                        <span>Profile: {FEED_PROFILE_LABELS[archetype.preferredNutrientProfile] || archetype.preferredNutrientProfile}</span>
+                        <button onClick={() => setIsInfoOpen(true)} className="text-primary-500 hover:text-primary-600 transition-colors p-1 rounded-full active:bg-primary-50 dark:active:bg-primary-900/30"><Icon name="help-circle" size={14} /></button>
+                      </div>
+                    )}
                     {isValidData(archetype?.whatToFeed) && <span className="text-slate-500 dark:text-slate-400 text-xs italic block leading-relaxed">{archetype?.whatToFeed}</span>}
                   </div>
                 </li>
@@ -687,6 +703,21 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         )}
       </div>
 
+      <FeedActionModal 
+        isOpen={isFeedModalOpen} 
+        defaultProfile={archetype?.preferredNutrientProfile || 'GENERAL_FEED'}
+        onClose={() => setIsFeedModalOpen(false)} 
+        onConfirm={(feedType, feedAmount) => { 
+          onFeed(instance.qrId, feedType, feedAmount); 
+          setIsFeedModalOpen(false); 
+          showToast(`🪴 Plant fed with ${FEED_PROFILE_LABELS[feedType] || feedType}!`); 
+        }} 
+      />
+      <NutrientProfileInfoModal 
+        isOpen={isInfoOpen} 
+        onClose={() => setIsInfoOpen(false)} 
+        currentProfile={archetype?.preferredNutrientProfile}
+      />
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );

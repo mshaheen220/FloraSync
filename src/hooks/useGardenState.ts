@@ -29,7 +29,7 @@ export function useGardenState(currentUser: User | null) {
   const handleBatchWater = useCallback((locationId: string) => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { ...inst, lastWatered: now } : inst
+      inst.locationId === locationId && !inst.untracked ? { ...inst, lastWatered: now } : inst
     ));
     setLocations(prev => prev.map(loc => 
       loc.id === locationId ? {
@@ -45,10 +45,10 @@ export function useGardenState(currentUser: User | null) {
     ));
   }, [currentUser]);
 
-  const handleBatchFeed = useCallback((locationId: string) => {
+  const handleBatchFeed = useCallback((locationId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
-      inst.locationId === locationId ? { ...inst, lastFed: now } : inst
+      inst.locationId === locationId && !inst.untracked ? { ...inst, lastFed: now } : inst
     ));
     setLocations(prev => prev.map(loc => 
       loc.id === locationId ? {
@@ -57,6 +57,8 @@ export function useGardenState(currentUser: User | null) {
           id: `j-loc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
           activityType: 'Fed',
+          feedType,
+          feedAmount,
           authorName: currentUser?.name || '',
           authorImageUrl: currentUser?.imageUrl || ''
         } as JournalEntry, ...(loc.journal || [])]
@@ -68,7 +70,7 @@ export function useGardenState(currentUser: User | null) {
     const now = new Date().toISOString();
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
     setInstances(prev => prev.map(inst => 
-      zoneLocIds.includes(inst.locationId) ? { ...inst, lastWatered: now } : inst
+      zoneLocIds.includes(inst.locationId) && !inst.untracked ? { ...inst, lastWatered: now } : inst
     ));
     setZones(prev => prev.map(z => 
       z.id === zoneId ? {
@@ -84,11 +86,11 @@ export function useGardenState(currentUser: User | null) {
     ));
   }, [locations, currentUser]);
 
-  const handleBatchFeedZone = useCallback((zoneId: string) => {
+  const handleBatchFeedZone = useCallback((zoneId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => {
     const now = new Date().toISOString();
     const zoneLocIds = locations.filter(l => l.zoneId === zoneId).map(l => l.id);
     setInstances(prev => prev.map(inst => 
-      zoneLocIds.includes(inst.locationId) ? { ...inst, lastFed: now } : inst
+      zoneLocIds.includes(inst.locationId) && !inst.untracked ? { ...inst, lastFed: now } : inst
     ));
     setZones(prev => prev.map(z => 
       z.id === zoneId ? {
@@ -97,6 +99,8 @@ export function useGardenState(currentUser: User | null) {
           id: `j-zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
           activityType: 'Fed',
+          feedType,
+          feedAmount,
           authorName: currentUser?.name || '',
           authorImageUrl: currentUser?.imageUrl || ''
         } as JournalEntry, ...(z.journal || [])]
@@ -106,7 +110,7 @@ export function useGardenState(currentUser: User | null) {
 
   const handleBatchWaterAll = useCallback(() => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ ...inst, lastWatered: now })));
+    setInstances(prev => prev.map(inst => !inst.untracked ? { ...inst, lastWatered: now } : inst));
     setGardenJournal(prev => [{
       id: `j-gdn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: now,
@@ -116,13 +120,15 @@ export function useGardenState(currentUser: User | null) {
     } as JournalEntry, ...prev]);
   }, [currentUser]);
 
-  const handleBatchFeedAll = useCallback(() => {
+  const handleBatchFeedAll = useCallback((feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => {
     const now = new Date().toISOString();
-    setInstances(prev => prev.map(inst => ({ ...inst, lastFed: now })));
+    setInstances(prev => prev.map(inst => !inst.untracked ? { ...inst, lastFed: now } : inst));
     setGardenJournal(prev => [{
       id: `j-gdn-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: now,
       activityType: 'Fed',
+      feedType,
+      feedAmount,
       authorName: currentUser?.name || '',
       authorImageUrl: currentUser?.imageUrl || ''
     } as JournalEntry, ...prev]);
@@ -145,7 +151,7 @@ export function useGardenState(currentUser: User | null) {
     ));
   }, [currentUser]);
 
-  const handleFeed = useCallback((qrId: string) => {
+  const handleFeed = useCallback((qrId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => {
     const now = new Date().toISOString();
     setInstances(prev => prev.map(inst => 
       inst.qrId === qrId ? { 
@@ -155,6 +161,8 @@ export function useGardenState(currentUser: User | null) {
           id: `j-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           timestamp: now,
           activityType: 'Fed',
+          feedType,
+          feedAmount,
           authorName: currentUser?.name || '',
           authorImageUrl: currentUser?.imageUrl || ''
         } as any, ...(inst.journal || [])]
@@ -194,7 +202,8 @@ export function useGardenState(currentUser: User | null) {
           hardinessNote: '',
           plantingInstructions: 'Unknown',
           growthRequirements: 'Unknown',
-          lifecycle: 'Unknown'
+          lifecycle: 'Unknown',
+          preferredNutrientProfile: 'LOW_FEED'
         };
         setArchetypes(prev => [...prev, newArchetype]);
       }

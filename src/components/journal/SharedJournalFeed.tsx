@@ -2,6 +2,7 @@ import { FC, useState } from 'react';
 import { JournalEntry, User } from '../../../types';
 import { Card, Button } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
+import { FEED_PROFILE_LABELS, ACTIVITY_ICONS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -148,19 +149,47 @@ const EntryContent: FC<{entry: any, showSourceContext: boolean, isLocalEntry: bo
       {entry.title && <h4 className={`text-slate-800 dark:text-slate-100 font-bold mb-${showSourceContext ? '2' : '1'} text-${showSourceContext ? 'base' : 'lg'}`}>{entry.title}</h4>}
       {((entry.activityType && !['Observation', 'Garden Note', 'Zone Note', 'Location Note'].includes(entry.activityType)) || entry.harvestAmount || entry.height || entry.fullness || entry.colorAppearance || entry.healthIssues || entry.growthStage || entry.batchScope) && (
         <div className={`flex flex-wrap gap-2 mb-3 ${!showSourceContext ? 'mt-1' : ''}`}>
-          {entry.activityType && !['Observation', 'Garden Note', 'Zone Note', 'Location Note'].includes(entry.activityType) && (
-            <span className="bg-primary-100 dark:bg-primary-900/50 text-primary-800 dark:text-primary-300 text-xs px-2 py-1 rounded-md border border-primary-200 dark:border-primary-800 font-bold inline-flex items-center gap-1.5">
-              {entry.activityType === 'Harvest' ? <><Icon name="apple" size={14} /> Harvest</> : entry.activityType === 'Pruning' ? <><Icon name="edit" size={14} /> Pruning</> : entry.activityType === 'Watered' ? <><Icon name="water" size={14} /> Watered</> : entry.activityType === 'Fed' ? <><Icon name="feed" size={14} /> Fed</> : entry.activityType === 'Treatment' ? <><Icon name="alert-circle" size={14} /> Treatment</> : entry.activityType === 'Weather' ? <><Icon name="cloud-sun" size={14} /> Weather</> : entry.activityType === 'Heavy Rain' ? <><Icon name="cloud-rain" size={14} /> Heavy Rain</> : entry.activityType === 'Pest Sighting' ? <><Icon name="bug" size={14} /> Pest Sighting</> : entry.activityType === 'Maintenance' ? <><Icon name="settings" size={14} /> Maintenance</> : entry.activityType === 'Planning' ? <><Icon name="lightbulb" size={14} /> Planning</> : entry.activityType === 'Alert' ? <><Icon name="alert-circle" size={14} /> Alert</> : entry.activityType}
-            </span>
-          )}
-          {entry.harvestAmount && <span className={`bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-md border border-amber-200 dark:border-amber-800 font-bold inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="scale" size={showSourceContext ? 12 : 14} /> {entry.harvestAmount}</span>}
-          {entry.height && <span className={`bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="ruler" size={showSourceContext ? 12 : 14} /> {entry.height}"</span>}
-          {entry.growthStage && <span className={`bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="sprout" size={showSourceContext ? 12 : 14} /> {entry.growthStage}</span>}
-          {entry.fullness && <span className={`bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="leaf" size={showSourceContext ? 12 : 14} /> {entry.fullness}</span>}
-          {entry.colorAppearance && <span className={`bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded-md border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="palette" size={showSourceContext ? 12 : 14} /> {entry.colorAppearance}</span>}
-          {entry.healthIssues && entry.healthIssues !== 'None' && <span className={`bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded-md border border-red-200 dark:border-red-800 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="alert" size={showSourceContext ? 12 : 14} /> {entry.healthIssues}</span>}
-          {entry.healthIssues === 'None' && <span className={`bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-2 py-1 rounded-md border border-primary-200 dark:border-primary-800 inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="sparkles" size={showSourceContext ? 12 : 14} /> Healthy</span>}
-          {entry.batchScope && <span className={`bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-1 rounded-md border border-indigo-200 dark:border-indigo-800 font-semibold inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}><Icon name="map-pin" size={showSourceContext ? 12 : 14} /> via {entry.batchScope}</span>}
+          {entry.activityType && !['Observation', 'Garden Note', 'Zone Note', 'Location Note'].includes(entry.activityType) && (() => {
+            const iconName = ACTIVITY_ICONS[entry.activityType] || 'info';
+            let label = entry.activityType;
+            if (entry.activityType === 'Fed' && entry.feedType) {
+              label = FEED_PROFILE_LABELS[entry.feedType] || 'Fed';
+            }
+            if (entry.activityType === 'Fed' && entry.feedAmount && entry.feedAmount !== 'Normal') {
+              label += ` (${entry.feedAmount})`;
+            }
+            return (
+              <span className="bg-primary-100 dark:bg-primary-900/50 text-primary-800 dark:text-primary-300 text-xs px-2 py-1 rounded-md border border-primary-200 dark:border-primary-800 font-bold inline-flex items-center gap-1.5">
+                <Icon name={iconName as any} size={14} /> {label}
+              </span>
+            );
+          })()}
+          {(() => {
+            const badgeClasses = {
+              amber: "bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800 font-bold",
+              slate: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700",
+              red: "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800",
+              primary: "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800",
+              indigo: "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 font-semibold"
+            };
+
+            const metrics = [
+              { key: entry.harvestAmount, icon: 'scale', theme: 'amber', format: (v: any) => v },
+              { key: entry.height, icon: 'ruler', theme: 'slate', format: (v: any) => `${v}"` },
+              { key: entry.growthStage, icon: 'sprout', theme: 'slate', format: (v: any) => v },
+              { key: entry.fullness, icon: 'leaf', theme: 'slate', format: (v: any) => v },
+              { key: entry.colorAppearance, icon: 'palette', theme: 'slate', format: (v: any) => v },
+              { key: entry.healthIssues && entry.healthIssues !== 'None' ? entry.healthIssues : null, icon: 'alert', theme: 'red', format: (v: any) => v },
+              { key: entry.healthIssues === 'None' ? 'Healthy' : null, icon: 'sparkles', theme: 'primary', format: (v: any) => v },
+              { key: entry.batchScope, icon: 'map-pin', theme: 'indigo', format: (v: any) => `via ${v}` }
+            ];
+
+            return metrics.filter(m => m.key).map((m, idx) => (
+              <span key={idx} className={`${badgeClasses[m.theme as keyof typeof badgeClasses]} px-2 py-1 rounded-md border inline-flex items-center gap-1.5 ${showSourceContext ? 'text-[10px]' : 'text-xs'}`}>
+                <Icon name={m.icon as any} size={showSourceContext ? 12 : 14} /> {m.format(m.key)}
+              </span>
+            ));
+          })()}
         </div>
       )}
       {entry.note && <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-3 whitespace-pre-wrap">{entry.note}</p>}

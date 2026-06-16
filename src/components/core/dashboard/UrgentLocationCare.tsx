@@ -3,15 +3,17 @@ import { Location, Zone } from '../../../../types';
 import { Subtitle, Button } from '../../../styles/StyledElements';
 import { User } from '../../../App';
 import { Icon } from '../../common/Icon';
+import { FEED_PROFILE_LABELS } from '../../../utils/constants';
 
 interface UrgentLocationCareProps {
   overdueLocations: Location[];
   zones: Zone[];
   currentUser: User;
   onBatchWater: (locationId: string) => void;
+  onBatchFeed?: (locationId: string, feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED', feedAmount?: 'Light' | 'Normal' | 'Heavy') => void;
 }
 
-export const UrgentLocationCare: FC<UrgentLocationCareProps> = ({ overdueLocations, zones, currentUser, onBatchWater }) => {
+export const UrgentLocationCare: FC<UrgentLocationCareProps> = ({ overdueLocations, zones, currentUser, onBatchWater, onBatchFeed }) => {
   if (overdueLocations.length === 0 || currentUser?.workspaceRole === 'viewer') return null;
 
   return (
@@ -20,6 +22,17 @@ export const UrgentLocationCare: FC<UrgentLocationCareProps> = ({ overdueLocatio
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
         {overdueLocations.map(loc => {
           const zone = zones.find(z => z.id === loc.zoneId);
+          const activeProfile = loc.activeNutrientProfile;
+          
+          if (activeProfile && onBatchFeed) {
+            const feedLabel = FEED_PROFILE_LABELS[activeProfile] || activeProfile;
+            return (
+              <Button key={loc.id} $variant="batch" onClick={() => onBatchFeed(loc.id, activeProfile as 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED')} className="whitespace-nowrap flex-shrink-0 w-auto px-5 flex items-center gap-2 !bg-amber-100 !text-amber-800 dark:!bg-amber-900/30 dark:!text-amber-300">
+                <Icon name="feed" size={16} /> Apply {feedLabel} to {loc.name}
+              </Button>
+            );
+          }
+          
           return (
             <Button key={loc.id} $variant="batch" onClick={() => onBatchWater(loc.id)} className="whitespace-nowrap flex-shrink-0 w-auto px-5 flex items-center gap-2">
               <Icon name="water" size={16} /> Water all on {zone ? `${zone.name} • ` : ''}{loc.name}

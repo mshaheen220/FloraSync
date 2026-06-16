@@ -7,6 +7,8 @@ import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { hasPermission } from '../../utils/permissions';
 import { Icon } from '../common/Icon';
+import { FeedActionModal } from '../common/FeedActionModal';
+import { FEED_PROFILE_LABELS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -32,6 +34,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
   const [expandedLocations, setExpandedLocations] = useState<string[]>([]);
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [newZoneName, setNewZoneName] = useState('');
+  const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -75,6 +78,22 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
     return { groups, sortedLocations };
   }, [instances, locations, archetypes]);
 
+  // Calculate the most prominent nutrient profile based on all plants and locations in this zone
+  const recommendedProfile = useMemo(() => {
+    const counts: Record<string, number> = {};
+    let best: any = 'GENERAL_FEED';
+    let max = 0;
+    zoneInstances.forEach(inst => {
+      if (inst.untracked) return;
+      const loc = locations.find(l => l.id === inst.locationId);
+      const arch = archetypes.find(a => a.id === inst.archetypeId);
+      const p = loc?.activeNutrientProfile || arch?.preferredNutrientProfile || 'GENERAL_FEED';
+      counts[p] = (counts[p] || 0) + 1;
+      if (counts[p] > max) { max = counts[p]; best = p; }
+    });
+    return best;
+  }, [zoneInstances, archetypes, locations]);
+
   // "Zero-Click" Action Handling for entire zones
   useEffect(() => {
     if (zone && zoneLocations.length > 0 && initialAction === 'water') {
@@ -83,12 +102,12 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
       window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
     } else if (zone && zoneLocations.length > 0 && initialAction === 'feed') {
-      onBatchFeedZone(zone.id);
+      onBatchFeedZone(zone.id, recommendedProfile);
       showToast('🪴 Entire zone fed successfully!');
       window.history.replaceState({ internal: true }, '', `/zone/${zone.id}`);
       onClearAction();
     }
-  }, [zoneLocations.length, initialAction, zone, onBatchWaterZone, onBatchFeedZone, onClearAction]);
+  }, [zoneLocations.length, initialAction, zone, recommendedProfile, onBatchWaterZone, onBatchFeedZone, onClearAction]);
 
   const currentUserId = currentUser?.id || '';
   const userPins = (zone?.pinnedActions && !Array.isArray(zone.pinnedActions)) 
@@ -179,7 +198,7 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
             <div className="w-full flex flex-col gap-3 px-2">
               <div className="flex gap-3">
                 <Button className="flex-1 flex items-center justify-center gap-2" onClick={() => { onBatchWaterZone(zone.id); showToast('💦 Entire zone watered!'); }}><Icon name="water" size={18} /> Water Zone</Button>
-                <Button className="flex-1 flex items-center justify-center gap-2" $variant="secondary" onClick={() => { onBatchFeedZone(zone.id); showToast('🪴 Entire zone fed!'); }}><Icon name="feed" size={18} /> Feed Zone</Button>
+                <Button className="flex-1 flex items-center justify-center gap-2" $variant="secondary" onClick={() => setIsFeedModalOpen(true)}><Icon name="feed" size={18} /> Feed Zone</Button>
               </div>
             </div>
           )}
@@ -252,6 +271,17 @@ export const ZoneDetail: FC<ZoneDetailProps> = ({
           />
         )}
       </div>
+      <FeedActionModal 
+        isOpen={isFeedModalOpen} 
+        defaultProfile={recommendedProfile}
+        showRecommendationHint={true}
+        onClose={() => setIsFeedModalOpen(false)} 
+        onConfirm={(feedType, feedAmount) => { 
+          onBatchFeedZone(zone.id, feedType, feedAmount); 
+          setIsFeedModalOpen(false); 
+          showToast(`🪴 Entire zone fed with ${FEED_PROFILE_LABELS[feedType] || feedType}!`); 
+        }} 
+      />
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );

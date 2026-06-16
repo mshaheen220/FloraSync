@@ -15,6 +15,7 @@ To keep this master reference clean and perfectly accurate, only Garden Owners a
 ### The Blueprint Details
 A great dictionary entry gives your plants the best chance to thrive. When an Admin creates a new blueprint, they can fill it with tons of helpful info:
 * **Care Routines:** Exactly how much sun it needs, and how many days should pass between watering or feeding.
+* **Nutrient Profiles:** Assign plants to specific feeding groups to optimize their diet and power the Smart Math engine. Choose from 'Heavy Feeders' (fruit/yield focus), 'Leafy & Lush' (high nitrogen), 'Mediterranean & Lean' (low/no feed), or 'Acid Lovers' (low-pH). This ensures your dashboard always recommends the perfect fertilizer mix.
 * **Harvest & Yield:** How long until it's ready to pick, what it tastes like, and what to do with a massive harvest.
 * **Ecosystem Secrets:** What companion plants it loves to grow next to, and which combative plants to keep far away!
 * **Extras:** Beautiful photos and fun botanical trivia.

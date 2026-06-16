@@ -6,6 +6,8 @@ import { useGarden } from '../../contexts/GardenContext';
 import { hasPermission } from '../../utils/permissions';
 import { Icon, IconName } from '../common/Icon';
 import { ArchetypeForm } from './ArchetypeForm';
+import { NutrientProfileInfoModal } from '../common/NutrientProfileInfoModal';
+import { FEED_PROFILE_LABELS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -55,6 +57,7 @@ export const ArchetypeDetail: FC<ArchetypeDetailProps> = ({ archetypeId, onGoBac
   
   const [initialFormData, setInitialFormData] = useState<Partial<PlantArchetype>>({});
   const [expandedViewSections, setExpandedViewSections] = useState<string[]>(['cultivation']);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   const milestoneVerbFuture = useMemo(() => {
     const cat = archetype?.category?.toLowerCase() || '';
@@ -196,6 +199,12 @@ export const ArchetypeDetail: FC<ArchetypeDetailProps> = ({ archetypeId, onGoBac
               {isValidData(archetype?.waterIntervalDays) && <span className="flex items-center gap-1.5"><Icon name={getWaterIcon(archetype?.waterIntervalDays)} size={16} className="text-blue-500 dark:text-blue-400" /> {archetype?.waterIntervalDays}d</span>}
               {isValidData(archetype?.feedingIntervalDays) && <span className="flex items-center gap-1.5"><Icon name={getFeedIcon(archetype?.feedingIntervalDays)} size={16} className="text-amber-500 dark:text-amber-400" /> {archetype?.feedingIntervalDays}d</span>}
               {isValidData(archetype?.sunRequirement) && <span className="flex items-center gap-1.5"><Icon name={getSunIcon(archetype?.sunRequirement)} size={16} className="text-amber-400 dark:text-amber-300" /> {archetype?.sunRequirement}</span>}
+              {archetype?.preferredNutrientProfile && (
+                <button onClick={() => setIsInfoOpen(true)} className="flex items-center gap-1 text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors border border-slate-200 dark:border-slate-700/50 ml-1">
+                  {FEED_PROFILE_LABELS[archetype.preferredNutrientProfile] || archetype.preferredNutrientProfile}
+                  <Icon name="help-circle" size={12} className="opacity-70" />
+                </button>
+              )}
             </div>
           </div>
         </Card>
@@ -239,6 +248,12 @@ export const ArchetypeDetail: FC<ArchetypeDetailProps> = ({ archetypeId, onGoBac
                     <div className="pt-1">
                       <strong className="block text-slate-800 dark:text-slate-100 font-semibold mb-0.5">Feeding</strong>
                       <span className="text-slate-500 dark:text-slate-400 leading-relaxed block mb-1">Every {archetype?.feedingIntervalDays} days</span>
+                      {archetype?.preferredNutrientProfile && (
+                        <div className="flex items-center gap-1 mb-1 mt-0.5 text-slate-500 dark:text-slate-400 leading-relaxed">
+                          <span>Profile: {FEED_PROFILE_LABELS[archetype.preferredNutrientProfile] || archetype.preferredNutrientProfile}</span>
+                          <button onClick={() => setIsInfoOpen(true)} className="text-primary-500 hover:text-primary-600 transition-colors p-1 rounded-full active:bg-primary-50 dark:active:bg-primary-900/30"><Icon name="help-circle" size={14} /></button>
+                        </div>
+                      )}
                       {isValidData(archetype?.whatToFeed) && <span className="text-slate-500 dark:text-slate-400 text-xs italic block leading-relaxed">{archetype?.whatToFeed}</span>}
                     </div>
                   </li>
@@ -452,6 +467,11 @@ export const ArchetypeDetail: FC<ArchetypeDetailProps> = ({ archetypeId, onGoBac
           onCancel={archetypeId === 'new' ? onGoBack : () => setIsEditing(false)}
         />
       ) : renderViewMode()}
+      <NutrientProfileInfoModal 
+        isOpen={isInfoOpen} 
+        onClose={() => setIsInfoOpen(false)} 
+        currentProfile={archetype?.preferredNutrientProfile}
+      />
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );

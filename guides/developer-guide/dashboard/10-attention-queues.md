@@ -41,3 +41,11 @@ It computes the `ratio` using:
 
 ### 4. Queue Sorting
 The entire `attentionQueue` array is sorted by this `ratio` in ascending order. This guarantees that plants with the lowest ratio (most critical need) bubble to the top of the queue arrays passed to the various Dashboard widgets.
+
+### 5. Feeding Math & Nutrient Deficits
+The "Hungry Plants" calculations operate similarly but include Location-level `feedingModifier`s and a specific "Nutrient Deficit" penalty.
+* **Target Interval:** `intervalMs = (archetype.feedingIntervalDays * 24 * 60 * 60 * 1000) * location.feedingModifier`
+* **Amount Modifier:** The engine sets the baseline `fullnessStart` to `1.0` (Normal), `0.5` (Light), or `1.2` (Heavy) based on the `feedAmount` of the most recent `Fed` journal entry.
+* **Deficit Checking:** The engine then checks the `feedType` parameter of that same entry.
+* **The Penalty:** If the `feedType` does NOT match the archetype's `preferredNutrientProfile` (and is NOT `GENERAL_FEED`), it applies a 60% deficit penalty, multiplying the `fullnessStart` by `0.4`. 
+* **The Result:** The formula `ratio = Math.max(0, fullnessStart - (timeElapsed / intervalMs))` means a penalized plant will reach `0` (overdue) 60% faster than normal, accelerating its return to the queue to correct the diet.

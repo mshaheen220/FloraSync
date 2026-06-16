@@ -100,6 +100,7 @@ export interface PlantArchetype {
   growthRequirements: string;
   lifecycle: string;
   funFacts?: FunFact[];
+  preferredNutrientProfile?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS';
 }
 
 export interface JournalEntry {
@@ -121,6 +122,8 @@ export interface JournalEntry {
   targetId?: string;
   targetType?: 'plant' | 'location' | 'zone' | 'garden';
   durationMinutes?: number;
+  feedType?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS' | 'GENERAL_FEED';
+  feedAmount?: 'Light' | 'Normal' | 'Heavy';
 }
 
 export interface PlantInstance {
@@ -149,6 +152,8 @@ export interface Location {
   journal?: JournalEntry[];
   imageUrl?: string;
   pinnedActions?: Record<string, string[]>;
+  activeNutrientProfile?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS';
+  feedingModifier?: number;
 }
 
 export interface Zone {

@@ -33,6 +33,7 @@ async function askGeminiForPlantData(commonName) {
   {
     "scientificName": "...",
     "category": "...", // e.g. Vegetable, Herb, Foliage Accent, Flower, Tree
+    "preferredNutrientProfile": "...", // MUST be exactly one of: 'LOW_FEED', 'VEG_GROW', 'BLOOM_BOOST', or 'ACID_LOVERS'
     "folder": "...", // MUST be exactly one of: flowers, fruits, foliage, herbs, vegetables, trees
     "imageSearchTerm": "...", // A 3-5 word search query for Wikimedia Commons. MUST use the Scientific/Latin name. MUST include 'blooming' or 'flowers' for flowers, and 'fruiting' or 'growing' for vegetables/vines. (e.g. 'blooming Hemerocallis', 'fruiting Vitis vinifera', 'growing Brassica rapa').
     "lifecycle": "...", // e.g. Annual, Biennial, Perennial
@@ -233,6 +234,7 @@ async function generatePackage() {
       commonName: plantName,
       scientificName: aiData.scientificName || 'Unknown',
       category: aiData.category || 'Uncategorized',
+      preferredNutrientProfile: aiData.preferredNutrientProfile || 'LOW_FEED',
       lifecycle: aiData.lifecycle || "Annual",
       sunRequirement: aiData.sunRequirement || "Full Sun",
       waterIntervalDays: aiData.waterIntervalDays || 3,

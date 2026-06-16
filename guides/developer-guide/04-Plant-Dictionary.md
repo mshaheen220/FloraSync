@@ -23,7 +23,7 @@ The `PlantArchetype` TypeScript interface (found in `src/types.ts`) defines the 
 
 * **Identity:** `id`, `commonName`, `scientificName`, `category`
 * **Care Requirements:** `sunRequirement`, `waterIntervalDays`, `feedingIntervalDays`, `whatToFeed`
-* **Characteristics:** `growthHabit`, `daysToHarvest`, `flavorProfile`
+* **Characteristics:** `growthHabit`, `daysToHarvest`, `flavorProfile`, `preferredNutrientProfile`
 * **Ecosystem Data:** Arrays of `companionPlants` and `combativePlants`
 * **Rich Content:** `imageUrl`, `funFacts` (Array of `FunFact` objects)
 

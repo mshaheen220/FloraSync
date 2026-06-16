@@ -1,4 +1,4 @@
-import { useEffect, useState, FC } from 'react';
+import { useEffect, useState, useMemo, FC } from 'react';
 import { Container, Title, Card, Button, Toast, Subtitle, Input } from '../../styles/StyledElements';
 import { PlantInstanceCard } from '../inventory/PlantInstanceCard';
 import { PageHeader } from '../common/PageHeader';
@@ -7,6 +7,8 @@ import { hasPermission } from '../../utils/permissions';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
 import { Icon } from '../common/Icon';
+import { FeedActionModal } from '../common/FeedActionModal';
+import { FEED_PROFILE_LABELS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -32,6 +34,7 @@ export const LocationDetail: FC<LocationDetailProps> = ({
   const [newLocName, setNewLocName] = useState('');
   const [newLocZone, setNewLocZone] = useState('');
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
+  const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -46,6 +49,22 @@ export const LocationDetail: FC<LocationDetailProps> = ({
     );
   };
 
+  // Calculate the most prominent nutrient profile based on the plants actually living here
+  const recommendedProfile = useMemo(() => {
+    if (location?.activeNutrientProfile) return location.activeNutrientProfile;
+    const counts: Record<string, number> = {};
+    let best: any = 'GENERAL_FEED';
+    let max = 0;
+    locationInstances.forEach(inst => {
+      if (inst.untracked) return;
+      const arch = archetypes.find(a => a.id === inst.archetypeId);
+      const p = arch?.preferredNutrientProfile || 'GENERAL_FEED';
+      counts[p] = (counts[p] || 0) + 1;
+      if (counts[p] > max) { max = counts[p]; best = p; }
+    });
+    return best;
+  }, [location?.activeNutrientProfile, locationInstances, archetypes]);
+
   // "Zero-Click" Action Handling for entire locations
   useEffect(() => {
     if (location && initialAction === 'water') {
@@ -54,12 +73,12 @@ export const LocationDetail: FC<LocationDetailProps> = ({
       window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     } else if (location && initialAction === 'feed') {
-      onBatchFeedLocation(locationId);
+      onBatchFeedLocation(locationId, recommendedProfile);
       showToast('🪴 All plants fed successfully!');
       window.history.replaceState({ internal: true }, '', `/location/${locationId}`);
       onClearAction();
     }
-  }, [location, initialAction, locationId, onBatchWaterLocation, onBatchFeedLocation, onClearAction]);
+  }, [location, initialAction, locationId, recommendedProfile, onBatchWaterLocation, onBatchFeedLocation, onClearAction]);
 
   const currentUserId = currentUser?.id || '';
   const userPins = (location?.pinnedActions && !Array.isArray(location.pinnedActions)) ? (location.pinnedActions[currentUserId] || []) : [];
@@ -151,11 +170,18 @@ export const LocationDetail: FC<LocationDetailProps> = ({
           <div className="w-full h-1 bg-gradient-to-r from-primary-400 to-primary-600 mb-6"></div>
         )}
         <div className="px-5 w-full flex flex-col items-center">
+          {location.activeNutrientProfile && (
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 mt-2 flex items-center gap-1.5">
+              <Icon name="feed" size={16} /> 
+              Active Feed: {FEED_PROFILE_LABELS[location.activeNutrientProfile] || location.activeNutrientProfile}
+              {location.feedingModifier && location.feedingModifier !== 1.0 ? ` (${location.feedingModifier}x)` : ''}
+            </p>
+          )}
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-6">{locationInstances.length} active plant{locationInstances.length !== 1 ? 's' : ''} in this location.</p>
           {currentUser?.workspaceRole !== 'viewer' && (
             <div className="w-full flex gap-3 px-2 mb-6">
               <Button onClick={() => { onBatchWaterLocation(locationId); showToast('💦 All plants watered!'); }} className="flex items-center justify-center gap-2"><Icon name="water" size={18} /> Water All</Button>
-              <Button $variant="secondary" onClick={() => { onBatchFeedLocation(locationId); showToast('🪴 All plants fed!'); }} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed All</Button>
+              <Button $variant="secondary" onClick={() => setIsFeedModalOpen(true)} className="flex items-center justify-center gap-2"><Icon name="feed" size={18} /> Feed All</Button>
             </div>
           )}
           
@@ -208,6 +234,18 @@ export const LocationDetail: FC<LocationDetailProps> = ({
           />
         )}
       </div>
+      
+      <FeedActionModal 
+        isOpen={isFeedModalOpen} 
+        defaultProfile={recommendedProfile}
+        showRecommendationHint={true}
+        onClose={() => setIsFeedModalOpen(false)} 
+        onConfirm={(feedType, feedAmount) => { 
+          onBatchFeedLocation(locationId, feedType, feedAmount); 
+          setIsFeedModalOpen(false); 
+          showToast(`🪴 All plants fed with ${FEED_PROFILE_LABELS[feedType] || feedType}!`); 
+        }} 
+      />
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>
   );

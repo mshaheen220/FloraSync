@@ -35,6 +35,8 @@ export interface Location {
   journal?: JournalEntry[];
   imageUrl?: string;
   pinnedActions?: Record<string, string[]>;
+  activeNutrientProfile?: 'LOW_FEED' | 'VEG_GROW' | 'BLOOM_BOOST' | 'ACID_LOVERS';
+  feedingModifier?: number;
 }
 
 export interface PlantInstance {
@@ -77,3 +79,4 @@ The `evaporationModifier` is applied within the hydration math engine. If a Zone
 *   **State:** Extend the `Zone` interface in `types.ts`.
 *   **Logic:** Update the hydration and feed calculation utilities to ingest the new modifier.
 *   **Cascade:** Ensure functions like those in `useGardenState` properly cascade the modifier to child locations and plants during evaluation.
+*   **Locations (Micro-Environments):** Utilize `feedingModifier` at the location level for granular nutrient absorption adjustments without affecting the whole zone's evaporation rate. The `activeNutrientProfile` allows a Location to declare its intended soil composition, which the frontend `HungryPlants` widget uses to calculate Location Auditor conflict warnings.

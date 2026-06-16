@@ -3,23 +3,9 @@ import { FunFact } from '../../../types';
 import { Input, Button } from '../../styles/StyledElements';
 import { Icon, IconName } from '../common/Icon';
 import { ImageUploadInput } from '../common/ImageUploadInput';
+import { FUN_FACT_ICONS } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
-
-const FACT_ICONS = [
-  { value: 'bug', label: 'Bugs' },
-  { value: 'skull', label: 'Dangerous' },
-  { value: 'wine', label: 'Drink' },
-  { value: 'soup', label: 'Food' },
-  { value: 'lightbulb', label: 'Fun Fact' },
-  { value: 'alert-circle', label: 'Important' },
-  { value: 'smile', label: 'Joke' },
-  { value: 'heart', label: 'Love This' },
-  { value: 'coins', label: 'Money' },
-  { value: 'cat', label: 'Pets' },
-  { value: 'dna', label: 'Science' },
-  { value: 'help-circle', label: 'Weird Fact / Unknown' },
-];
 
 interface FunFactManagerProps {
   facts: FunFact[];
@@ -55,7 +41,7 @@ export const FunFactManager: FC<FunFactManagerProps> = ({ facts, onChange }) => 
                   className="border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm w-full py-2.5"
                 >
                   <option value="lightbulb">Default Icon</option>
-                  {FACT_ICONS.map(icon => (
+                  {FUN_FACT_ICONS.map(icon => (
                     <option key={icon.value} value={icon.value}>{icon.label}</option>
                   ))}
                 </select>

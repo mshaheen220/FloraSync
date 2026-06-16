@@ -31,3 +31,13 @@ Once the calculated hydration or nutrition level hits **0%**, the plant drops di
 When you log natural rain on your Dashboard, FloraSync calculates the exact hydration value of that weather event based on the hours and minutes you entered! 
 * A **60+ minute Heavy Rain** fully saturates your garden, completely resetting the queue to 100%. 
 * A **15 minute Light Sprinkle** only provides a fraction of the needed water, meaning a severely overdue plant might *still* be thirsty and need a supplemental hand-watering later that day!
+
+### 6. Nutrient Deficit Penalties
+FloraSync tracks 4 distinct Nutrient Profiles (e.g., Leafy & Lush vs. Heavy Feeders). When you log a feeding, you select the specific mix you used.
+* If the mix you applied **matches** the plant's Preferred Nutrient Profile, the plant gets 100% full.
+* **General Feed** is considered a safe, balanced fallback and also gives the plant 100% fullness.
+* If you apply the **wrong** mix, the Smart Math engine applies a "Nutrient Deficit." For example, if you feed a Heavy Feeder (like a Tomato) with a Lean Mediterranean mix, the plant isn't getting the phosphorus it needs to bloom. Instead of resetting the plant to 100% fullness, the engine caps it at 40%. 
+* This penalty ensures the plant drops back into your Hungry queue much sooner so you can correct its diet before its growth is permanently stunted!
+
+### 7. Feeding Amounts (Light vs Heavy)
+The exact amount you feed also affects the countdown timer! A **Normal** feed resets the plant to 100%. A **Light** feed only resets it to 50% (meaning you'll need to feed it again twice as soon). A **Heavy** feed provides a surplus, resetting the plant to 120% and buying you a little extra time before its next scheduled feeding.

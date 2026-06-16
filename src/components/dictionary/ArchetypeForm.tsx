@@ -4,6 +4,7 @@ import { Input, Button, Card } from '../../styles/StyledElements';
 import { Icon, IconName } from '../common/Icon';
 import { ImageUploadInput } from '../common/ImageUploadInput';
 import { FunFactManager } from './FunFactManager';
+import { NutrientProfileInfoModal } from '../common/NutrientProfileInfoModal';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -17,6 +18,7 @@ interface ArchetypeFormProps {
 export const ArchetypeForm: FC<ArchetypeFormProps> = ({ initialData, onSave, onCancel }) => {
   const [formData, setFormData] = useState(initialData);
   const [expandedEditSections, setExpandedEditSections] = useState<string[]>(['basic']);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
 
   const milestoneVerbFuture = useMemo(() => {
     const cat = formData.category?.toLowerCase() || '';
@@ -112,6 +114,20 @@ export const ArchetypeForm: FC<ArchetypeFormProps> = ({ initialData, onSave, onC
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Sunlight</label>
                 <Input value={formData.sunRequirement || ''} onChange={e => setFormData({...formData, sunRequirement: e.target.value})} className="!mb-0 py-2 text-sm" required />
               </div>
+            <div className="col-span-2">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preferred Nutrient Profile</label>
+                <button type="button" onClick={() => setIsInfoModalOpen(true)} className="text-primary-500 hover:text-primary-600 transition-colors">
+                  <Icon name="help-circle" size={16} />
+                </button>
+              </div>
+              <select value={formData.preferredNutrientProfile || 'LOW_FEED'} onChange={e => setFormData({...formData, preferredNutrientProfile: e.target.value as any})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 h-[42px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" required>
+                <option value="BLOOM_BOOST">Heavy Feeders (Fruit & Yield)</option>
+                <option value="VEG_GROW">Leafy & Lush (High Nitrogen Greens)</option>
+                <option value="LOW_FEED">Mediterranean & Lean (Low-to-No Feed)</option>
+                <option value="ACID_LOVERS">Acid Lovers (Low-pH Specialty)</option>
+              </select>
+            </div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Lifecycle</label>
                 <select value={formData.lifecycle || ''} onChange={e => setFormData({...formData, lifecycle: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 h-[42px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm" required>
@@ -226,6 +242,11 @@ export const ArchetypeForm: FC<ArchetypeFormProps> = ({ initialData, onSave, onC
           <Button type="submit" className="flex-1 py-3 text-sm">{initialData.id ? 'Save Changes' : 'Add Plant'}</Button>
         </div>
       </form>
+      <NutrientProfileInfoModal 
+        isOpen={isInfoModalOpen} 
+        onClose={() => setIsInfoModalOpen(false)} 
+        currentProfile={formData.preferredNutrientProfile}
+      />
     </Card>
   );
 };

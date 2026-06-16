@@ -3,6 +3,7 @@ import { JournalEntry, User, JournalActivityType } from '../../../types';
 import { Card, Button, Input, Subtitle } from '../../styles/StyledElements';
 import { Icon } from '../common/Icon';
 import { ImageUploadInput } from '../common/ImageUploadInput';
+import { FEED_AMOUNTS, PLANT_GROWTH_STAGES, PLANT_FULLNESS_OPTIONS, PLANT_HEALTH_ISSUES } from '../../utils/constants';
 
 const FALLBACK_IMAGE = "data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='100%25' height='100%25' fill='%2310b981' fill-opacity='0.2'/%3E%3Ctext x='50%25' y='50%25' font-size='100' text-anchor='middle' dominant-baseline='middle'%3E🌿%3C/text%3E%3C/svg%3E";
 
@@ -109,14 +110,9 @@ export const SharedJournalForm: FC<SharedJournalFormProps> = ({ initialData, onS
               <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Growth Stage</label>
               <select value={journalForm.growthStage || ''} onChange={e => setJournalForm({...journalForm, growthStage: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                 <option value="">-- Select --</option>
-                <option value="Seedling">Seedling</option>
-                <option value="Vegetative">Vegetative</option>
-                <option value="Budding">Budding</option>
-                <option value="Blooming">Blooming</option>
-                <option value="Fruiting">Fruiting</option>
-                <option value="Ripening">Ripening</option>
-                <option value="Ready for Harvest">Ready for Harvest</option>
-                <option value="Harvested">Harvested</option>
+                {PLANT_GROWTH_STAGES.map(stage => (
+                  <option key={stage} value={stage}>{stage}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -149,6 +145,24 @@ export const SharedJournalForm: FC<SharedJournalFormProps> = ({ initialData, onS
           </div>
         )}
 
+        {currentActivity === 'Fed' && (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Feeding Amount</label>
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                {FEED_AMOUNTS.map(amt => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setJournalForm({...journalForm, feedAmount: amt as any})}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${journalForm.feedAmount === amt || (!journalForm.feedAmount && amt === 'Normal') ? 'bg-white dark:bg-slate-700 text-primary-600 dark:text-primary-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                  >
+                    {amt}
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
         {targetType === 'plant' && (
           <>
             <div className="grid grid-cols-2 gap-3">
@@ -160,10 +174,9 @@ export const SharedJournalForm: FC<SharedJournalFormProps> = ({ initialData, onS
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Fullness</label>
                 <select value={journalForm.fullness || ''} onChange={e => setJournalForm({...journalForm, fullness: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                   <option value="">-- Select --</option>
-                  <option value="Sparse">Sparse</option>
-                  <option value="Average">Average</option>
-                  <option value="Lush">Lush</option>
-                  <option value="Overgrown">Overgrown</option>
+                  {PLANT_FULLNESS_OPTIONS.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -172,13 +185,9 @@ export const SharedJournalForm: FC<SharedJournalFormProps> = ({ initialData, onS
                 <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Health / Issues</label>
                 <select value={journalForm.healthIssues || ''} onChange={e => setJournalForm({...journalForm, healthIssues: e.target.value})} className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 shadow-sm transition-all text-sm">
                   <option value="">-- Select --</option>
-                  <option value="None">Healthy (None)</option>
-                  <option value="Wilting">Wilting</option>
-                  <option value="Insect Damage">Insect Damage</option>
-                  <option value="Animal Bites">Animal Bites</option>
-                  <option value="Fungus / Disease">Fungus / Disease</option>
-                  <option value="Sunburn">Sunburn</option>
-                  <option value="Nutrient Deficiency">Nutrient Deficiency</option>
+                  {PLANT_HEALTH_ISSUES.map(issue => (
+                    <option key={issue} value={issue}>{issue === 'None' ? 'Healthy (None)' : issue}</option>
+                  ))}
                 </select>
               </div>
               <div>
