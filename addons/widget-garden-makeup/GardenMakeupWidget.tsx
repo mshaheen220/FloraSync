@@ -223,7 +223,7 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
         </Subtitle>
         <Card 
           onClick={() => setIsModalOpen(true)} 
-          className="cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 !border-primary-200 dark:!border-primary-900/50 !bg-primary-50/30 dark:!bg-primary-900/10 flex flex-col items-center justify-center p-5 text-center active:scale-[0.98] transition-all"
+          className="cursor-pointer hover:border-primary-300 dark:hover:border-primary-700 flex flex-col items-center justify-center p-5 text-center active:scale-[0.98] transition-all"
         >
           <p className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-3">Inventory Breakdown</p>
           <div className="flex flex-wrap items-center justify-center gap-1.5 mb-3">
