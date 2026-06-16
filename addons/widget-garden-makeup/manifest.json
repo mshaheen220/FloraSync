@@ -1,0 +1,15 @@
+{
+  "id": "widget-garden-makeup",
+  "name": "Garden Makeup & Shopping List",
+  "version": "1.0.3",
+  "description": "Analyzes your active inventory to break down your garden by category and provides tailored fertilizer shopping recommendations.",
+  "status": "published",
+  "author": "FloraSync Official",
+  "entryPoints": [
+    "dashboard"
+  ],
+  "requiresInternet": false,
+  "executeScript": "execute.js",
+  "settingsSchema": [],
+  "actions": []
+}

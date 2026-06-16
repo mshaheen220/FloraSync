@@ -3,6 +3,7 @@
   "name": "Health & Pruning Tracker",
   "version": "1.0.7",
   "description": "Advanced logging for plant condition, pruning sessions, and rescue plans.",
+  "status": "draft",
   "author": "Michael Shaheen",
   "entryPoints": ["plant_detail_action", "journal_entry_type"],
   "installScript": "setup.js",

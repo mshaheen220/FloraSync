@@ -44,6 +44,7 @@ export interface AddonManifest {
   version: string;
   description: string;
   author?: string;
+  status?: 'draft' | 'published' | 'deprecated';
   entryPoints?: string[];
   requiresInternet?: boolean;
   installScript?: string;

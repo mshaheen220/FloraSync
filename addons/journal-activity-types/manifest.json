@@ -3,6 +3,7 @@
   "name": "Custom Journal Activity Types",
   "version": "1.0.2",
   "description": "Add custom activity types to journal entries for more detailed plant care logging.",
+  "status": "draft",
   "author": "Michael Shaheen",
   "uninstallScript": "uninstall.js",
   "journalActivityTypes": [

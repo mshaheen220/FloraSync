@@ -5,23 +5,11 @@ import { Icon } from '../../common/Icon';
 import JSZip from 'jszip';
 import { apiFetch } from '../../../utils/api';
 
-// Local registry for the MVP. Later, this could be fetched from the server.
-const AVAILABLE_ADDONS: AddonManifest[] = [
-  {
-    id: "widget-weather",
-    name: "Weather Widget",
-    version: "2.0.1",
-    description: "Provides hyper-local, garden-specific weather insights, alerts, and other metrics using data from Tomorrow.io.",
-    author: "Michael Shaheen",
-    entryPoints: ["dashboard"],
-    requiresInternet: true,
-    executeScript: "execute.js",
-    settingsSchema: [
-      { key: "latitude", label: "Latitude", type: "number", defaultValue: 40.689156 },
-      { key: "longitude", label: "Longitude", type: "number", defaultValue: -80.041077 }
-    ]
-  }
-];
+// Automatically discover all local add-ons in the /addons/ directory at build time!
+const manifestModules = import.meta.glob('../../../../addons/*/manifest.json', { eager: true });
+const AVAILABLE_ADDONS: AddonManifest[] = Object.values(manifestModules)
+  .map((mod: any) => mod.default || mod)
+  .filter((manifest: AddonManifest) => manifest.status === 'published');
 
 interface AddonManagerProps {
   currentUser: User | null;

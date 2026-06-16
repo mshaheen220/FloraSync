@@ -1,6 +1,7 @@
 import { FC, useEffect } from 'react';
 import { Card, Button, Subtitle } from '../../styles/StyledElements';
 import { Icon } from './Icon';
+import { useGarden } from '../../contexts/GardenContext';
 
 interface NutrientProfileInfoModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface NutrientProfileInfoModalProps {
 }
 
 export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ isOpen, onClose, currentProfile }) => {
+  const { instances, archetypes } = useGarden();
+
   useEffect(() => {
     if (isOpen && currentProfile) {
       const element = document.getElementById(`profile-${currentProfile}`);
@@ -17,6 +20,19 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
       }
     }
   }, [isOpen, currentProfile]);
+
+  const getExamples = (profile: string, fallback: string) => {
+    // Get unique archetype IDs of active plants in the garden
+    const activeArchetypes = new Set(instances.filter(i => !i.dateHarvested).map(i => i.archetypeId));
+    const matches = archetypes
+      .filter(a => activeArchetypes.has(a.id) && (a.preferredNutrientProfile || 'GENERAL_FEED') === profile)
+      .map(a => a.commonName);
+    
+    if (matches.length > 0) {
+      return "Your " + matches.slice(0, 4).join(', ') + (matches.length > 4 ? ', etc.' : '');
+    }
+    return fallback;
+  };
 
   if (!isOpen) return null;
 
@@ -41,10 +57,11 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
               General Feed (Balanced)
               {currentProfile === 'GENERAL_FEED' && <span className="ml-2 text-[10px] bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Current Selection</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: Any plant when you are unsure.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: {getExamples('GENERAL_FEED', 'Any plant when you are unsure.')}</p>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-3 mb-2">
               "A safe, standard, balanced fertilizer (like a 10-10-10). It provides baseline nutrients to keep plants alive without specializing in extreme leaf growth or heavy fruit production."
             </p>
+            <p className="text-sm text-slate-700 dark:text-slate-300"><strong>Application:</strong> Apply a balanced granular or liquid fertilizer every 2–4 weeks during the active growing season.</p>
           </div>
 
           {/* Profile 1 */}
@@ -54,7 +71,7 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
               Heavy Feeders (Fruit & Yield)
               {currentProfile === 'BLOOM_BOOST' && <span className="ml-2 text-[10px] bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Current Selection</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: Cherry Tomato, Roma Tomato, Cucumber, Summer Squash.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: {getExamples('BLOOM_BOOST', 'Cherry Tomato, Roma Tomato, Cucumber, Summer Squash.')}</p>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-3 mb-2">
               "For fruiting vegetables that require high energy to maximize crop yields. Focus on organic granular fertilizers with lower Nitrogen (N) and higher Phosphorus (P) and Potassium (K) to promote blooms and fruit rather than excess leaves. Includes vital calcium to prevent blossom end rot."
             </p>
@@ -68,7 +85,7 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
               Leafy & Lush (High Nitrogen Greens)
               {currentProfile === 'VEG_GROW' && <span className="ml-2 text-[10px] bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Current Selection</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: Curly Parsley, Flat-Leaf Parsley, Dill, Cilantro, Chives, Green Onions.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: {getExamples('VEG_GROW', 'Curly Parsley, Flat-Leaf Parsley, Dill, Cilantro, Chives, Green Onions.')}</p>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-3 mb-2">
               "For leafy herbs and greens where continuous, tender foliage production is the main goal. These plants thrive on fast-acting, nitrogen-rich liquid options that fuel rapid leaf growth without building up salts in the soil."
             </p>
@@ -82,7 +99,7 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
               Mediterranean & Lean (Low-to-No Feed)
               {currentProfile === 'LOW_FEED' && <span className="ml-2 text-[10px] bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Current Selection</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: Sage, Greek Oregano, Rosemary, Thyme, Tarragon.</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: {getExamples('LOW_FEED', 'Sage, Greek Oregano, Rosemary, Thyme, Tarragon.')}</p>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-3 mb-2">
               "For woody, drought-tolerant herbs that thrive in lean, nutrient-poor soil. Over-fertilizing these plants causes rapid, leggy growth that dilutes their aromatic essential oils and ruins their flavor. Keep them on a 'starvation diet'."
             </p>
@@ -96,7 +113,7 @@ export const NutrientProfileInfoModal: FC<NutrientProfileInfoModalProps> = ({ is
               Acid Lovers (Low-pH Specialty)
               {currentProfile === 'ACID_LOVERS' && <span className="ml-2 text-[10px] bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded uppercase tracking-wider font-bold">Current Selection</span>}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: Blueberry Bush (and future additions like Blackberries, Raspberries, or Hydrangeas).</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-medium">Target Plants: {getExamples('ACID_LOVERS', 'Blueberry Bush (and future additions like Blackberries, Raspberries, or Hydrangeas).')}</p>
             <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-3 mb-2">
               "For specific fruiting shrubs and perennials that strictly require highly acidic soil (pH 4.5–5.5) to absorb nutrients. Standard fertilizers will cause iron deficiency and yellowing leaves. Requires dedicated acidifying elements."
             </p>
