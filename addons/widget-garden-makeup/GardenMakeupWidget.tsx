@@ -243,7 +243,7 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 dark:bg-slate-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => { setIsModalOpen(false); setDetailView(null); }}>
           <Card className="w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom-4 !p-0" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 shrink-0 rounded-t-2xl">
+            <div className="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-700 shrink-0 rounded-t-2xl">
               <Subtitle className="!m-0 flex items-center gap-2">
                 <Icon name="pie-chart" size={20} className="text-primary-500" />
                 {detailView ? 'Detailed Breakdown' : 'Inventory Makeup'}
