@@ -74,12 +74,24 @@ const SHOPPING_GUIDE: Record<string, { buy: string, why: string, npk: string, ti
 
 const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => void }> = ({ stats, gardenName, onClose }) => {
   useEffect(() => {
-    // iOS Chrome/Safari Print Hack: Explicitly hide the root app DOM node while this 
-    // full-screen print preview is open. This absolutely guarantees that mobile print 
-    // engines cannot accidentally snapshot the background dashboard layout.
-    const rootEl = document.getElementById('root');
-    const originalDisplay = rootEl ? rootEl.style.display : '';
-    if (rootEl) rootEl.style.display = 'none';
+    // Bulletproof iOS Print Hack: 
+    // 1. Strip dark mode classes entirely from the HTML element
+    // 2. JS-hide EVERY sibling node in the body so the browser has literally nothing else to print
+    const rootHtml = document.documentElement;
+    const hasDarkClass = rootHtml.classList.contains('dark');
+    if (hasDarkClass) rootHtml.classList.remove('dark');
+    
+    rootHtml.style.setProperty('background-color', '#ffffff', 'important');
+    document.body.style.setProperty('background-color', '#ffffff', 'important');
+
+    const originalDisplays = new Map<HTMLElement, string>();
+    Array.from(document.body.children).forEach((child) => {
+      const el = child as HTMLElement;
+      if (el.id !== 'shopping-print-portal' && el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE') {
+        originalDisplays.set(el, el.style.display);
+        el.style.display = 'none';
+      }
+    });
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -114,7 +126,13 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
     window.addEventListener('afterprint', handleAfterPrint);
 
     return () => { 
-      if (rootEl) rootEl.style.display = originalDisplay;
+      if (hasDarkClass) rootHtml.classList.add('dark');
+      rootHtml.style.removeProperty('background-color');
+      document.body.style.removeProperty('background-color');
+      
+      originalDisplays.forEach((display, el) => {
+        el.style.display = display;
+      });
       document.head.removeChild(style); 
       window.removeEventListener('afterprint', handleAfterPrint);
     };
