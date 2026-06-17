@@ -1,4 +1,4 @@
-import { FC, useState, useMemo, useEffect } from 'react';
+import { FC, useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Card, Subtitle, Button } from '../../src/styles/StyledElements';
 import { Icon } from '../../src/components/common/Icon';
@@ -73,70 +73,56 @@ const SHOPPING_GUIDE: Record<string, { buy: string, why: string, npk: string, ti
 };
 
 const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => void }> = ({ stats, gardenName, onClose }) => {
-  useEffect(() => {
-    // Bulletproof iOS Print Hack: 
-    // 1. Strip dark mode classes entirely from the HTML element
-    // 2. JS-hide EVERY sibling node in the body so the browser has literally nothing else to print
-    const rootHtml = document.documentElement;
-    const hasDarkClass = rootHtml.classList.contains('dark');
-    if (hasDarkClass) rootHtml.classList.remove('dark');
-    
-    rootHtml.style.setProperty('background-color', '#ffffff', 'important');
-    document.body.style.setProperty('background-color', '#ffffff', 'important');
+  const printContentRef = useRef<HTMLDivElement>(null);
 
-    const originalDisplays = new Map<HTMLElement, string>();
-    Array.from(document.body.children).forEach((child) => {
-      const el = child as HTMLElement;
-      if (el.id !== 'shopping-print-portal' && el.tagName !== 'SCRIPT' && el.tagName !== 'STYLE') {
-        originalDisplays.set(el, el.style.display);
-        el.style.display = 'none';
-      }
+  const handlePrint = () => {
+    const printNode = printContentRef.current;
+    if (!printNode) {
+      console.error("Could not find content to print.");
+      return;
+    }
+
+    // Create a hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      document.body.removeChild(iframe);
+      return;
+    }
+
+    // Clone all stylesheets from the main document to the iframe
+    document.head.querySelectorAll('link[rel="stylesheet"], style').forEach(node => {
+      iframeDoc.head.appendChild(node.cloneNode(true));
     });
 
-    const style = document.createElement('style');
-    style.innerHTML = `
-      @media print {
-        @page { margin: 0.5in; }
-        html, body { 
-          width: 100% !important; 
-          height: auto !important; 
-          margin: 0 !important; 
-          padding: 0 !important; 
-          overflow: visible !important; 
-          background-color: #ffffff !important; 
-          -webkit-print-color-adjust: exact !important; 
-          print-color-adjust: exact !important; 
-        }
-        body > *:not(#shopping-print-portal) { display: none !important; }
-        
-        /* Force the portal to start exactly at the top left of the page */
-        #shopping-print-portal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; overflow: visible !important; height: auto !important; display: block !important; background-color: #ffffff !important; }
-        .print-item { page-break-inside: avoid !important; break-inside: avoid !important; }
-      }
+    // Add print-specific styles
+    const printStyle = iframeDoc.createElement('style');
+    printStyle.innerHTML = `
+      @page { margin: 0.5in; }
+      body { background-color: #ffffff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .print-item { page-break-inside: avoid !important; break-inside: avoid !important; }
     `;
-    document.head.appendChild(style);
+    iframeDoc.head.appendChild(printStyle);
 
-    const handleAfterPrint = () => {
-      // This event fires after the system's print dialog is closed,
-      // regardless of whether the user printed or cancelled.
-      // We can now automatically close our print preview component.
-      onClose();
+    // Set the content and trigger print
+    iframeDoc.body.innerHTML = printNode.innerHTML;
+    
+    iframe.onload = () => {
+      setTimeout(() => { // Timeout ensures styles are applied, especially in Firefox
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+        document.body.removeChild(iframe);
+        onClose();
+      }, 250);
     };
-
-    window.addEventListener('afterprint', handleAfterPrint);
-
-    return () => { 
-      if (hasDarkClass) rootHtml.classList.add('dark');
-      rootHtml.style.removeProperty('background-color');
-      document.body.style.removeProperty('background-color');
-      
-      originalDisplays.forEach((display, el) => {
-        el.style.display = display;
-      });
-      document.head.removeChild(style); 
-      window.removeEventListener('afterprint', handleAfterPrint);
-    };
-  }, [onClose]);
+  };
 
   return createPortal(
     <div id="shopping-print-portal" className="fixed inset-0 z-[9999] bg-white text-black overflow-y-auto">
@@ -147,12 +133,12 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
         </div>
         <div className="flex gap-3">
           <button onClick={onClose} className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 font-bold transition-colors">Cancel</button>
-          <button onClick={() => window.print()} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg flex items-center gap-2">
+          <button onClick={handlePrint} className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 font-bold transition-colors shadow-lg flex items-center gap-2">
             <Icon name="print" size={18} /> Print
           </button>
         </div>
       </div>
-      <div className="p-8 print:p-0 max-w-3xl mx-auto font-sans">
+      <div ref={printContentRef} className="p-8 max-w-3xl mx-auto font-sans">
         <div className="border-b-2 border-emerald-600 pb-1 mb-2">
           <h1 className="text-2xl font-black text-slate-900 mb-0.5">{gardenName} Shopping List</h1>
           <p className="text-sm text-slate-600 font-medium">Generated by FloraSync</p>
