@@ -85,8 +85,21 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
       }
     `;
     document.head.appendChild(style);
-    return () => { document.head.removeChild(style); };
-  }, []);
+
+    const handleAfterPrint = () => {
+      // This event fires after the system's print dialog is closed,
+      // regardless of whether the user printed or cancelled.
+      // We can now automatically close our print preview component.
+      onClose();
+    };
+
+    window.addEventListener('afterprint', handleAfterPrint);
+
+    return () => { 
+      document.head.removeChild(style); 
+      window.removeEventListener('afterprint', handleAfterPrint);
+    };
+  }, [onClose]);
 
   return createPortal(
     <div id="shopping-print-portal" className="fixed inset-0 z-[9999] bg-white text-black overflow-y-auto">
