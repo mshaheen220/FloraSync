@@ -74,13 +74,31 @@ const SHOPPING_GUIDE: Record<string, { buy: string, why: string, npk: string, ti
 
 const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => void }> = ({ stats, gardenName, onClose }) => {
   useEffect(() => {
+    // iOS Chrome/Safari Print Hack: Explicitly hide the root app DOM node while this 
+    // full-screen print preview is open. This absolutely guarantees that mobile print 
+    // engines cannot accidentally snapshot the background dashboard layout.
+    const rootEl = document.getElementById('root');
+    const originalDisplay = rootEl ? rootEl.style.display : '';
+    if (rootEl) rootEl.style.display = 'none';
+
     const style = document.createElement('style');
     style.innerHTML = `
       @media print {
         @page { margin: 0.5in; }
-        html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        html, body { 
+          width: 100% !important; 
+          height: auto !important; 
+          margin: 0 !important; 
+          padding: 0 !important; 
+          overflow: visible !important; 
+          background-color: #ffffff !important; 
+          -webkit-print-color-adjust: exact !important; 
+          print-color-adjust: exact !important; 
+        }
         body > *:not(#shopping-print-portal) { display: none !important; }
-        #shopping-print-portal { position: static !important; width: 100% !important; max-width: 100% !important; overflow: visible !important; height: auto !important; display: block !important; }
+        
+        /* Force the portal to start exactly at the top left of the page */
+        #shopping-print-portal { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; max-width: 100% !important; overflow: visible !important; height: auto !important; display: block !important; background-color: #ffffff !important; }
         .print-item { page-break-inside: avoid !important; break-inside: avoid !important; }
       }
     `;
@@ -96,6 +114,7 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
     window.addEventListener('afterprint', handleAfterPrint);
 
     return () => { 
+      if (rootEl) rootEl.style.display = originalDisplay;
       document.head.removeChild(style); 
       window.removeEventListener('afterprint', handleAfterPrint);
     };
