@@ -1,6 +1,6 @@
 import { FC, useState, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Card, Subtitle, Button } from '../../src/styles/StyledElements';
+import { Card, Subtitle } from '../../src/styles/StyledElements';
 import { Icon } from '../../src/components/common/Icon';
 import { FEED_PROFILE_LABELS } from '../../src/utils/constants';
 import { useGarden } from '../../src/contexts/GardenContext';
@@ -415,7 +415,10 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
                             e.g., {data.examples.join(', ')}{data.count > data.examples.length ? ', etc.' : ''}
                           </p>
                           <div className="bg-white dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm">
-                            <p className="text-sm text-slate-800 dark:text-slate-100 font-semibold mb-1">🛒 Buy: {guide.buy}</p>
+                            <div className="bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 rounded-md border border-emerald-100 dark:border-emerald-800/30 mb-3">
+                              <p className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider mb-0.5">🛒 What to Buy</p>
+                              <p className="text-base font-bold text-emerald-950 dark:text-emerald-300">{guide.buy}</p>
+                            </div>
                             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-2">{guide.why}</p>
                             <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 space-y-1.5">
                               <p className="text-[11px] text-slate-600 dark:text-slate-400">
@@ -435,13 +438,6 @@ export const GardenMakeupWidget: FC<GardenMakeupWidgetProps> = () => {
               </div>
             </div>
             )}
-
-            <div className="p-4 flex gap-3 border-t border-surface-100 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 shrink-0 rounded-b-2xl">
-              <Button onClick={() => setIsPrinting(true)} $variant="secondary" className="flex-1 py-3 flex items-center justify-center gap-2">
-                <Icon name="print" size={18} /> Print List
-              </Button>
-              <Button onClick={() => { setIsModalOpen(false); setDetailView(null); }} className="flex-1 py-3">Close</Button>
-            </div>
           </Card>
         </div>
       )}
