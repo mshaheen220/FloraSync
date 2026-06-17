@@ -77,10 +77,10 @@ const PrintShoppingList: FC<{ stats: any, gardenName: string, onClose: () => voi
     const style = document.createElement('style');
     style.innerHTML = `
       @media print {
-        @page { margin: 0.5in; size: letter; }
-        html, body { width: 8.5in !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        #root { display: none !important; }
-        #shopping-print-portal { position: static !important; width: 8.5in !important; overflow: visible !important; height: auto !important; display: block !important; }
+        @page { margin: 0.5in; }
+        html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        body > *:not(#shopping-print-portal) { display: none !important; }
+        #shopping-print-portal { position: static !important; width: 100% !important; max-width: 100% !important; overflow: visible !important; height: auto !important; display: block !important; }
         .print-item { page-break-inside: avoid !important; break-inside: avoid !important; }
       }
     `;
