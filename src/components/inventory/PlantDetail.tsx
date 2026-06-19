@@ -686,6 +686,33 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         </div>
       )}
 
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4">
+        <button onClick={() => toggleSection('harvests')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
+          <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+            Harvest Log <span className="text-sm text-slate-400 dark:text-slate-500 ml-2 font-normal">({instance.harvests?.length || 0})</span>
+          </Subtitle>
+          <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('harvests') ? 'rotate-180' : ''}`}>▼</span>
+        </button>
+        {expandedSections.includes('harvests') && (
+          <Card>
+            {instance.harvests?.length ? (
+              <ul className="space-y-4">
+                {instance.harvests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(h => (
+                  <li key={h.id} className="text-sm">
+                    <p className="font-semibold text-slate-800 dark:text-slate-100">
+                      {new Date(h.date).toLocaleDateString()} - {h.yieldAmount} {h.yieldUnit} ({h.quality})
+                    </p>
+                    {h.notes && <p className="text-slate-600 dark:text-slate-400 italic mt-1">{h.notes}</p>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">No harvests have been recorded for this plant yet.</p>
+            )}
+          </Card>
+        )}
+      </div>
+
       <div className="border-b border-slate-200 dark:border-slate-800 pb-2 mb-4 last:border-0">
         <button onClick={() => toggleSection('journal')} className="w-full flex items-center justify-between text-left group py-2 mb-2 active:scale-[0.98] transition-transform">
           <Subtitle className="!m-0 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">

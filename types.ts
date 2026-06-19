@@ -143,6 +143,16 @@ export interface PlantInstance {
     timestamp: string;
     deficitMs: number;
   };
+  harvests?: Harvest[];
+}
+
+export interface Harvest {
+  id: string; // Unique ID for the harvest event
+  date: string; // ISO string
+  yieldAmount: number;
+  yieldUnit: string; // e.g., 'grams', 'ounces', 'items'
+  quality: 'Excellent' | 'Good' | 'Fair' | 'Poor';
+  notes?: string;
 }
 
 export interface Location {
