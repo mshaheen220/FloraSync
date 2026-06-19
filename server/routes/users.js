@@ -266,20 +266,18 @@ router.put('/api/users/:id/password', authenticateToken, (req, res) => {
     return res.status(403).json({ error: 'Not authorized to change this password.' });
   }
   const { currentPassword, newPassword } = req.body;
-  // if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new passwords are required.' });
-  if (!newPassword) return res.status(400).json({ error: 'New password is required.' });
+  if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new passwords are required.' });
   
   try {
     const user = db.prepare('SELECT password_hash FROM users WHERE id = ?').get(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found.' });
 
-    // Temporarily disabled for password reset
-    // const validPassword = bcrypt.compareSync(currentPassword, user.password_hash);
-    // if (!validPassword) return res.status(401).json({ error: 'Incorrect current password.' });
+    const validPassword = bcrypt.compareSync(currentPassword, user.password_hash);
+    if (!validPassword) return res.status(401).json({ error: 'Incorrect current password.' });
 
     const passwordHash = bcrypt.hashSync(newPassword, 10);
     db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(passwordHash, req.params.id);
-    res.json({ success: true, message: 'Password updated successfully!' });
+    res.json({ success: true });
   } catch (err) {
     console.error('Error changing password:', err);
     res.status(500).json({ error: 'Internal server error.' });

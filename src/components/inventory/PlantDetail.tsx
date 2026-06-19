@@ -1,6 +1,9 @@
 import { useEffect, useState, FC, FormEvent } from 'react';
 import { Container, Title, Card, Button, StatusBadge, Input, Toast, Subtitle, MenuButton } from '../../styles/StyledElements';
 import { PlantRegistrationForm } from './PlantRegistrationForm';
+import { Harvest } from '../../../types';
+import { HarvestModal } from './HarvestModal';
+import { HarvestJournal } from './HarvestJournal';
 import { PlantJournal } from './PlantJournal';
 import { ActionControlStrip } from '../common/ActionControlStrip';
 import { useGarden } from '../../contexts/GardenContext';
@@ -61,6 +64,7 @@ export const PlantDetail: FC<PlantDetailProps> = ({
   const [expandedSections, setExpandedSections] = useState<string[]>([]);
   const [isFeedModalOpen, setIsFeedModalOpen] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [isHarvestModalOpen, setIsHarvestModalOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -143,6 +147,14 @@ export const PlantDetail: FC<PlantDetailProps> = ({
     onRegister(id, identifier, isNew, locId, isNewLoc, zId, isNewZ, img);
     showToast('🌱 Plant registered successfully!');
   };
+
+  const handleSaveHarvest = (harvestData: Harvest) => {
+    if (!instance) return;
+    const existingHarvests = instance.harvests || [];
+    onUpdateInstance(qrId, { harvests: [...existingHarvests, harvestData] });
+    showToast('🎉 Harvest recorded!');
+    setIsHarvestModalOpen(false);
+  }
 
   // 4. Dynamic Just-In-Time Registration Form (when QR isn't mapped in instances)
   if (!instance) {
@@ -694,22 +706,12 @@ export const PlantDetail: FC<PlantDetailProps> = ({
           <span className={`text-slate-400 transition-transform duration-200 ${expandedSections.includes('harvests') ? 'rotate-180' : ''}`}>▼</span>
         </button>
         {expandedSections.includes('harvests') && (
-          <Card>
-            {instance.harvests?.length ? (
-              <ul className="space-y-4">
-                {instance.harvests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(h => (
-                  <li key={h.id} className="text-sm">
-                    <p className="font-semibold text-slate-800 dark:text-slate-100">
-                      {new Date(h.date).toLocaleDateString()} - {h.yieldAmount} {h.yieldUnit} ({h.quality})
-                    </p>
-                    {h.notes && <p className="text-slate-600 dark:text-slate-400 italic mt-1">{h.notes}</p>}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">No harvests have been recorded for this plant yet.</p>
-            )}
-          </Card>
+          <div className="space-y-4">
+            <Button onClick={() => setIsHarvestModalOpen(true)} className="w-full flex justify-center items-center gap-2">
+              <Icon name="harvest" size={18} /> Record Harvest
+            </Button>
+            <HarvestJournal harvests={instance.harvests || []} />
+          </div>
         )}
       </div>
 
@@ -744,6 +746,11 @@ export const PlantDetail: FC<PlantDetailProps> = ({
         isOpen={isInfoOpen} 
         onClose={() => setIsInfoOpen(false)} 
         currentProfile={archetype?.preferredNutrientProfile}
+      />
+      <HarvestModal 
+        isOpen={isHarvestModalOpen}
+        onClose={() => setIsHarvestModalOpen(false)}
+        onSave={handleSaveHarvest}
       />
       <Toast $visible={!!toastMessage}>{toastMessage}</Toast>
     </Container>

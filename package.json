@@ -1,6 +1,6 @@
 {
   "name": "florasync",
-  "version": "9.1.15",
+  "version": "9.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

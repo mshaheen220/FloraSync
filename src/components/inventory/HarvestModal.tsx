@@ -47,12 +47,16 @@ export const HarvestModal: FC<HarvestModalProps> = ({ isOpen, onClose, onSave })
           </div>
           <div>
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Unit</label>
-            <Input 
-              type="text"
+            <select 
               value={yieldUnit}
               onChange={e => setYieldUnit(e.target.value)}
-              placeholder="e.g., grams, items"
-            />
+              className="w-full border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 h-[52px] focus:outline-none focus:border-primary-500 dark:focus:border-primary-500 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100"
+            >
+              <option value="grams">grams</option>
+              <option value="ounces">ounces</option>
+              <option value="pieces">pieces</option>
+              <option value="items">items</option>
+            </select>
           </div>
         </div>
 
